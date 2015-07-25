@@ -12,17 +12,43 @@ TEST_CASE( "stoopid/1=2", "Prove that one equals 2")
   REQUIRE( one == 1 );
 }
 
-TEST_CASE( "buffer/can-hold-one-byte", "Prove that a buffer_ct can hold a byte")
+TEST_CASE( "buffer/can-hold-one-byte", "Prove that a buffer_t can hold a byte")
 {
-  buffer_ct x((byte)1);
+  buffer_t x((byte)1);
 
   REQUIRE( x.size() == 1 );
+  REQUIRE( x.read_byte() == 1);
 }
 
-TEST_CASE( "buffer/can-hold-two-bytes", "Prove that a buffer_ct can hold two bytes")
+TEST_CASE( "buffer/can-hold-two-bytes", "Prove that a buffer_t can hold two bytes")
 {
-  buffer_ct x((uint16)1);
+  buffer_t x((uint16)0x0202);
 
   REQUIRE( x.size() == 2 );
+  REQUIRE( x.read_byte() == 2);
+}
+
+TEST_CASE( "buffer/can-hold-eight-bytes", "Prove that a buffer_t can hold eight bytes")
+{
+  uint16 a = 2;
+  buffer_t x(a);
+
+  x.append(a);
+  x.append(a);
+  x.append(a);
+
+  REQUIRE( x.size() >= 8 );
+}
+
+TEST_CASE( "buffer/can-hold-sixteen-bytes", "Prove that a buffer_t can hold sixteen bytes")
+{
+  uint32 a = 2;
+  buffer_t x(a);
+
+  x.append(a);
+  x.append(a);
+  x.append(a);
+
+  REQUIRE( x.size() >= 16 );
 }
 
