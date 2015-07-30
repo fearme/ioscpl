@@ -21,16 +21,17 @@
 
 #endif
 
-#ifndef max
-#define max(a,b) (((a) > (b)) ? (a) : (b))
+#ifndef mwp_max
+#define mwp_max(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 
-#ifndef min
-#define min(a,b) (((a) < (b)) ? (a) : (b))
+#ifndef mwp_min
+#define mwp_min(a,b) (((a) < (b)) ? (a) : (b))
 #endif
 
 
 #include "mwp_types.hpp"
+//#include <string>
 #include <cstddef>
 #include <cstdlib>
 #include <cctype>
@@ -39,6 +40,7 @@
 namespace net_mobilewebprint {
 
   using std::size_t;
+  //using std::string;
   using net_mobilewebprint::byte;
   using net_mobilewebprint::uint16;
 
@@ -49,6 +51,29 @@ namespace net_mobilewebprint {
 
   size_t write_hton(byte * mem, uint16 sh);
   size_t write_hton(byte * mem, uint32 n);
+
+  struct buffer_view_t
+  {
+    typedef byte const * iterator;
+
+    virtual byte const *       begin() const = 0;
+    virtual byte const *         end() const = 0;
+    virtual size_t             dsize() const = 0;
+
+    byte                          at(int byte_offset) const;
+    uint16                 uint16_at(int byte_offset) const;
+    uint32                 uint32_at(int byte_offset) const;
+
+    virtual iterator           first() const;
+    virtual bool            is_valid(iterator const & it) const;
+
+    virtual byte           read_byte(iterator & it) const;
+    virtual uint16       read_uint16(iterator & it) const;
+    virtual uint32       read_uint32(iterator & it) const;
+
+//    virtual std::string       read_string(iterator & it) const;
+//    virtual std::string    read_string_nz(iterator & it) const;
+  };
 
   template <typename TT>
   struct buffer_tt
@@ -113,7 +138,7 @@ namespace net_mobilewebprint {
       }
 
       /* otherwise */
-      size_t num_to_increase_by = max(new_mem_length - mem_length, grow_size);
+      size_t num_to_increase_by = mwp_max(new_mem_length - mem_length, grow_size);
       byte * temp = new byte[mem_length = (mem_length + num_to_increase_by)]; /**/ num_buf_bytes_allocations += 1; num_buf_bytes += mem_length;
       memset(temp, 0, mem_length);
 

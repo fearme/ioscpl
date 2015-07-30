@@ -3,6 +3,7 @@
 #include "catch.hpp"
 
 #include "mwp_buffer.hpp"
+#include "mwp_assert.hpp"
 
 using namespace net_mobilewebprint;
 
@@ -10,6 +11,16 @@ TEST_CASE( "stoopid/1=2", "Prove that one equals 2")
 {
   int one = 1;
   REQUIRE( one == 1 );
+  REQUIRE( num_asserts() == 0 );
+}
+
+TEST_CASE( "assert works" )
+{
+  REQUIRE( num_asserts() == 0 );
+
+  mwp_assert(false);
+
+  REQUIRE( num_asserts() == 1 );
 }
 
 TEST_CASE( "buffer/can-hold-one-byte", "Prove that a buffer_t can hold a byte")
