@@ -12,11 +12,18 @@ cmake -G Xcode ../../src/cpp
 # ------
 # ------ Build unit test binaries
 # ------
-xcodebuild -target test_buffer -configuration Debug
+xcodebuild -target test_client_only -configuration Debug
 
 # ------
 # ------ Run unit tests
 # ------
+
+echo ""
+echo ""
+echo "===================================================================================="
+echo "====================================== Tests ======================================="
+echo "===================================================================================="
+echo ""
 ctest -C Debug -VV
 
 cd $START_DIR

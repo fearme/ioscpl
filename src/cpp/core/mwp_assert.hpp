@@ -5,6 +5,7 @@
 namespace net_mobilewebprint {
 
   extern int num_failed_assertions;
+  void reset_assert_count();
 
   int num_asserts();
 

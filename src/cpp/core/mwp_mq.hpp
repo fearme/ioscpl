@@ -2,7 +2,12 @@
 #ifndef __MWP_MQ_HPP__
 #define __MWP_MQ_HPP__
 
+#include <mwp_buffer.hpp>
+#include <string>
+
 namespace net_mobilewebprint {
+
+  using std::string;
 
   enum mq_result
   {

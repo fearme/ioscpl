@@ -1,5 +1,4 @@
 
-#define CATCH_CONFIG_MAIN
 #include "catch.hpp"
 
 #include "mwp_buffer.hpp"
@@ -7,7 +6,7 @@
 
 using namespace net_mobilewebprint;
 
-TEST_CASE( "stoopid/1=2", "Prove that one equals 2")
+TEST_CASE( "stoopid/1=1", "Prove that one equals 1")
 {
   int one = 1;
   REQUIRE( one == 1 );
@@ -16,6 +15,7 @@ TEST_CASE( "stoopid/1=2", "Prove that one equals 2")
 
 TEST_CASE( "assert works" )
 {
+  reset_assert_count();
   REQUIRE( num_asserts() == 0 );
 
   mwp_assert(false);
