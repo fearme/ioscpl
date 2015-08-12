@@ -31,7 +31,7 @@
 
 
 #include "mwp_types.hpp"
-//#include <string>
+#include <string>
 #include <cstddef>
 #include <cstdlib>
 #include <cctype>
@@ -40,7 +40,7 @@
 namespace net_mobilewebprint {
 
   using std::size_t;
-  //using std::string;
+  using std::string;
   using net_mobilewebprint::byte;
   using net_mobilewebprint::uint16;
 
@@ -49,8 +49,9 @@ namespace net_mobilewebprint {
   extern int    num_buf_bytes_allocations;
   extern int    num_buf_bytes;
 
-  size_t write_hton(byte * mem, uint16 sh);
-  size_t write_hton(byte * mem, uint32 n);
+  size_t   write_hton(byte * mem, uint16 sh);
+  size_t   write_hton(byte * mem, uint32 n);
+  string   mwp_ntop(byte const * p);
 
   struct buffer_view_t
   {
@@ -60,58 +61,48 @@ namespace net_mobilewebprint {
     virtual byte const *         end() const = 0;
     virtual size_t             dsize() const = 0;
 
-    byte                          at(int byte_offset) const;
-    uint16                 uint16_at(int byte_offset) const;
-    uint32                 uint32_at(int byte_offset) const;
-
     virtual iterator           first() const;
     virtual bool            is_valid(iterator const & it) const;
+    virtual bool            is_valid(iterator const & it, size_t) const;
 
-    virtual byte           read_byte(iterator & it) const;
-    virtual uint16       read_uint16(iterator & it) const;
-    virtual uint32       read_uint32(iterator & it) const;
+    virtual byte           read_byte(iterator & it, bool & valid, bool no_assert = false) const;
+    virtual uint16       read_uint16(iterator & it, bool & valid, bool no_assert = false) const;
+    virtual uint32       read_uint32(iterator & it, bool & valid, bool no_assert = false) const;
 
-//    virtual std::string       read_string(iterator & it) const;
-//    virtual std::string    read_string_nz(iterator & it) const;
+    virtual string       read_string(iterator & it, bool & valid, bool no_assert = false) const;
+    virtual string    read_string_nz(iterator & it, size_t count, bool & valid, bool no_assert = false) const;
+
+    virtual string           read_ip(iterator & it, bool & valid, bool no_assert = false) const;
   };
 
   template <typename TT>
-  struct buffer_tt
+  struct buffer_tt : public buffer_view_t
   {
     size_t mem_length;
     size_t data_length;
     size_t grow_size;
     byte * bytes;
 
-    buffer_tt(byte   by)
-      : mem_length(sizeof(by)), data_length(sizeof(by)), grow_size(128), bytes(NULL)
+    buffer_tt(byte const * pby, size_t data_length_)
+      : mem_length(data_length_), data_length(data_length_), grow_size(128), bytes(NULL)
     {
       bytes = _fresh_bytes(mem_length);
-      *bytes = by;
+      ::memcpy(bytes, pby, data_length);
     }
 
-    buffer_tt(uint16 sh)
-      : mem_length(sizeof(sh)), data_length(sizeof(sh)), grow_size(128), bytes(NULL)
+    virtual byte const *       begin() const
     {
-      bytes = _fresh_bytes(mem_length);
-      *(uint16*)(bytes) = htons(sh);
+      return bytes;
     }
 
-    buffer_tt(uint32 n)
-      : mem_length(sizeof(n)), data_length(sizeof(n)), grow_size(128), bytes(NULL)
+    virtual byte const *         end() const
     {
-      bytes = _fresh_bytes(mem_length);
-      *(uint32*)(bytes) = htons(n);
+      return bytes + dsize();
     }
 
-    int size()
+    virtual size_t             dsize() const
     {
       return data_length;
-    }
-
-    byte read_byte()
-    {
-      return (byte)*bytes;
     }
 
     template <typename T>
@@ -157,7 +148,51 @@ namespace net_mobilewebprint {
   };
   typedef buffer_tt<byte> buffer_t;
 
+  struct buffer_range_t : public buffer_view_t
+  {
+    byte const * begin_;
+    byte const * end_;
 
+    buffer_range_t(byte const * begin, byte const * end);
+//    buffer_range_t(byte const * begin, size_t length);
+    buffer_range_t();
+    buffer_range_t(buffer_view_t const &);
+
+    virtual byte const *       begin() const;
+    virtual byte const *         end() const;
+    virtual size_t             dsize() const;
+  };
+
+  struct buffer_reader_t
+  {
+    buffer_range_t             buffer;
+    bool                       valid;
+    buffer_view_t::iterator    p;
+    bool                       no_assert;
+
+    buffer_reader_t(buffer_view_t const &, bool no_assert = false);
+    buffer_reader_t(buffer_reader_t const &);
+
+    virtual byte           read_byte();
+    virtual uint16       read_uint16();
+    virtual uint32       read_uint32();
+
+    virtual string       read_string();
+    virtual string    read_string_nz(size_t count);
+
+    virtual string           read_ip();
+
+    virtual void                seek(int count);
+    virtual void             seek_to(size_t place);
+
+    virtual int                 tell();
+
+    virtual bool              at_end();
+
+    virtual bool            is_valid();
+  };
+
+  buffer_range_t mk_buffer_range(buffer_reader_t const &);
 };
 
 #endif // __MWP_BUFFER_HPP__

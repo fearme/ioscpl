@@ -49,7 +49,7 @@ namespace net_mobilewebprint {
     virtual mq_result        on_select_loop_idle(select_loop_idle_data_t const &  data);
   };
 
-  struct mq
+  struct mq_t
   {
   };
 

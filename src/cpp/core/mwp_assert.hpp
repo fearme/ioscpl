@@ -9,7 +9,7 @@ namespace net_mobilewebprint {
 
   int num_asserts();
 
-  bool mwp_assert(bool);
+  bool mwp_assert(bool, char const * cause);
 };
 
 #endif // __MWP_ASSERT_HPP__
