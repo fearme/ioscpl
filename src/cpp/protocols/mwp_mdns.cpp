@@ -3,14 +3,59 @@
 #include "mwp_utils.hpp"
 
 using namespace net_mobilewebprint;
+using net_mobilewebprint::mq_result;
 
 using std::string;
 
-//net_mobilewebprint::mdns_t::mdns_t(controller_t & controller_)
-//  : controller(controller_), mq(controller_.mq)
-//{
-//}
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_t ------------------------------------------------------
+//---------------------------------------------------------------------------------------------------
+net_mobilewebprint::mdns_t::mdns_t(controller_t & controller_)
+  : controller(controller_), mq(controller_.mq)
+{
+  name_ = "mdns";
 
+  mq.register_handler(*this);
+}
+
+mq_result net_mobilewebprint::mdns_t::initialize()
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_select_loop_start(select_loop_start_extra_t const & extra)
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_pre_select(pre_select_extra_t & extra)
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_select(select_extra_t & extra)
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_message(string const & name, buffer_view_t const & payload, message_extra_t & extra)
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_select_loop_end(select_loop_end_extra_t const &   extra)
+{
+  return not_impl;
+}
+
+mq_result net_mobilewebprint::mdns_t::on_select_loop_idle(select_loop_idle_extra_t const &  extra)
+{
+  return not_impl;
+}
+
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_parsed_packet_t ----------------------------------------
+//---------------------------------------------------------------------------------------------------
 string net_mobilewebprint::mdns_parsed_packet_t::read_stoopid_mdns_string(buffer_reader_t & reader)
 {
   string result;
@@ -42,6 +87,9 @@ string net_mobilewebprint::mdns_parsed_packet_t::read_stoopid_mdns_string(buffer
   return result;
 }
 
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_header_t -----------------------------------------------
+//---------------------------------------------------------------------------------------------------
 net_mobilewebprint::mdns_header_t::mdns_header_t(buffer_reader_t & reader)
   : type(0), flags(0), ttl(0), data_length(0), data(reader)
 {
@@ -67,12 +115,18 @@ mdns_record_base_t::mdns_record_base_t(mdns_header_t const & header)
 {
 }
 
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_a_record_t----------------------------------------------
+//---------------------------------------------------------------------------------------------------
 mdns_a_record_t::mdns_a_record_t(mdns_header_t const & header)
   : mdns_record_base_t(header)
 {
   ip = header.data_reader().read_ip();
 }
 
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_srv_record_t -------------------------------------------
+//---------------------------------------------------------------------------------------------------
 mdns_srv_record_t::mdns_srv_record_t(mdns_header_t const & header)
   : mdns_record_base_t(header)
 {
@@ -85,6 +139,9 @@ mdns_srv_record_t::mdns_srv_record_t(mdns_header_t const & header)
   target = mdns_parsed_packet_t::read_stoopid_mdns_string(reader);
 }
 
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_txt_record_t -------------------------------------------
+//---------------------------------------------------------------------------------------------------
 mdns_txt_record_t::mdns_txt_record_t(mdns_header_t const & header)
   : mdns_record_base_t(header)
 {
@@ -102,10 +159,3 @@ mdns_txt_record_t::mdns_txt_record_t(mdns_header_t const & header)
   }
 }
 
-
-//  struct mdns_txt_record_t : public mdns_record_base_t
-//  {
-//    strmap dict;
-//
-//    mdns_srv_record_t(mdns_header_t const &);
-//  };

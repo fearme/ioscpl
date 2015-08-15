@@ -31,7 +31,7 @@ namespace net_mobilewebprint {
   struct mdns_parsed_packet_t
   {
     buffer_t *    buffer;
-    mdns_parsed_packet_t(byte const *, size_t lenght);
+    mdns_parsed_packet_t(byte const *, size_t length);
     ~mdns_parsed_packet_t();
 
     static string read_stoopid_mdns_string(buffer_reader_t &);
@@ -85,13 +85,24 @@ namespace net_mobilewebprint {
     mdns_txt_record_t(mdns_header_t const &);
   };
 
-//  struct mdns_t : public mq_handler_t
-//  {
-//    controller_t & controller;
-//    mq_t         & mq;
-//
-//    mdns_t(controller_t &);
-//  };
+  struct mdns_t : public mq_handler_t
+  {
+    controller_t & controller;
+    mq_t         & mq;
+
+    mdns_t(controller_t &);
+
+    virtual mq_result                 initialize();
+
+    virtual mq_result       on_select_loop_start(select_loop_start_extra_t const & extra);
+
+    virtual mq_result              on_pre_select(pre_select_extra_t & extra);
+    virtual mq_result                  on_select(select_extra_t & extra);
+    virtual mq_result                 on_message(string const & name, buffer_view_t const & payload, message_extra_t & extra);
+
+    virtual mq_result         on_select_loop_end(select_loop_end_extra_t const &   extra);
+    virtual mq_result        on_select_loop_idle(select_loop_idle_extra_t const &  extra);
+  };
 
 };
 

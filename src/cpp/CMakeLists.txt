@@ -21,6 +21,11 @@ add_subdirectory(protocols)
 # -----
 add_library(mario_client_only sys.cpp)
 
+# --------------------------------- Platform -------------------------------
+#add_library(core platform/darwin/darwin_host.cpp platform/posix/posix_host.cpp)
+include_directories(platform/posix)
+include_directories(platform/darwin)
+
 # --------------------------------- Unit Tests -------------------------------
 
 # -----
@@ -31,6 +36,8 @@ add_executable(test_client_only
                   test/test_buffer.cpp
                   test/test_mdns.cpp
                   test/test_utils.cpp
+                  platform/darwin/darwin_host.cpp
+                  platform/posix/posix_host.cpp
                   )
 
 target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos)
