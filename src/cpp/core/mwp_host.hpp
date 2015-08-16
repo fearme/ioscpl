@@ -16,6 +16,9 @@ namespace net_mobilewebprint {
     bool    lock(char const * name, void * lock);
     bool    unlock(char const * name, void * lock);
     void    free_lock(char const * name, void * lock);
+
+    // Sleep-like things
+    void    interruptable_sleep(uint32 msec);
   };
 
 };

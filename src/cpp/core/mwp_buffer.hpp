@@ -75,6 +75,7 @@ namespace net_mobilewebprint {
     virtual string    read_string_nz(iterator & it, size_t count, bool & valid, bool no_assert = false) const;
 
     virtual string           read_ip(iterator & it, bool & valid, bool no_assert = false) const;
+    virtual void                dump(char const * msg) const;
   };
 
   template <typename TT>

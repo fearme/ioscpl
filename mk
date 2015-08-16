@@ -27,5 +27,10 @@ echo ""
 #ctest -C Debug -VV
 ./Debug/test_client_only
 
+# ------
+# ------ Build Utilities
+# ------
+xcodebuild -target mario -configuration Debug
+
 cd $START_DIR
 

@@ -8,11 +8,11 @@ project(Mario)
 # -----
 # ----- Mario Core
 # -----
-include_directories(core)
-add_subdirectory(core)
-
 include_directories(protocols)
+include_directories(core)
+
 add_subdirectory(protocols)
+add_subdirectory(core)
 
 # --------------------------------- Libraries -------------------------------
 
@@ -25,6 +25,14 @@ add_library(mario_client_only sys.cpp)
 #add_library(core platform/darwin/darwin_host.cpp platform/posix/posix_host.cpp)
 include_directories(platform/posix)
 include_directories(platform/darwin)
+
+# ----------------------------- Utilities/Binaries ---------------------------
+add_executable(mario
+                    platform/stdio/mario_cli.cpp
+                    platform/darwin/darwin_host.cpp
+                    platform/posix/posix_host.cpp
+                    )
+target_link_libraries(mario mario_client_only mwpcore mwpcoreprotos)
 
 # --------------------------------- Unit Tests -------------------------------
 

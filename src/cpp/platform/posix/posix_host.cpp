@@ -3,6 +3,7 @@
 #include "posix_host.hpp"
 
 #include <pthread.h>
+#include <unistd.h>
 #include <sys/time.h>
 #include <errno.h>
 
@@ -65,4 +66,9 @@ void net_mobilewebprint::posix::free_lock(char const * name, void * lock)
   // TODO: implement this
 }
 
+
+void net_mobilewebprint::posix::interruptable_sleep(uint32 msec)
+{
+  usleep(msec * 1000);
+}
 

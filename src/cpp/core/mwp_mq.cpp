@@ -100,7 +100,10 @@ void net_mobilewebprint::mq_t::dispatch_loop()
     zero_timeout_select_stats->start();
     int num_zero_timeout_selects = _on_zero_select();
 
+    //printf("Number of selects(0): %d\n", num_zero_timeout_selects);
+
     if (num_zero_timeout_selects > 0) {
+      //printf("Dispatching zero select\n");
       select_dispatch_stats->start();
       _on_select_dispatch();
 
@@ -118,6 +121,7 @@ void net_mobilewebprint::mq_t::dispatch_loop()
 
       message_parsing_stats->start();
       bool parsed = parse_message(msg, message_extra);
+      //printf("Pulled message %s, parsed: %d\n", message_extra.name.c_str(), (int)parsed);
 
       if (parsed) {
         message_dispatch_stats->start();
@@ -148,7 +152,10 @@ void net_mobilewebprint::mq_t::dispatch_loop()
     long_timeout_select_stats->start();
     int num_long_timeout_selects = _on_long_select(500);
 
+    //printf("Number of selects(long): %d\n", num_long_timeout_selects);
+
     if (num_long_timeout_selects > 0) {
+      //printf("Dispatching long select\n");
       select_dispatch_stats->start();
       _on_select_dispatch();
     }
@@ -185,6 +192,7 @@ void net_mobilewebprint::mq_t::_on_select_loop_start()
 
 int net_mobilewebprint::mq_t::_on_zero_select()
 {
+//  printf("MQ on_zero_select\n");
   max_fd    = -1;
 
   FD_ZERO(&readable);
@@ -196,6 +204,7 @@ int net_mobilewebprint::mq_t::_on_zero_select()
   for (deque<mq_handler_t *>::iterator it = handlers.begin(); it != handlers.end(); ++it) {
     mq_handler_t *& handler = *it;
     if (handler != NULL) {
+//      printf("MQ::handler on_zero_select\n");
       handler->on_pre_select(pre_select_extra);
     }
   }
@@ -244,6 +253,8 @@ void net_mobilewebprint::mq_t::_on_select_dispatch()
 mq_result net_mobilewebprint::mq_t::_on_message_dispatch(buffer_t * msg, message_extra_t & extra)
 {
   mq_result result = ok;
+
+  printf("on_message_dispatch %s, %d\n", extra.name.c_str(), handlers.size());
 
   for (deque<mq_handler_t *>::iterator it = handlers.begin(); it != handlers.end(); ++it) {
     mq_handler_t *& handler = *it;
@@ -304,6 +315,15 @@ bool net_mobilewebprint::mq_t::parse_message(buffer_t * msg, message_extra_t & e
 void net_mobilewebprint::mq_t::send(buffer_t * msg)
 {
   messages.push_back(msg);
+}
+
+void net_mobilewebprint::mq_t::send(char const * name)
+{
+  buffer_t * msg = NULL;
+
+  if ((msg = message(name, 0)) != NULL) {
+    messages.push_back(msg);
+  }
 }
 
 buffer_t * net_mobilewebprint::mq_t::pull()

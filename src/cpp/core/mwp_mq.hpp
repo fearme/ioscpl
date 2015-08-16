@@ -157,6 +157,7 @@ namespace net_mobilewebprint {
     bool       parse_message(buffer_t * msg, message_extra_t &);
 
     void       send(buffer_t * msg);
+    void       send(char const * name);
     buffer_t * pull();
 
     // -------------- select --------------

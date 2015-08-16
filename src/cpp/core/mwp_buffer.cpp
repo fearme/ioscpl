@@ -211,6 +211,11 @@ string net_mobilewebprint::buffer_view_t::read_ip(iterator & it, bool & valid, b
   return mwp_ntop(start);
 }
 
+void net_mobilewebprint::buffer_view_t::dump(char const * msg) const
+{
+  mem_dump(begin(), end() - begin(), msg);
+}
+
 net_mobilewebprint::buffer_reader_t::buffer_reader_t(buffer_view_t const & buffer_, bool no_assert_)
   : buffer(buffer_), valid(true), p(buffer_.first()), no_assert(no_assert_)
 {

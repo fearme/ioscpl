@@ -41,3 +41,8 @@ void net_mobilewebprint::host::free_lock(char const * name, void * lock)
   net_mobilewebprint::posix::free_lock(name, lock);
 }
 
+void net_mobilewebprint::host::interruptable_sleep(uint32 msec)
+{
+  net_mobilewebprint::posix::interruptable_sleep(msec);
+}
+
