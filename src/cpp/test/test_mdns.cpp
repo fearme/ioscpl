@@ -353,6 +353,43 @@ TEST_CASE("mdns_t can read mdns headers", "[mdns]")
 
 }
 
+TEST_CASE("mdns_t can make pdl request packet", "[mdns]")
+{
+  reset_assert_count();
+
+  buffer_t pdl_query_request;
+
+  SECTION("mdns_t makes pdl") {
+    mdns_t::_mk_query_request_packet(pdl_query_request, mdns::ptr, "_pdl-datastream");
+    buffer_reader_t reader(pdl_query_request);
+
+    uint16 sh = reader.read_uint16();                 /* transaction ID */
+    REQUIRE((sh = reader.read_uint16()) == 0);        /* flags */
+
+    REQUIRE((sh = reader.read_uint16()) == 1);        /* number of questions */
+    REQUIRE((sh = reader.read_uint16()) == 0);        /* number of answers */
+    REQUIRE((sh = reader.read_uint16()) == 0);        /* number of authority records */
+    REQUIRE((sh = reader.read_uint16()) == 0);        /* number of additional records */
+
+    byte by = reader.read_byte();
+    REQUIRE(reader.read_string_nz(by) == "_pdl-datastream");
+
+    by = reader.read_byte();
+    REQUIRE(reader.read_string_nz(by) == "_tcp");
+
+    by = reader.read_byte();
+    REQUIRE(reader.read_string_nz(by) == "local");
+
+    REQUIRE((by = reader.read_byte()) == 0);
+    REQUIRE((sh = reader.read_uint16()) == mdns::ptr);
+    REQUIRE((sh = reader.read_uint16()) == 0x8001);
+
+    REQUIRE( num_asserts() == 0 );
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
+
 /* Frame (1334 bytes) */
 const unsigned char mdns_pkt1[1334] = {
 0x01, 0x00, 0x5e, 0x00, 0x00, 0xfb, 0xd4, 0x85, /* ..^.....  00000000 */

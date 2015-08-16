@@ -4,6 +4,7 @@
 
 #include <pthread.h>
 #include <sys/time.h>
+#include <errno.h>
 
 using namespace net_mobilewebprint;
 
@@ -35,4 +36,33 @@ uint32 get_tick()
   gettimeofday(&result, NULL);
   return (uint32)((result.tv_sec * 1000) + (result.tv_usec * 0.001));
 }
+
+int net_mobilewebprint::posix::get_last_network_error()
+{
+  return errno;
+}
+
+bool net_mobilewebprint::posix::allocate_lock(char const * name, void ** lock)
+{
+  // TODO: implement this
+  return true;
+}
+
+bool net_mobilewebprint::posix::lock(char const * name, void * lock)
+{
+  // TODO: implement this
+  return true;
+}
+
+bool net_mobilewebprint::posix::unlock(char const * name, void * lock)
+{
+  // TODO: implement this
+  return true;
+}
+
+void net_mobilewebprint::posix::free_lock(char const * name, void * lock)
+{
+  // TODO: implement this
+}
+
 

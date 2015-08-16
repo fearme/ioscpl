@@ -22,10 +22,10 @@ buffer_range_t::buffer_range_t(byte const * begin, byte const * end)
 {
 }
 
-//buffer_range_t::buffer_range_t(byte const * begin, size_t length)
-//  : begin_(begin), end(begin + length)
-//{
-//}
+buffer_range_t::buffer_range_t(byte const * begin, size_t length)
+  : begin_(begin), end_(begin + length)
+{
+}
 
 buffer_range_t::buffer_range_t()
   : begin_(NULL), end_(NULL)
@@ -279,6 +279,12 @@ bool net_mobilewebprint::buffer_reader_t::at_end()
   return p >= buffer.end();
 }
 
+size_t net_mobilewebprint::write_hton(byte * mem, byte by)
+{
+  *mem = by;
+  return sizeof(by);
+}
+
 size_t net_mobilewebprint::write_hton(byte * mem, uint16 sh)
 {
   *(uint16*)(mem) = htons(sh);
@@ -287,7 +293,7 @@ size_t net_mobilewebprint::write_hton(byte * mem, uint16 sh)
 
 size_t net_mobilewebprint::write_hton(byte * mem, uint32 n)
 {
-  *(uint32*)(mem) = htons(n);
+  *(uint32*)(mem) = htonl(n);
   return sizeof(n);
 }
 

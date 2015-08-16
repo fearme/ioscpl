@@ -5,4 +5,5 @@ add_library(mwpcore
                 mwp_buffer.cpp
                 mwp_assert.cpp
                 mwp_utils.cpp
+                mwp_socket.cpp
                 )

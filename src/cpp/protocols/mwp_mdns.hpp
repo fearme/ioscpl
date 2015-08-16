@@ -4,6 +4,7 @@
 
 #include <mwp_controller.hpp>
 #include <mwp_mq.hpp>
+#include <mwp_socket.hpp>
 
 #include <string>
 
@@ -12,7 +13,7 @@ namespace net_mobilewebprint {
   using std::string;
 
   namespace mdns {
-    enum record_types {
+    enum record_type {
       a         =   1,  /* 0x0001 */
       cname     =   5,  /*  */
       soa       =   6,  /*  */
@@ -87,10 +88,18 @@ namespace net_mobilewebprint {
 
   struct mdns_t : public mq_handler_t
   {
-    controller_t & controller;
-    mq_t         & mq;
+    controller_t &          controller;
+    mq_t         &          mq;
+
+    udp_socket_t            socket;
+
+    static uint16           next_transaction_id;
+    static buffer_t         pdl_query_request;
+    static buffer_t         bjnp_query_request;
 
     mdns_t(controller_t &);
+
+    static  buffer_t &  _mk_query_request_packet(buffer_t & result, mdns::record_type type, char const * service_name);
 
     virtual mq_result                 initialize();
 

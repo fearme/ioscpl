@@ -1,7 +1,10 @@
 
 #include "mwp_utils.hpp"
+#include "mwp_buffer.hpp"
 
 #include <string>
+
+using namespace net_mobilewebprint;
 
 using net_mobilewebprint::strlist;
 using net_mobilewebprint::strmap;
@@ -122,5 +125,71 @@ strmap & net_mobilewebprint::_add_kv(strmap & map, string const & str, char cons
 
   map.insert(make_pair(key, value));
   return map;
+}
+
+strlist & net_mobilewebprint::mem_dump(strlist & result, byte const * p, size_t length, char const * msg, int a, int b, int width)
+{
+  buffer_range_t  buffer(p, length);
+  buffer_reader_t as_hex(buffer);
+  buffer_reader_t as_char(buffer);
+
+  char   cbuf[64];
+  char   ch = 0;
+  string line;
+
+  int i = 0, j = 0;
+  for (i = 0; i < length; ) {
+
+    line = "";
+
+    mwp_snprintf(cbuf, sizeof(cbuf), "0x%08x(%08d):  ", i, i);
+    line += cbuf;
+
+    for (j = 0; j < width && i+j < length; ++j) {
+      if (j == 4) {
+        line += "  ";
+      }
+
+      ch = ' ';
+      if (i+j == a)         { ch = '['; }
+      else if (i+j == b)    { ch = ']'; }
+
+      mwp_snprintf(cbuf, sizeof(cbuf), "%c%02x", ch, (int)as_hex.read_byte());
+      line += cbuf;
+    }
+
+    line += "   ";
+
+    for (j = 0; j < width && i < length; ++j, ++i) {
+      ch = as_char.read_byte();
+      if (ch < 32 || ch > 126) {
+        ch = '.';
+      }
+      mwp_snprintf(cbuf, sizeof(cbuf), "%c", (int)ch);
+      line += cbuf;
+
+      if (j == 3) {
+        line += " ";
+      }
+    }
+
+    result.push_back(line);
+  }
+
+  return result;
+}
+
+void net_mobilewebprint::mem_dump(byte const * p, size_t length, char const * msg, int a, int b, int width)
+{
+  printf("%s\n", msg);
+
+  strlist lines;
+  mem_dump(lines, p, length, msg, a, b, width);
+
+  for (strlist::const_iterator it = lines.begin(); it != lines.end(); ++it) {
+    string const & str = *it;
+    printf("%s\n", str.c_str());
+  }
+
 }
 

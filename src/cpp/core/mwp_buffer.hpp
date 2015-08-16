@@ -31,6 +31,7 @@
 
 
 #include "mwp_types.hpp"
+#include "mwp_utils.hpp"
 #include <string>
 #include <cstddef>
 #include <cstdlib>
@@ -49,6 +50,7 @@ namespace net_mobilewebprint {
   extern int    num_buf_bytes_allocations;
   extern int    num_buf_bytes;
 
+  size_t   write_hton(byte * mem, byte   by);
   size_t   write_hton(byte * mem, uint16 sh);
   size_t   write_hton(byte * mem, uint32 n);
   string   mwp_ntop(byte const * p);
@@ -83,11 +85,23 @@ namespace net_mobilewebprint {
     size_t grow_size;
     byte * bytes;
 
+    buffer_tt()
+      : mem_length(128), data_length(0), grow_size(128), bytes(NULL)
+    {
+      bytes = _fresh_bytes(mem_length);
+    }
+
     buffer_tt(byte const * pby, size_t data_length_)
       : mem_length(data_length_), data_length(data_length_), grow_size(128), bytes(NULL)
     {
       bytes = _fresh_bytes(mem_length);
       ::memcpy(bytes, pby, data_length);
+    }
+
+    virtual ~buffer_tt()
+    {
+      delete bytes;
+      bytes = NULL;
     }
 
     virtual byte const *       begin() const
@@ -113,11 +127,58 @@ namespace net_mobilewebprint {
       return *this;
     }
 
+    void append(void * p, size_t length)
+    {
+      resize_by(length);
+
+      memcpy(bytes + data_length, p, length);
+      data_length += length;
+    }
+
+    void append_string_nz(char const * str)
+    {
+      int length = strlen(str);
+      resize_by(length);
+
+      memcpy(bytes + data_length, str, length);
+      data_length += length;
+    }
+
+    void append_byte_and_string_nz(char const * str)
+    {
+      append((byte)strlen(str));
+      append_string_nz(str);
+    }
+
+    void zero_pad(size_t length)
+    {
+      resize_by(length);
+
+      memset(bytes + data_length, 0, length);
+      data_length += length;
+    }
+
+    template <typename T>
+    void set_at(size_t offset, T t)
+    {
+      write_hton(bytes + offset, t);
+    }
+
+    void dump(char const * msg)
+    {
+      mem_dump(bytes, mem_length, msg, data_length, -1, 8);
+    }
+
     byte * _fresh_bytes(size_t num)
     {
       byte * result = new byte[num];
       memset(result, 0, num);
       return result;
+    }
+
+    byte * resize_by(int additional_bytes)
+    {
+      return resize_to(data_length + additional_bytes);
     }
 
     byte * resize_to(size_t new_mem_length)
@@ -154,7 +215,7 @@ namespace net_mobilewebprint {
     byte const * end_;
 
     buffer_range_t(byte const * begin, byte const * end);
-//    buffer_range_t(byte const * begin, size_t length);
+    buffer_range_t(byte const * begin, size_t length);
     buffer_range_t();
     buffer_range_t(buffer_view_t const &);
 

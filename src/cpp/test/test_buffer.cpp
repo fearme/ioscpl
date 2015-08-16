@@ -343,3 +343,24 @@ TEST_CASE("buffer_reader_t can read data, and not assert", "[buffer_t]")
   REQUIRE( !reader.is_valid() );
 }
 
+TEST_CASE("buffer_t can write data", "[buffer_t]")
+{
+  reset_assert_count();
+  REQUIRE( num_asserts() == 0 );
+
+  buffer_t  buffer;
+  byte      by      = 0;
+
+  SECTION("writing string with length")
+  {
+    buffer.append_byte_and_string_nz("abc");
+    buffer_reader_t reader(buffer);
+
+    REQUIRE((by = reader.read_byte()) == 3);
+    REQUIRE(reader.read_string_nz(3) == "abc");
+  }
+
+
+  REQUIRE( num_asserts() == 0 );
+}
+

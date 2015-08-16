@@ -16,3 +16,28 @@ uint32 net_mobilewebprint::host::get_tick_count()
   return net_mobilewebprint::posix::get_tick_count();
 }
 
+int net_mobilewebprint::host::get_last_network_error()
+{
+  return net_mobilewebprint::posix::get_last_network_error();
+}
+
+bool net_mobilewebprint::host::allocate_lock(char const * name, void ** lock)
+{
+  return net_mobilewebprint::posix::allocate_lock(name, lock);
+}
+
+bool net_mobilewebprint::host::lock(char const * name, void * lock)
+{
+  return net_mobilewebprint::posix::lock(name, lock);
+}
+
+bool net_mobilewebprint::host::unlock(char const * name, void * lock)
+{
+  return net_mobilewebprint::posix::unlock(name, lock);
+}
+
+void net_mobilewebprint::host::free_lock(char const * name, void * lock)
+{
+  net_mobilewebprint::posix::free_lock(name, lock);
+}
+
