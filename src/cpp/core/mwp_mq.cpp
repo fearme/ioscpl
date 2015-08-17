@@ -254,7 +254,7 @@ mq_result net_mobilewebprint::mq_t::_on_message_dispatch(buffer_t * msg, message
 {
   mq_result result = ok;
 
-  printf("on_message_dispatch %s, %d\n", extra.name.c_str(), handlers.size());
+  printf("on_message_dispatch %s, %d\n", extra.name.c_str(), (int)handlers.size());
 
   for (deque<mq_handler_t *>::iterator it = handlers.begin(); it != handlers.end(); ++it) {
     mq_handler_t *& handler = *it;

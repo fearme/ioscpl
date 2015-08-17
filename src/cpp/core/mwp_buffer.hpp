@@ -165,11 +165,6 @@ namespace net_mobilewebprint {
       write_hton(bytes + offset, t);
     }
 
-    void dump(char const * msg)
-    {
-      mem_dump(bytes, mem_length, msg, data_length, -1, 8);
-    }
-
     byte * _fresh_bytes(size_t num)
     {
       byte * result = new byte[num];
@@ -254,7 +249,7 @@ namespace net_mobilewebprint {
     virtual bool            is_valid();
   };
 
-  buffer_range_t mk_buffer_range(buffer_reader_t const &);
+  buffer_range_t mk_range(buffer_reader_t const &);
 };
 
 #endif // __MWP_BUFFER_HPP__

@@ -52,7 +52,7 @@ size_t buffer_range_t::buffer_range_t::dsize() const
   return end_ - begin_;
 }
 
-buffer_range_t net_mobilewebprint::mk_buffer_range(buffer_reader_t const & reader)
+buffer_range_t net_mobilewebprint::mk_range(buffer_reader_t const & reader)
 {
   return buffer_range_t(reader.p, reader.buffer.end());
 }

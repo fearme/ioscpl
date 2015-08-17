@@ -172,27 +172,27 @@ net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t con
 {
   buffer_reader_t payload_reader(payload);
 
-  string ip           = payload_reader.read_ip();
-  uint16 port         = payload_reader.read_uint16();
+  string ip             =   payload_reader.read_ip();
+  /*uint16 port         =*/ payload_reader.read_uint16();
 
-  buffer_range_t  sub_payload = mk_buffer_range(payload_reader);
+  buffer_range_t  sub_payload = mk_range(payload_reader);
   //sub_payload.dump("mdns parsing");
 
   buffer_reader_t reader(sub_payload);
 
-  uint16 id           = reader.read_uint16();
-  uint16 flags        = reader.read_uint16();
-  uint16 num_qs       = reader.read_uint16();
-  uint16 num_rrs      = reader.read_uint16();
-  uint16 num_auth_rrs = reader.read_uint16();
-  uint16 num_addl_rrs = reader.read_uint16();
+  /*uint16 id           =*/ reader.read_uint16();
+  /*uint16 flags        =*/ reader.read_uint16();
+  uint16 num_qs         =   reader.read_uint16();
+  uint16 num_rrs        =   reader.read_uint16();
+  uint16 num_auth_rrs   =   reader.read_uint16();
+  uint16 num_addl_rrs   =   reader.read_uint16();
 
   uint16 total        = num_qs + num_rrs + num_auth_rrs + num_addl_rrs;
   printf("MDNS total: %d\n", total);
 
   for (uint16 i = 0; i < total; ++i) {
     bool is_question = i < num_qs;
-    //mk_buffer_range(reader).dump("mdns parsing header");
+    //mk_range(reader).dump("mdns parsing header");
     mdns_header_t header(reader, is_question);
 
     printf("MDNS header type: 0x%04x\n", header.type);
@@ -200,7 +200,7 @@ net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t con
     if (header.type == mdns::ptr) {
       if (!is_question) {
         buffer_reader_t reader2 = header.data_reader();
-        //mk_buffer_range(reader2).dump("mdns header data-reader");
+        //mk_range(reader2).dump("mdns header data-reader");
         string value = mdns_parsed_packet_t::read_stoopid_mdns_string(reader2);
         printf("%s == %s\n", header.record_name.c_str(), value.c_str());
       } else {
@@ -230,7 +230,7 @@ string net_mobilewebprint::mdns_parsed_packet_t::read_stoopid_mdns_string(buffer
 
       buffer_reader_t reader2(reader);
       reader2.seek_to(offset);
-//      mk_buffer_range(reader2).dump("mdns parsing a c0 substring");
+//      mk_range(reader2).dump("mdns parsing a c0 substring");
 
       return _accumulate(result, read_stoopid_mdns_string(reader2), ".");
     } else {
