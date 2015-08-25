@@ -2,9 +2,11 @@
 #include "mwp_controller.hpp"
 #include "mwp_mdns.hpp"
 #include "mwp_utils.hpp"
+#include "mwp_assert.hpp"
 
 using namespace net_mobilewebprint;
 using net_mobilewebprint::mq_result;
+using net_mobilewebprint::log;
 
 using std::string;
 
@@ -187,27 +189,102 @@ net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t con
   uint16 num_auth_rrs   =   reader.read_uint16();
   uint16 num_addl_rrs   =   reader.read_uint16();
 
-  uint16 total        = num_qs + num_rrs + num_auth_rrs + num_addl_rrs;
-  printf("MDNS total: %d\n", total);
+  uint16 total          = num_qs + num_rrs + num_auth_rrs + num_addl_rrs;
+  //log << "MDNS; total records: " << total << endl;
 
   for (uint16 i = 0; i < total; ++i) {
     bool is_question = i < num_qs;
     //mk_range(reader).dump("mdns parsing header");
     mdns_header_t header(reader, is_question);
 
-    printf("MDNS header type: 0x%04x\n", header.type);
+    if (!is_question) {
+      if (header.type == mdns::ptr) {
 
-    if (header.type == mdns::ptr) {
-      if (!is_question) {
-        buffer_reader_t reader2 = header.data_reader();
+        //buffer_reader_t reader2 = header.data_reader();
         //mk_range(reader2).dump("mdns header data-reader");
-        string value = mdns_parsed_packet_t::read_stoopid_mdns_string(reader2);
-        printf("%s == %s\n", header.record_name.c_str(), value.c_str());
+
+        ptr_records.push_back(mdns_ptr_record_t(header));
+
+      } else if (header.type == mdns::a) {
+
+        a_records.push_back(mdns_a_record_t(header));
+
+      } else if (header.type == mdns::srv) {
+
+        srv_records.push_back(mdns_srv_record_t(header));
+
+      } else if (header.type == mdns::txt) {
+
+        txt_records.push_back(mdns_txt_record_t(header));
+
       } else {
-        printf("%s\n", header.record_name.c_str());
+        //log << "MDNS; ???: (" << showbase << hex << header.type << ")" << noshowbase << dec << endl;
       }
+    } else {
+      // This is a question
+      //log << "MDNS;  QU: (" << showbase << hex << header.type << "): " << noshowbase << dec << header.record_name << endl;
     }
   }
+
+  // Now that we have all the records parsed, loop over them and build the properties
+
+  for (ptr_record_list::const_iterator it = ptr_records.begin(); it != ptr_records.end(); ++it) {
+    mdns_ptr_record_t const & ptr = *it;
+    //log << "MDNS; PTR: " << ptr.key() << " == " << ptr.name() << endl;
+
+    mdns_srv_record_t const * srv = get_SRV(ptr.value);
+    if (srv != NULL) {
+      //log << "!!MDNS; SRV: " << srv->record_name << " == " << srv->target << endl;
+
+      mdns_a_record_t const * a = get_A(srv->target);
+      if (a != NULL) {
+        //log << "!!MDNS;   A: " << a->record_name << " == " << a->ip << endl;
+
+        log << "!!!!!!!!MDNS found: " << ptr.name() << " == " << srv->target << " at " << a->ip << ":" << srv->port << endl;
+      }
+    }
+    //log << "MDNS; PTR: " << ptr.key() << " == " << _rtrim(ptr.value_, ptr.key()) << endl;
+  }
+
+  for (a_record_list::const_iterator it = a_records.begin(); it != a_records.end(); ++it) {
+    mdns_a_record_t const & a = *it;
+    //log << "MDNS;   A: " << a.record_name << " == " << a.ip << endl;
+  }
+
+  for (srv_record_list::const_iterator it = srv_records.begin(); it != srv_records.end(); ++it) {
+    mdns_srv_record_t const & srv = *it;
+    //log << "MDNS; SRV: " << srv.record_name << " == " << srv.target << endl;
+  }
+
+  for (txt_record_list::const_iterator it = txt_records.begin(); it != txt_records.end(); ++it) {
+    mdns_txt_record_t const & txt = *it;
+    //log << "MDNS; TXT: " << txt.record_name << endl;
+  }
+
+}
+
+mdns_srv_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_SRV(string const & key)
+{
+  for (srv_record_list::const_iterator it = srv_records.begin(); it != srv_records.end(); ++it) {
+    mdns_srv_record_t const & srv = *it;
+    if (srv.record_name == key) {
+      return &srv;
+    }
+  }
+
+  return NULL;
+}
+
+mdns_a_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_A(string const & key)
+{
+  for (a_record_list::const_iterator it = a_records.begin(); it != a_records.end(); ++it) {
+    mdns_a_record_t const & a = *it;
+    if (a.record_name == key) {
+      return &a;
+    }
+  }
+
+  return NULL;
 }
 
 string net_mobilewebprint::mdns_parsed_packet_t::read_stoopid_mdns_string(buffer_reader_t & reader)
@@ -297,6 +374,29 @@ mdns_srv_record_t::mdns_srv_record_t(mdns_header_t const & header)
   port     = reader.read_uint16();
 
   target = mdns_parsed_packet_t::read_stoopid_mdns_string(reader);
+}
+
+//---------------------------------------------------------------------------------------------------
+//------------------------------------- mdns_ptr_record_t -------------------------------------------
+//---------------------------------------------------------------------------------------------------
+mdns_ptr_record_t::mdns_ptr_record_t(mdns_header_t const & header)
+  : mdns_record_base_t(header)
+{
+  buffer_reader_t reader = header.data_reader();
+
+  value = mdns_parsed_packet_t::read_stoopid_mdns_string(reader);
+}
+
+string mdns_ptr_record_t::mdns_ptr_record_t::key() const
+{
+  return record_name;
+}
+
+string mdns_ptr_record_t::mdns_ptr_record_t::name() const
+{
+  string result = _rtrim(value, key());
+  result = _rtrim(result, ".");
+  return result;
 }
 
 //---------------------------------------------------------------------------------------------------

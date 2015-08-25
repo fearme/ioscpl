@@ -16,26 +16,18 @@ namespace net_mobilewebprint {
   namespace mdns {
     enum record_type {
       a         =   1,  /* 0x0001 */
-      cname     =   5,  /*  */
-      soa       =   6,  /*  */
+      cname     =   5,  /* 0x0005 */
+      soa       =   6,  /* 0x0006 */
       ptr       =  12,  /* 0x000c */
       mx        =  15,  /* 0x000f */
       txt       =  16,  /* 0x0010 */
       aaaa      =  28,  /* 0x001c */
       srv       =  33,  /* 0x0021 */
-      cert      =  37,  /*  */
-      ipseckey  =  45,  /*  */
+      cert      =  37,  /* 0x0025 */
+      ipseckey  =  45,  /* 0x002d */
 
       last      = 0xffff
     };
-  };
-
-  struct mdns_parsed_packet_t
-  {
-    buffer_t *    buffer;
-    mdns_parsed_packet_t(buffer_view_t const & payload);
-
-    static string read_stoopid_mdns_string(buffer_reader_t &);
   };
 
   struct mdns_header_t
@@ -68,6 +60,7 @@ namespace net_mobilewebprint {
 
     mdns_a_record_t(mdns_header_t const &);
   };
+  typedef deque<mdns_a_record_t> a_record_list;
 
   struct mdns_srv_record_t : public mdns_record_base_t
   {
@@ -78,12 +71,42 @@ namespace net_mobilewebprint {
 
     mdns_srv_record_t(mdns_header_t const &);
   };
+  typedef deque<mdns_srv_record_t> srv_record_list;
+
+  struct mdns_ptr_record_t : public mdns_record_base_t
+  {
+    string value;
+
+    mdns_ptr_record_t(mdns_header_t const &);
+
+    string   key() const;
+    string  name() const;
+  };
+  typedef deque<mdns_ptr_record_t> ptr_record_list;
 
   struct mdns_txt_record_t : public mdns_record_base_t
   {
     strmap dict;
 
     mdns_txt_record_t(mdns_header_t const &);
+  };
+  typedef deque<mdns_txt_record_t> txt_record_list;
+
+  struct mdns_parsed_packet_t
+  {
+    //buffer_t *    buffer;
+    strmap          properties;
+    a_record_list   a_records;
+    ptr_record_list ptr_records;
+    srv_record_list srv_records;
+    txt_record_list txt_records;
+
+    mdns_parsed_packet_t(buffer_view_t const & payload);
+
+    static string read_stoopid_mdns_string(buffer_reader_t &);
+
+    mdns_a_record_t   const *   get_A(string const & key);
+    mdns_srv_record_t const * get_SRV(string const & key);
   };
 
   struct mdns_t : public mq_handler_t

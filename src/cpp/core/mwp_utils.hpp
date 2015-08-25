@@ -19,6 +19,8 @@ namespace net_mobilewebprint {
 
   char const * _find(char const * str, char const * sub, char const * end = NULL, int sub_len = -1);
 
+  string _rtrim(string const & str, string const & to_remove);
+
   // ----- Lists -----
   strlist _split(string const & str, char const * sep, int num_splits = INT_MAX - 1);
 
@@ -34,6 +36,7 @@ namespace net_mobilewebprint {
 
   // ----- Maps -----
   strmap & _add_kv(strmap & map, string const & str, char const * sep);
+  strmap &    _add(strmap & map, string const & key, string const & value);
 
   // ----- Memory -----
   strlist & mem_dump(strlist & result, byte const * p, size_t length, char const * msg, int a = -1, int b = -1, int width = 8);

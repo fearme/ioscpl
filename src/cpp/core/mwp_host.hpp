@@ -3,6 +3,7 @@
 #define __MWP_HOST_HPP__
 
 #include "mwp_types.hpp"
+#include <sstream>
 
 namespace net_mobilewebprint {
 
@@ -19,6 +20,10 @@ namespace net_mobilewebprint {
 
     // Sleep-like things
     void    interruptable_sleep(uint32 msec);
+
+
+    // Logging
+    void    send_log(int verbosity, std::stringstream & ss);
   };
 
 };

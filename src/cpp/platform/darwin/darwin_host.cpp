@@ -46,3 +46,7 @@ void net_mobilewebprint::host::interruptable_sleep(uint32 msec)
   net_mobilewebprint::posix::interruptable_sleep(msec);
 }
 
+void net_mobilewebprint::host::send_log(int verbosity, std::stringstream & ss)
+{
+  net_mobilewebprint::cli::send_log(verbosity, ss);
+}

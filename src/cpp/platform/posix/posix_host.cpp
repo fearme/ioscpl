@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <errno.h>
+#include <iostream>
 
 using namespace net_mobilewebprint;
 
@@ -66,9 +67,13 @@ void net_mobilewebprint::posix::free_lock(char const * name, void * lock)
   // TODO: implement this
 }
 
-
 void net_mobilewebprint::posix::interruptable_sleep(uint32 msec)
 {
   usleep(msec * 1000);
+}
+
+void net_mobilewebprint::cli::send_log(int verbosity, std::stringstream & ss)
+{
+  std::cout << ss.str();
 }
 

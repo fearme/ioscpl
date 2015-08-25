@@ -68,26 +68,32 @@ TEST_CASE("buffer_t handles strings, and knows when it is being used wrongly", "
 
   SECTION("can read NULL-terminated string")
   {
+    mwp_silent_assert();
     buffer_view_t::iterator p = buffer.first();
     REQUIRE(buffer.read_string(p, is_valid) == "");
     REQUIRE( num_asserts() == 1 );
     REQUIRE(is_valid == false);
+    mwp_silent_assert(false);
   }
 
   SECTION("cannot read past end")
   {
+    mwp_silent_assert();
     buffer_view_t::iterator p = buffer.end();
     REQUIRE(buffer.read_string(p, is_valid) == "");
     REQUIRE( num_asserts() == 1 );
     REQUIRE(is_valid == false);
+    mwp_silent_assert(false);
   }
 
   SECTION("cannot read past end, for nz string")
   {
+    mwp_silent_assert();
     buffer_view_t::iterator p = buffer.end();
     REQUIRE(buffer.read_string_nz(p, a_string_nz_size, is_valid) == "");
     REQUIRE( num_asserts() == 1 );
     REQUIRE(is_valid == false);
+    mwp_silent_assert(false);
   }
 
 }
@@ -161,29 +167,35 @@ TEST_CASE("buffer_t knows when it is used wrong", "[buffer_t]")
 
   SECTION("reading byte past last is wrong")
   {
+    mwp_silent_assert();
     bool is_valid = true;
     buffer_view_t::iterator p = buffer.end();
     REQUIRE(buffer.read_byte(p, is_valid) == 0);
     REQUIRE(!is_valid);
     REQUIRE( num_asserts() == 1 );
+    mwp_silent_assert(false);
   }
 
   SECTION("reading uint16 past last is wrong")
   {
+    mwp_silent_assert();
     bool is_valid = true;
     buffer_view_t::iterator p = buffer.end() - 1;
     REQUIRE(buffer.read_uint16(p, is_valid) == 0);
     REQUIRE(!is_valid);
     REQUIRE( num_asserts() == 1 );
+    mwp_silent_assert(false);
   }
 
   SECTION("reading uint32 past last is wrong")
   {
+    mwp_silent_assert();
     bool is_valid = true;
     buffer_view_t::iterator p = buffer.end() - 1;
     REQUIRE(buffer.read_uint32(p, is_valid) == 0);
     REQUIRE(!is_valid);
     REQUIRE( num_asserts() == 1 );
+    mwp_silent_assert(false);
   }
 }
 

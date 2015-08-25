@@ -2,6 +2,8 @@
 #ifndef __POSIX_HOST_HPP__
 #define __POSIX_HOST_HPP__
 
+#include <sstream>
+
 namespace net_mobilewebprint {
 
   namespace posix {
@@ -17,6 +19,11 @@ namespace net_mobilewebprint {
 
     // Sleep-like things
     void    interruptable_sleep(uint32 msec);
+  };
+
+  namespace cli {
+    // Logging
+    void    send_log(int verbosity, std::stringstream & ss);
   };
 
 };

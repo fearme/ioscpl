@@ -1,15 +1,20 @@
 
 #include "mwp_utils.hpp"
 #include "mwp_buffer.hpp"
-
+#include "mwp_assert.hpp"
 #include <string>
 
 using namespace net_mobilewebprint;
 
 using net_mobilewebprint::strlist;
 using net_mobilewebprint::strmap;
+using net_mobilewebprint::log;
 using std::string;
 using std::make_pair;
+
+// ---------------------------------------------------------------------------------------
+// -------------------------------- string -----------------------------------------------
+// ---------------------------------------------------------------------------------------
 
 string & net_mobilewebprint::_accumulate(string & str, string const & part, char const * sep)
 {
@@ -65,6 +70,22 @@ char const * net_mobilewebprint::_find(char const * str, char const * sub, char 
   return NULL;
 }
 
+string net_mobilewebprint::_rtrim(string const & str, string const & to_remove)
+{
+  string result = str;
+  size_t len    = to_remove.length();
+
+  while (result.length() >= len && result.substr(result.length() - len) == to_remove) {
+    result = result.substr(0, result.length() - len);
+  }
+
+  return result;
+}
+
+// ---------------------------------------------------------------------------------------
+// -------------------------------- strlist ----------------------------------------------
+// ---------------------------------------------------------------------------------------
+
 strlist net_mobilewebprint::_split(string const & str, char const * sep, int num_splits)
 {
   int          max_size = num_splits + 1;
@@ -100,6 +121,15 @@ strlist net_mobilewebprint::_split(string const & str, char const * sep, int num
   return result;
 }
 
+// ---------------------------------------------------------------------------------------
+// -------------------------------- strmap -----------------------------------------------
+// ---------------------------------------------------------------------------------------
+
+/**
+ *  Adds a key/value pair to the map.
+ *
+ *  For example, to add foo/bar, str should be "foo=bar" and sep should be "="
+ */
 strmap & net_mobilewebprint::_add_kv(strmap & map, string const & str, char const * sep)
 {
   // Has to have separator
@@ -126,6 +156,21 @@ strmap & net_mobilewebprint::_add_kv(strmap & map, string const & str, char cons
   map.insert(make_pair(key, value));
   return map;
 }
+
+/**
+ *  Adds a key/value pair to the map.
+ *
+ *  Essentially, is an easy way to call insert(make_pair(...))
+ */
+strmap & net_mobilewebprint::_add(strmap & map, string const & key, string const & value)
+{
+  map.insert(make_pair(key, value));
+  return map;
+}
+
+// ---------------------------------------------------------------------------------------
+// -------------------------------- Raw memory -------------------------------------------
+// ---------------------------------------------------------------------------------------
 
 strlist & net_mobilewebprint::mem_dump(strlist & result, byte const * p, size_t length, char const * msg, int a, int b, int width)
 {
@@ -181,14 +226,16 @@ strlist & net_mobilewebprint::mem_dump(strlist & result, byte const * p, size_t 
 
 void net_mobilewebprint::mem_dump(byte const * p, size_t length, char const * msg, int a, int b, int width)
 {
-  printf("%s\n", msg);
+  log << msg << endl;
+  //printf("%s\n", msg);
 
   strlist lines;
   mem_dump(lines, p, length, msg, a, b, width);
 
   for (strlist::const_iterator it = lines.begin(); it != lines.end(); ++it) {
     string const & str = *it;
-    printf("%s\n", str.c_str());
+    log << str << endl;
+    //printf("%s\n", str.c_str());
   }
 
 }

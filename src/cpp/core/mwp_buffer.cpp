@@ -198,7 +198,7 @@ string net_mobilewebprint::buffer_view_t::read_ip(iterator & it, bool & valid, b
 {
   byte const * start = it;
 
-  valid = is_valid(it) && is_valid(it + 4);
+  valid = is_valid(it) && is_valid(it + 4 - 1);
   if (!no_assert) {
     mwp_assert(valid, "p out of range in read_ip");
   }
