@@ -140,7 +140,7 @@ void net_mobilewebprint::mdns_t::on_scan_for_printers(string const & name, buffe
 void net_mobilewebprint::mdns_t::on_mdns_packet(string const & name, buffer_view_t const & payload, message_extra_t & extra)
 {
   //printf("MDNS received packet\n");
-  mdns_parsed_packet_t mdns_packet(payload);
+  packet_list.push_back(mdns_parsed_packet_t(payload, *this));
 }
 
 buffer_t & net_mobilewebprint::mdns_t::_mk_query_request_packet(buffer_t & result, mdns::record_type type, char const * service_name)
@@ -167,10 +167,55 @@ buffer_t & net_mobilewebprint::mdns_t::_mk_query_request_packet(buffer_t & resul
   return result;
 }
 
+mdns_srv_record_t const * net_mobilewebprint::mdns_t::get_SRV(string const & key, bool needed)
+{
+  mdns_srv_record_t const * result = NULL;
+
+  for (packet_list_t::iterator it = packet_list.begin(); it != packet_list.end(); ++it) {
+    mdns_parsed_packet_t & packet = *it;
+
+    if ((result = packet.get_SRV(key)) != NULL) {
+      return result;
+    }
+  }
+
+  if (!needed) {
+    return result;
+  }
+
+  // TODO: If we get here, that means someone is looking for a record that we do not have.
+  //       send a request packet to go get it.
+
+  return result;
+}
+
+mdns_a_record_t const * net_mobilewebprint::mdns_t::get_A(string const & key, bool needed)
+{
+  mdns_a_record_t const * result = NULL;
+
+  for (packet_list_t::iterator it = packet_list.begin(); it != packet_list.end(); ++it) {
+    mdns_parsed_packet_t & packet = *it;
+
+    if ((result = packet.get_A(key)) != NULL) {
+      return result;
+    }
+  }
+
+  if (!needed) {
+    return result;
+  }
+
+  // TODO: If we get here, that means someone is looking for a record that we do not have.
+  //       send a request packet to go get it.
+
+  return result;
+}
+
 //---------------------------------------------------------------------------------------------------
 //------------------------------------- mdns_parsed_packet_t ----------------------------------------
 //---------------------------------------------------------------------------------------------------
-net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t const & payload)
+net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t const & payload, mdns_t & mdns_)
+  : mdns(mdns_)
 {
   buffer_reader_t payload_reader(payload);
 
@@ -227,44 +272,80 @@ net_mobilewebprint::mdns_parsed_packet_t::mdns_parsed_packet_t(buffer_view_t con
   }
 
   // Now that we have all the records parsed, loop over them and build the properties
+  strobe();
+}
+
+/**
+ *  Walks through it's records and pushes data to the printer list.
+ */
+void net_mobilewebprint::mdns_parsed_packet_t::strobe()
+{
+  mdns_srv_record_t const * srv = NULL;
+
+  printer_manager_t & printers = mdns.controller.printers;
 
   for (ptr_record_list::const_iterator it = ptr_records.begin(); it != ptr_records.end(); ++it) {
     mdns_ptr_record_t const & ptr = *it;
     //log << "MDNS; PTR: " << ptr.key() << " == " << ptr.name() << endl;
 
-    mdns_srv_record_t const * srv = get_SRV(ptr.value);
+    // Get the SRV record from ourselves, or from others, if necessary
+    if ((srv = get_SRV(ptr.value)) == NULL) {
+      srv = mdns.get_SRV(ptr.value);
+    }
+
     if (srv != NULL) {
       //log << "!!MDNS; SRV: " << srv->record_name << " == " << srv->target << endl;
 
       mdns_a_record_t const * a = get_A(srv->target);
       if (a != NULL) {
-        //log << "!!MDNS;   A: " << a->record_name << " == " << a->ip << endl;
-
         log << "!!!!!!!!MDNS found: " << ptr.name() << " == " << srv->target << " at " << a->ip << ":" << srv->port << endl;
+
+        printer_t * printer = NULL;
+        if ((printer = printers.find_by_key("mdns_name", ptr.name())) == NULL) {
+          if ((printer = printers.find_by_key("mdns_srv", srv->target)) == NULL) {
+            // TODO: look by other keys like IP and MAC
+          }
+        }
+
+        if (printer == NULL) {
+          printer = printers.create_by_key("mdns_name", ptr.name());
+        }
+
+        if (printer == NULL) {
+          continue;
+        }
+
+        /* otherwise -- we have found the associated printer */
+        printer->set("mdns_name", ptr.name());
+        printer->set("mdns_srv", srv->target);
+        printer->set("port", srv->port);
+        printer->set("ip", a->ip);
+
       }
     }
     //log << "MDNS; PTR: " << ptr.key() << " == " << _rtrim(ptr.value_, ptr.key()) << endl;
   }
 
-  for (a_record_list::const_iterator it = a_records.begin(); it != a_records.end(); ++it) {
-    mdns_a_record_t const & a = *it;
-    //log << "MDNS;   A: " << a.record_name << " == " << a.ip << endl;
-  }
-
-  for (srv_record_list::const_iterator it = srv_records.begin(); it != srv_records.end(); ++it) {
-    mdns_srv_record_t const & srv = *it;
-    //log << "MDNS; SRV: " << srv.record_name << " == " << srv.target << endl;
-  }
-
-  for (txt_record_list::const_iterator it = txt_records.begin(); it != txt_records.end(); ++it) {
-    mdns_txt_record_t const & txt = *it;
-    //log << "MDNS; TXT: " << txt.record_name << endl;
-  }
+//  for (a_record_list::const_iterator it = a_records.begin(); it != a_records.end(); ++it) {
+//    mdns_a_record_t const & a = *it;
+//    //log << "MDNS;   A: " << a.record_name << " == " << a.ip << endl;
+//  }
+//
+//  for (srv_record_list::const_iterator it = srv_records.begin(); it != srv_records.end(); ++it) {
+//    mdns_srv_record_t const & srv = *it;
+//    //log << "MDNS; SRV: " << srv.record_name << " == " << srv.target << endl;
+//  }
+//
+//  for (txt_record_list::const_iterator it = txt_records.begin(); it != txt_records.end(); ++it) {
+//    mdns_txt_record_t const & txt = *it;
+//    //log << "MDNS; TXT: " << txt.record_name << endl;
+//  }
 
 }
 
 mdns_srv_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_SRV(string const & key)
 {
+  // Prefer getting the record from myself
   for (srv_record_list::const_iterator it = srv_records.begin(); it != srv_records.end(); ++it) {
     mdns_srv_record_t const & srv = *it;
     if (srv.record_name == key) {
@@ -277,6 +358,7 @@ mdns_srv_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_SRV(stri
 
 mdns_a_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_A(string const & key)
 {
+  // Prefer getting the record from myself
   for (a_record_list::const_iterator it = a_records.begin(); it != a_records.end(); ++it) {
     mdns_a_record_t const & a = *it;
     if (a.record_name == key) {
@@ -284,7 +366,8 @@ mdns_a_record_t const * net_mobilewebprint::mdns_parsed_packet_t::get_A(string c
     }
   }
 
-  return NULL;
+  // But if we do not have it ourselves, see if another packet has it
+  return mdns.get_A(key);
 }
 
 string net_mobilewebprint::mdns_parsed_packet_t::read_stoopid_mdns_string(buffer_reader_t & reader)

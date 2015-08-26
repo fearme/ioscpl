@@ -21,6 +21,8 @@ namespace net_mobilewebprint {
 
   string _rtrim(string const & str, string const & to_remove);
 
+  string mwp_itoa(int);
+
   // ----- Lists -----
   strlist _split(string const & str, char const * sep, int num_splits = INT_MAX - 1);
 
@@ -35,12 +37,25 @@ namespace net_mobilewebprint {
   }
 
   // ----- Maps -----
-  strmap & _add_kv(strmap & map, string const & str, char const * sep);
-  strmap &    _add(strmap & map, string const & key, string const & value);
+
+  template <typename T>
+  bool           _has(std::map<string, T> const & map, string const & key)
+  {
+    return map.find(key) != map.end();
+  }
+
+  strmap &    _add_kv(strmap & map, string const & str, char const * sep);
+  strmap &       _add(strmap & map, string const & key, string const & value);
+  strmap &       _add(strmap & map, string const & key, uint16 value);
+
+  string const & _get(strmap const & map, string const & key);
 
   // ----- Memory -----
-  strlist & mem_dump(strlist & result, byte const * p, size_t length, char const * msg, int a = -1, int b = -1, int width = 8);
-  void mem_dump(byte const * p, size_t length, char const * msg, int a = -1, int b = -1, int width = 8);
+  strlist & mem_dump(strlist & result, byte const * p, size_t length, char const * msg, int a = -1, int b = -1, int width = 16);
+  void      mem_dump(byte const * p, size_t length, char const * msg, int a = -1, int b = -1, int width = 16);
+
+  // ----- Time -----
+  uint32 _time_since(uint32 then, uint32 now = 0);
 };
 
 #endif // __MWP_UTILS_HPP__

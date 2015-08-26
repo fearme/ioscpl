@@ -6,6 +6,7 @@
 using namespace net_mobilewebprint;
 
 extern const unsigned char mdns_pkt1[1334];
+extern const unsigned char mdns_pkt2[75];
 
 TEST_CASE("mdns_t can read stoopid mdns strings", "[mdns]")
 {
@@ -389,6 +390,64 @@ TEST_CASE("mdns_t can make pdl request packet", "[mdns]")
 
   REQUIRE( num_asserts() == 0 );
 }
+
+TEST_CASE("mdns_t can read mdns headers2", "[mdns]")
+{
+  reset_assert_count();
+
+  REQUIRE( num_asserts() == 0 );
+  buffer_t buffer(mdns_pkt2, sizeof(mdns_pkt2));
+  string str;
+
+  SECTION("mdns_header_t can read header") {
+
+    buffer_reader_t reader(buffer);
+
+    reader.seek(12);  // Skip past MDNS header
+
+    // -------------------------------------------------------------------------------- 1
+    {
+      mdns_header_t header(reader, /*is_question=*/true);
+      REQUIRE(header.record_name == "_canon-bjnp1._tcp.local");
+
+      REQUIRE(header.type        == mdns::ptr);
+      REQUIRE(header.flags       == 0x0001);
+      //REQUIRE(header.ttl         == 0x00001194);
+      //REQUIRE(header.data_length == 0x0027);
+
+      buffer_reader_t reader2 = header.data_reader();
+      str = mdns_parsed_packet_t::read_stoopid_mdns_string(reader2);
+      REQUIRE(str == "_canon-bjnp1._tcp.local");
+    }
+
+    // -------------------------------------------------------------------------------- 2
+    {
+      mdns_header_t header(reader);
+      REQUIRE(header.record_name == "_canon-bjnp1._tcp.local");
+
+      REQUIRE(header.type        == mdns::ptr);
+      REQUIRE(header.flags       == 0x0001);
+      REQUIRE(header.ttl         == 0x0000000a);
+      REQUIRE(header.data_length == 0x0016);
+
+      buffer_reader_t reader2 = header.data_reader();
+      str = mdns_parsed_packet_t::read_stoopid_mdns_string(reader2);
+      REQUIRE(str == "Canon MG5500 series._canon-bjnp1._tcp.local");
+    }
+  }
+
+  REQUIRE( num_asserts() == 0 );
+
+}
+
+const unsigned char mdns_pkt2[75] = {
+/*0000000*/ 0x00, 0x05, 0x84, 0x00, 0x00, 0x01, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x0c, 0x5f, 0x63, 0x61,
+/*0000010*/ 0x6e, 0x6f, 0x6e, 0x2d, 0x62, 0x6a, 0x6e, 0x70, 0x31, 0x04, 0x5f, 0x74, 0x63, 0x70, 0x05, 0x6c,
+/*0000020*/ 0x6f, 0x63, 0x61, 0x6c, 0x00, 0x00, 0x0c, 0x00, 0x01, 0xc0, 0x0c, 0x00, 0x0c, 0x00, 0x01, 0x00,
+/*0000030*/ 0x00, 0x00, 0x0a, 0x00, 0x16, 0x13, 0x43, 0x61, 0x6e, 0x6f, 0x6e, 0x20, 0x4d, 0x47, 0x35, 0x35,
+/*0000040*/ 0x30, 0x30, 0x20, 0x73, 0x65, 0x72, 0x69, 0x65, 0x73, 0xc0, 0x0c
+/*000004b*/
+};
 
 /* Frame (1334 bytes) */
 const unsigned char mdns_pkt1[1334] = {

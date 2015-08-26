@@ -12,6 +12,8 @@ using net_mobilewebprint::log;
 using std::string;
 using std::make_pair;
 
+string the_empty_string("");
+
 // ---------------------------------------------------------------------------------------
 // -------------------------------- string -----------------------------------------------
 // ---------------------------------------------------------------------------------------
@@ -80,6 +82,44 @@ string net_mobilewebprint::_rtrim(string const & str, string const & to_remove)
   }
 
   return result;
+}
+
+/* reverse:  reverse string s in place -- From K&R */
+void reverse(char s[])
+{
+  int i, j;
+  char c;
+
+  for (i = 0, j = (int)(strlen(s)-1); i<j; i++, j--) {
+    c = s[i];
+    s[i] = s[j];
+    s[j] = c;
+  }
+}
+
+string net_mobilewebprint::mwp_itoa(int n)
+{
+  char s[22];
+
+  int i, sign;
+
+  if ((sign = n) < 0) {  /* record sign */
+    n = -n;              /* make n positive */
+  }
+
+  i = 0;
+  do {                       /* generate digits in reverse order */
+    s[i++] = n % 10 + '0';   /* get next digit */
+  } while ((n /= 10) > 0);   /* delete it */
+
+  if (sign < 0) {
+    s[i++] = '-';
+  }
+
+  s[i] = '\0';
+  reverse(s);
+
+  return s;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -168,6 +208,31 @@ strmap & net_mobilewebprint::_add(strmap & map, string const & key, string const
   return map;
 }
 
+/**
+ *  Adds a key/value pair to the map.
+ *
+ *  Essentially, is an easy way to call insert(make_pair(...))
+ */
+strmap & net_mobilewebprint::_add(strmap & map, string const & key, uint16 value_)
+{
+  string value = mwp_itoa(value_);
+  map.insert(make_pair(key, value));
+  return map;
+}
+
+/**
+ *  Returns the string for the key, or the empty string if the item is not present.
+ */
+string const & net_mobilewebprint::_get(strmap const & map, string const & key)
+{
+  strmap::const_iterator it = map.find(key);
+  if (it != map.end()) {
+    return (*it).second;
+  }
+
+  return the_empty_string;
+}
+
 // ---------------------------------------------------------------------------------------
 // -------------------------------- Raw memory -------------------------------------------
 // ---------------------------------------------------------------------------------------
@@ -191,7 +256,7 @@ strlist & net_mobilewebprint::mem_dump(strlist & result, byte const * p, size_t 
     line += cbuf;
 
     for (j = 0; j < width && i+j < length; ++j) {
-      if (j == 4) {
+      if (j == width/2) {
         line += "  ";
       }
 
@@ -203,19 +268,26 @@ strlist & net_mobilewebprint::mem_dump(strlist & result, byte const * p, size_t 
       line += cbuf;
     }
 
+    for (; j < width; ++j) {
+      if (j == width/2) {
+        line += "  ";
+      }
+
+      line += "   ";
+    }
+
     line += "   ";
 
     for (j = 0; j < width && i < length; ++j, ++i) {
+      if (j == width/2) {
+        line += " ";
+      }
       ch = as_char.read_byte();
       if (ch < 32 || ch > 126) {
         ch = '.';
       }
       mwp_snprintf(cbuf, sizeof(cbuf), "%c", (int)ch);
       line += cbuf;
-
-      if (j == 3) {
-        line += " ";
-      }
     }
 
     result.push_back(line);
@@ -238,5 +310,14 @@ void net_mobilewebprint::mem_dump(byte const * p, size_t length, char const * ms
     //printf("%s\n", str.c_str());
   }
 
+}
+
+uint32 net_mobilewebprint::_time_since(uint32 then, uint32 now)
+{
+  if (now == 0) {
+    now = host::get_tick_count();
+  }
+
+  return now - then;
 }
 

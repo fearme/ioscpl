@@ -5,6 +5,7 @@
 #include <map>
 #include <string>
 #include <deque>
+#include <set>
 
 #define mwp_snprintf snprintf
 
@@ -14,8 +15,9 @@ namespace net_mobilewebprint {
   typedef unsigned short uint16;
   typedef unsigned int   uint32;
 
-  typedef std::map<std::string, std::string>   strmap;
-  typedef std::deque<std::string>              strlist;
+  typedef std::map<std::string, std::string>    strmap;
+  typedef std::deque<std::string>               strlist;
+  typedef std::set<std::string>                 strset;
 
 };
 

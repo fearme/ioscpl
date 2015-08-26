@@ -6,4 +6,5 @@ add_library(mwpcore
                 mwp_assert.cpp
                 mwp_utils.cpp
                 mwp_socket.cpp
+                mwp_printer.cpp
                 )

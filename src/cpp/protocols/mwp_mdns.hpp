@@ -12,6 +12,7 @@ namespace net_mobilewebprint {
   using std::string;
 
   struct controller_t;
+  struct mdns_t;
 
   namespace mdns {
     enum record_type {
@@ -94,20 +95,26 @@ namespace net_mobilewebprint {
 
   struct mdns_parsed_packet_t
   {
-    //buffer_t *    buffer;
-    strmap          properties;
-    a_record_list   a_records;
-    ptr_record_list ptr_records;
-    srv_record_list srv_records;
-    txt_record_list txt_records;
+//    //buffer_t *    buffer;
+//    strmap          properties;
 
-    mdns_parsed_packet_t(buffer_view_t const & payload);
+    mdns_t &          mdns;
+
+    a_record_list     a_records;
+    ptr_record_list   ptr_records;
+    srv_record_list   srv_records;
+    txt_record_list   txt_records;
+
+    mdns_parsed_packet_t(buffer_view_t const & payload, mdns_t &);
+
+    void          strobe();
 
     static string read_stoopid_mdns_string(buffer_reader_t &);
 
     mdns_a_record_t   const *   get_A(string const & key);
     mdns_srv_record_t const * get_SRV(string const & key);
   };
+  typedef deque<mdns_parsed_packet_t> packet_list_t;
 
   struct mdns_t : public mq_handler_t
   {
@@ -115,6 +122,7 @@ namespace net_mobilewebprint {
     mq_t         &          mq;
 
     udp_socket_t            socket;
+    packet_list_t           packet_list;
 
     static uint16           next_transaction_id;
     static buffer_t         pdl_query_request;
@@ -138,6 +146,10 @@ namespace net_mobilewebprint {
 
     virtual mq_result         on_select_loop_end(select_loop_end_extra_t const &   extra);
     virtual mq_result        on_select_loop_idle(select_loop_idle_extra_t const &  extra);
+
+    // ----- Processing the list of records received
+    mdns_srv_record_t const * get_SRV(string const & key, bool needed = true);
+    mdns_a_record_t   const *   get_A(string const & key, bool needed = true);
   };
 
 };
