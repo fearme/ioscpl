@@ -3,10 +3,94 @@
 #include "mwp_mdns.hpp"
 #include "mwp_assert.hpp"
 
+#include <pcap.h>
+
 using namespace net_mobilewebprint;
 
 extern const unsigned char mdns_pkt1[1334];
 extern const unsigned char mdns_pkt2[75];
+
+TEST_CASE("mdns_t can a bunch of packets", "[mdns]")
+{
+  reset_assert_count();
+
+  byte            by = 0;
+  uint16          sh = 0;
+  uint32          n  = 0;
+
+  char            errbuf[PCAP_ERRBUF_SIZE];
+  u_char const *  packet = NULL;
+  pcap_t *        handle = NULL;
+  pcap_pkthdr     header;
+
+  SECTION("read pcap file") {
+    handle = pcap_open_offline("../../src/cpp/test/data/mdns2.pcap", errbuf);
+    REQUIRE(handle != NULL);
+    if (handle != NULL) {
+      while ((packet = pcap_next(handle, &header)) != NULL) {
+
+        //printf("Packet. data_len: %d, on_wire_len %d\n", header.caplen, header.len);
+
+        // Make a buffer for the data
+        buffer_t         buffer(packet, header.caplen);
+        buffer_reader_t  reader(buffer);
+
+        // ---------- Ethernet ----------
+        reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte();
+        reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte(); reader.read_byte();
+        //printf("dest_mac: %02x:%02x:%02x:%02x:%02x:%02x  ", reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte());
+        //printf("src_mac: %02x:%02x:%02x:%02x:%02x:%02x\n", reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte(), reader.read_byte());
+
+        sh = reader.read_uint16();                // Type
+
+        // ---------- IP ----------
+        by = reader.read_byte();                  // From the IP header
+
+        if (sh == 0x0800) {
+
+          // IPv4
+          REQUIRE(by >> 4 == 4);
+          int ip_header_len = (by & 0x0f) * 4;
+          REQUIRE(ip_header_len >= 20);
+          REQUIRE(ip_header_len < 28);
+
+          by = reader.read_byte();          // Type of Service (TOS)
+          sh = reader.read_uint16();        // Total packet length
+          sh = reader.read_uint16();        // Identification
+          sh = reader.read_uint16();        // Flags and Fragmentation offset
+          by = reader.read_byte();          // TTL
+          by = reader.read_byte();          // Protocol (i.e. UDP or TCP)
+
+          byte protocol = by;
+
+          reader.seek_to(14 + ip_header_len);   // Seek to the UDP header
+
+          reader.read_uint16();
+          reader.read_uint16();
+
+          //REQUIRE(reader.read_uint16() == 5353);
+          //REQUIRE(reader.read_uint16() == 5353);
+
+          reader.seek(4);
+
+          // Currently, we are just trying to ensure we are stable and don't crash on the packet data
+          mdns_header_t header(reader);
+
+        } else if (sh == 0x86dd) {
+          REQUIRE(by >> 4 == 6);
+        } else {
+          REQUIRE(false);
+        }
+
+      }
+    } else {
+      fprintf(stderr, "Cannot open mdns2 data file %s\n", errbuf);
+    }
+
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
 
 TEST_CASE("mdns_t can read stoopid mdns strings", "[mdns]")
 {
@@ -34,7 +118,6 @@ TEST_CASE("mdns_t can read stoopid mdns strings", "[mdns]")
   }
 
   REQUIRE( num_asserts() == 0 );
-
 }
 
 TEST_CASE("utils work on packets")

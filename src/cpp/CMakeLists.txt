@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(Mario)
 
+find_package(PCAP)
+
 # --------------------------------- Core -------------------------------
 
 # -----
@@ -48,7 +50,7 @@ add_executable(test_client_only
                   platform/posix/posix_host.cpp
                   )
 
-target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos)
+target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos pcap)
 
 enable_testing(true)
 add_test(NAME "Mario_client_only_test" COMMAND test_client_only)
