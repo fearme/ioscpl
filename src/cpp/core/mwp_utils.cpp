@@ -8,7 +8,6 @@ using namespace net_mobilewebprint;
 
 using net_mobilewebprint::strlist;
 using net_mobilewebprint::strmap;
-using net_mobilewebprint::log;
 using std::string;
 using std::make_pair;
 

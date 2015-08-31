@@ -3,8 +3,6 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(Mario)
 
-find_package(PCAP)
-
 # --------------------------------- Core -------------------------------
 
 # -----
@@ -16,42 +14,96 @@ include_directories(core)
 add_subdirectory(protocols)
 add_subdirectory(core)
 
+# --------------------------------- Platform -------------------------------
+if (IOS)
+  set(MARIO_PLATFORM   "ios")
+
+  include_directories(platform/posix)
+  include_directories(platform/darwin)
+
+  set(PLATFORM_SRC ${PLATFORM_SRC}
+      platform/android/android_host.cpp
+      platform/posix/posix_host.cpp
+      )
+
+  set(MARIO_SHAREDNESS "")
+  set(MARIO_CLI        false)
+  set(MARIO_APP        true)
+  set(MARIO_UNIT_TESTS false)
+
+elseif (APPLE)
+  set(MARIO_PLATFORM   "mac_osx")
+
+  include_directories(platform/posix)
+  include_directories(platform/darwin)
+
+  set(PLATFORM_SRC ${PLATFORM_SRC}
+      platform/darwin/darwin_host.cpp
+      platform/posix/posix_host.cpp
+      )
+
+  set(MARIO_SHAREDNESS "")
+  set(MARIO_CLI        true)
+  set(MARIO_APP        false)
+  set(MARIO_UNIT_TESTS true)
+
+else()
+  set(MARIO_PLATFORM     "android")
+
+  include_directories(platform/posix)
+  include_directories(platform/android)
+
+  set(PLATFORM_SRC ${PLATFORM_SRC}
+      platform/android/android_host.cpp
+      platform/posix/posix_host.cpp
+      )
+
+  set(MARIO_SHAREDNESS   "SHARED")
+  set(MARIO_CLI          false)
+  set(MARIO_APP          true)
+  set(MARIO_UNIT_TESTS   false)
+
+endif()
+
 # --------------------------------- Libraries -------------------------------
 
 # -----
 # ----- Mario Client-only library
 # -----
-add_library(mario_client_only sys.cpp)
-
-# --------------------------------- Platform -------------------------------
-#add_library(core platform/darwin/darwin_host.cpp platform/posix/posix_host.cpp)
-include_directories(platform/posix)
-include_directories(platform/darwin)
+add_library(mario_client_only ${MARIO_SHAREDNESS}
+            sys.cpp)
 
 # ----------------------------- Utilities/Binaries ---------------------------
-add_executable(mario
-                    platform/stdio/mario_cli.cpp
-                    platform/darwin/darwin_host.cpp
-                    platform/posix/posix_host.cpp
-                    )
-target_link_libraries(mario mario_client_only mwpcore mwpcoreprotos)
+if (${MARIO_CLI})
+  add_executable(mario
+                      platform/stdio/mario_cli.cpp
+                      ${PLATFORM_SRC}
+                      )
+
+  target_link_libraries(mario mario_client_only mwpcore mwpcoreprotos)
+endif()
 
 # --------------------------------- Unit Tests -------------------------------
 
 # -----
 # ----- Unit tests for the client-only classes
 # -----
-add_executable(test_client_only
-                  test/test.cpp
-                  test/test_buffer.cpp
-                  test/test_mdns.cpp
-                  test/test_utils.cpp
-                  platform/darwin/darwin_host.cpp
-                  platform/posix/posix_host.cpp
-                  )
+if (${MARIO_UNIT_TESTS})
 
-target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos pcap)
+  find_package(PCAP)
 
-enable_testing(true)
-add_test(NAME "Mario_client_only_test" COMMAND test_client_only)
+  add_executable(test_client_only
+                    test/test.cpp
+                    test/test_buffer.cpp
+                    test/test_mdns.cpp
+                    test/test_utils.cpp
+                    platform/darwin/darwin_host.cpp
+                    platform/posix/posix_host.cpp
+                    )
+
+  target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos pcap)
+
+  enable_testing(true)
+  add_test(NAME "Mario_client_only_test" COMMAND test_client_only)
+endif()
 

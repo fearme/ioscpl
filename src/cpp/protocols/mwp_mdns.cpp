@@ -6,7 +6,6 @@
 
 using namespace net_mobilewebprint;
 using net_mobilewebprint::mq_result;
-using net_mobilewebprint::log;
 
 using std::string;
 
