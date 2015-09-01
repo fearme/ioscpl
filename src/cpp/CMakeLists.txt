@@ -70,8 +70,7 @@ endif()
 # -----
 # ----- Mario Client-only library
 # -----
-add_library(mario_client_only ${MARIO_SHAREDNESS}
-            sys.cpp)
+set(MARIO_CLIENT_ONLY ${MARIO_CLIENT_ONLY} mwpcore mwpcoreprotos)
 
 # ----------------------------- Utilities/Binaries ---------------------------
 if (${MARIO_CLI})
@@ -80,7 +79,7 @@ if (${MARIO_CLI})
                       ${PLATFORM_SRC}
                       )
 
-  target_link_libraries(mario mario_client_only mwpcore mwpcoreprotos)
+  target_link_libraries(mario ${MARIO_CLIENT_ONLY})
 endif()
 
 # --------------------------------- Unit Tests -------------------------------
@@ -101,7 +100,7 @@ if (${MARIO_UNIT_TESTS})
                     platform/posix/posix_host.cpp
                     )
 
-  target_link_libraries(test_client_only mario_client_only mwpcore mwpcoreprotos pcap)
+  target_link_libraries(test_client_only ${MARIO_CLIENT_ONLY} pcap)
 
   enable_testing(true)
   add_test(NAME "Mario_client_only_test" COMMAND test_client_only)

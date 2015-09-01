@@ -29,8 +29,20 @@ for arg in "$@"; do
       all="1"
       shift;;
 
+    --clean)
+      clean="1"
+      shift;;
+
   esac
 done
+
+# -----
+# ----- Clean the build tree
+# -----
+if [ -n "$clean" ]; then
+  test -d cmake-build && rm -rf cmake-build
+  exit 0
+fi
 
 # Remember where we started
 START_DIR="$(pwd)"
@@ -96,7 +108,7 @@ echo ""
 # ----- Build Android debug -----
 mkdir -p cmake-build/android && cd cmake-build/android
 cmake -G "Unix Makefiles" ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/android.cmake -DCMAKE_BUILD_TYPE=Debug -DANDROID_STL=stlport_static
-make mario_client_only
+#make mario_client_only
 cd $START_DIR
 
 echo ""
@@ -108,6 +120,6 @@ echo ""
 # ----- Build iOS debug -----
 mkdir -p cmake-build/ios && cd cmake-build/ios
 cmake -G Xcode ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/iOS.cmake -DIOS_PLATFORM="SIMULATOR"
-xcodebuild -target mario_client_only -configuration Debug
+#xcodebuild -target mario_client_only -configuration Debug
 cd $START_DIR
 
