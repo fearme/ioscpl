@@ -102,18 +102,6 @@ fi
 echo ""
 echo ""
 echo "===================================================================================="
-echo "====================================== Android - Debug ============================="
-echo "===================================================================================="
-echo ""
-# ----- Build Android debug -----
-mkdir -p cmake-build/android && cd cmake-build/android
-cmake -G "Unix Makefiles" ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/android.cmake -DCMAKE_BUILD_TYPE=Debug -DANDROID_STL=stlport_static
-#make mario_client_only
-cd $START_DIR
-
-echo ""
-echo ""
-echo "===================================================================================="
 echo "====================================== IOS - Debug ================================="
 echo "===================================================================================="
 echo ""
@@ -121,5 +109,22 @@ echo ""
 mkdir -p cmake-build/ios && cd cmake-build/ios
 cmake -G Xcode ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/iOS.cmake -DIOS_PLATFORM="SIMULATOR"
 #xcodebuild -target mario_client_only -configuration Debug
+cd $START_DIR
+
+echo ""
+echo ""
+echo "===================================================================================="
+echo "====================================== Android - Debug ============================="
+echo "===================================================================================="
+echo ""
+# ----- Build Android debug -----
+mkdir -p cmake-build/android && cd cmake-build/android
+cmake -G "Unix Makefiles" ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/android.cmake -DCMAKE_BUILD_TYPE=Debug -DANDROID_STL=stlport_static
+#make mario_client_only
+
+cd $START_DIR/src/java
+ndk-build
+
+# Finish in the dir that we started
 cd $START_DIR
 
