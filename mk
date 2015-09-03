@@ -40,7 +40,13 @@ done
 # ----- Clean the build tree
 # -----
 if [ -n "$clean" ]; then
+  START_CLEAN_DIR=$(pwd)
   test -d cmake-build && rm -rf cmake-build
+  test -d deliveries && rm -rf deliveries
+
+  cd src/java && ndk-build clean
+
+  cd $START_CLEAN_DIR
   exit 0
 fi
 
