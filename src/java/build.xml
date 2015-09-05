@@ -1,0 +1,49 @@
+<project name="mobilewebprint" default="dist" basedir=".">
+  <description>
+    Build core JAR for MobileWebPrint.
+  </description>
+
+  <!-- global properties -->
+  <property name="src"      location="src" />
+  <property name="build"    location="build" />
+  <property name="dist"     location="dist" />
+
+  <!-- Read ENV -->
+  <property environment="env" />
+  <condition property="sdk.dir" value="${env.ANDROID_HOME}">
+      <isset property="env.ANDROID_HOME" />
+  </condition>
+
+  <!-- quick check on sdk.dir -->
+  <fail
+          message="sdk.dir is missing. Make sure to generate local.properties using 'android update project' or to inject it through the ANDROID_HOME environment variable."
+          unless="sdk.dir"
+  />
+
+  <target name="init">
+    <tstamp/>
+
+    <!-- Create the build and dist dirs -->
+    <mkdir dir="${build}" />
+    <mkdir dir="${dist}/lib" />
+  </target>
+
+  <target name="build" depends="init" description="compile the source">
+    <javac srcdir="${src}" destdir="${build}" includeantruntime="false" />
+  </target>
+
+  <target name="dist" depends="build" description="generate the distribution" >
+    <mkdir dir="${dist}" />
+    <jar jarfile="${dist}/lib/mobilewebprint.jar" basedir="${build}" />
+
+    <!--
+    <copy file="${dist}/lib/mobilewebprint.jar" todir="../target" />
+    -->
+  </target>
+
+  <target name="clean" description="clean intermediate files">
+    <delete dir="${build}" />
+    <delete dir="${dist}" />
+  </target>
+
+</project>

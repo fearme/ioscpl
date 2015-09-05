@@ -33,6 +33,10 @@ for arg in "$@"; do
       clean="1"
       shift;;
 
+    --dev)
+      dev="1"
+      shift;;
+
   esac
 done
 
@@ -47,6 +51,15 @@ if [ -n "$clean" ]; then
   cd src/java && ndk-build clean
 
   cd $START_CLEAN_DIR
+  test -d src/java/libs && rm -rf src/java/libs
+  test -d src/java/obj && rm -rf src/java/obj
+
+  cd $START_CLEAN_DIR
+
+  echo ""
+  echo "===================================================================================="
+  echo "The build is clean.  Use 'mk --dev' or 'mk' or 'mk --full' or 'mk --all'"
+  echo "===================================================================================="
   exit 0
 fi
 
@@ -87,6 +100,16 @@ xcodebuild -target test_client_only -configuration Debug
 #ctest -C Debug -VV
 ./Debug/test_client_only
 
+# ----------------------------------------------------
+# Stop, if we are doing a development-only build.
+# ---------------------------------------------------
+if [ -n "$dev" ]; then
+  echo "=================================================================================================="
+  echo "Unit tests built and passing.  Use 'mk' or 'mk --full' to build debug versions of all platforms."
+  echo "=================================================================================================="
+  exit 0
+fi
+
 echo ""
 echo ""
 echo "===================================================================================="
@@ -100,8 +123,13 @@ xcodebuild -target mario -configuration Debug
 
 cd $START_DIR
 
+# ----------------------------------------------------
 # Stop, if we are only doing a quick development build
+# ---------------------------------------------------
 if [ -z "$full" -a -z "$all" ]; then
+  echo "===================================================================================="
+  echo "Unit tests built and passing.  Use --full to build debug versions of all platforms."
+  echo "===================================================================================="
   exit 0
 fi
 
@@ -130,6 +158,17 @@ cmake -G "Unix Makefiles" ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/clie
 
 cd $START_DIR/src/java
 ndk-build
+ant dist
+
+# ----------------------------------------------------
+# Stop, if we are only doing a full build
+# ---------------------------------------------------
+if [ -z "$all" ]; then
+  echo "==============================================================================================================="
+  echo "Debug versions of all platforms have been built.  Use --all to build everything (debug and release versions.)"
+  echo "==============================================================================================================="
+  exit 0
+fi
 
 # Finish in the dir that we started
 cd $START_DIR
