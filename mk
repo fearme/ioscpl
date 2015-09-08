@@ -48,7 +48,7 @@ if [ -n "$clean" ]; then
   test -d cmake-build && rm -rf cmake-build
   test -d deliveries && rm -rf deliveries
 
-  cd src/java && ndk-build clean
+  cd src/java && ndk-build clean && ant clean
 
   cd $START_CLEAN_DIR
   test -d src/java/libs && rm -rf src/java/libs
