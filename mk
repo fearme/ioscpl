@@ -160,6 +160,9 @@ cd $START_DIR/src/java
 ndk-build
 ant dist
 
+cd $START_DIR
+${START_DIR}/scripts/publish-android --debug
+
 # ----------------------------------------------------
 # Stop, if we are only doing a full build
 # ---------------------------------------------------

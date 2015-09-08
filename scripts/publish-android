@@ -1,0 +1,34 @@
+#!/bin/bash -e
+
+die()
+{
+  echo "$*"
+  exit 1
+}
+
+START_DIR=$(pwd)
+
+for arg in "$@"; do
+  case $arg in
+
+    --debug)
+      DEBUG_RELEASE="debug"
+      shift;;
+
+    --release)
+      DEBUG_RELEASE="release"
+      shift;;
+
+  esac
+done
+
+test -z "$DEBUG_RELEASE" && die "use --debug or --release"
+
+mkdir -p deliveries/include
+
+mkdir -p deliveries/android/device/${DEBUG_RELEASE} && cd $_
+
+mkdir -p libs
+cp -r ${START_DIR}/src/java/libs/* ./libs/
+cp -r ${START_DIR}/src/java/dist/lib/*.jar ./libs/
+
