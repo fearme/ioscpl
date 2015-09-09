@@ -89,7 +89,8 @@ endif()
 # -----
 if (${MARIO_UNIT_TESTS})
 
-  find_package(PCAP)
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "../../toolchain")
+  find_package(PCAP REQUIRED)
 
   add_executable(test_client_only
                     test/test.cpp
