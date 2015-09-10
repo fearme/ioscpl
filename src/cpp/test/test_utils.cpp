@@ -23,6 +23,60 @@ static string keyB("bar");
 
 static string empty("");
 
+TEST_CASE("utils parses args", "[utils]")
+{
+  reset_assert_count();
+
+  REQUIRE( num_asserts() == 0 );
+
+  strmap dict;
+  strset flags;
+
+  SECTION("parse args") {
+
+    parse_args("--foo", dict, flags);
+    REQUIRE(dict.size() == 0);
+    REQUIRE(flags.size() == 1);
+
+    REQUIRE(flags.find("foo") != flags.end());
+    REQUIRE(flags.find("xfoo") == flags.end());
+
+    parse_args("--Foo-bar=Baz", dict, flags);
+    REQUIRE(dict.size() == 1);
+    REQUIRE(flags.size() == 1);
+
+    REQUIRE(dict.find("foo_bar") != dict.end());
+    REQUIRE(dict["foo_bar"] == "Baz");
+
+    parse_args("--foo-Bar", dict, flags);
+    REQUIRE(dict.size() == 1);
+    REQUIRE(flags.size() == 2);
+
+    REQUIRE(flags.find("foo_bar") != flags.end());
+    REQUIRE(flags.find("xfoo_bar") == flags.end());
+
+  }
+
+  SECTION("parse many args") {
+
+    parse_args("--foo --BART=Mart --Roo-bar=quxx --bart-fooligan", dict, flags);
+    REQUIRE(dict.size() == 2);
+    REQUIRE(flags.size() == 2);
+
+    REQUIRE(flags.find("foo") != flags.end());
+    REQUIRE(flags.find("bart_fooligan") != flags.end());
+
+    REQUIRE(dict.find("roo_bar") != dict.end());
+    REQUIRE(dict["roo_bar"] == "quxx");
+
+    REQUIRE(dict.find("bart") != dict.end());
+    REQUIRE(dict["bart"] == "Mart");
+
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
+
 TEST_CASE("utils compact join", "[utils]")
 {
   reset_assert_count();

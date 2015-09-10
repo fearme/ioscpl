@@ -74,6 +74,9 @@ namespace net_mobilewebprint {
 
   // ----- Time -----
   uint32 _time_since(uint32 then, uint32 now = 0);
+
+  // ----- Parsing -----
+  bool    parse_args(char const * args, strmap & dict, strset & flags);
 };
 
 #endif // __MWP_UTILS_HPP__

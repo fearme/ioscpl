@@ -1,4 +1,6 @@
 
+RAGEL_TARGET(args mwp_args.rl ${CMAKE_CURRENT_BINARY_DIR}/mwp_args.cpp)
+
 include(CheckIncludeFiles)
 
 check_include_files("netinet/if_ether.h" HAVE_IF_ETHER_H)
@@ -15,4 +17,5 @@ add_library(mwpcore
                 mwp_socket.cpp
                 mwp_printer.cpp
                 mwp_json.cpp
+                ${RAGEL_args_OUTPUTS}
                 )

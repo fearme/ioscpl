@@ -3,6 +3,9 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project(Mario)
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "../../toolchain")
+find_package(RAGEL 6.6 REQUIRED)
+
 # --------------------------------- Core -------------------------------
 
 # -----
@@ -89,7 +92,6 @@ endif()
 # -----
 if (${MARIO_UNIT_TESTS})
 
-  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "../../toolchain")
   find_package(PCAP REQUIRED)
 
   add_executable(test_client_only
