@@ -23,6 +23,53 @@ static string keyB("bar");
 
 static string empty("");
 
+TEST_CASE("utils parses uris", "[utils]")
+{
+  reset_assert_count();
+
+  REQUIRE( num_asserts() == 0 );
+
+  string protocol, user, host, port, path, fragment;
+  strmap query;
+
+  SECTION("parse proxy") {
+    char const * uri = "http://proxy.houston.hp.com:8080/";
+    parse_uri(uri, protocol, user, host, port, path, query, fragment);
+
+    REQUIRE(protocol == "http");
+    REQUIRE(user == "");
+    REQUIRE(host == "proxy.houston.hp.com");
+    REQUIRE(port == "8080");
+    REQUIRE(path == "/");
+    REQUIRE(fragment == "");
+  }
+
+  SECTION("parse our url") {
+    char const * uri = "http://dev.mobiledevprint.net/path/to/resource";
+    parse_uri(uri, protocol, user, host, port, path, query, fragment);
+
+    REQUIRE(protocol == "http");
+    REQUIRE(user == "");
+    REQUIRE(host == "dev.mobiledevprint.net");
+    REQUIRE(port == "");
+    REQUIRE(path == "/path/to/resource");
+    REQUIRE(fragment == "");
+  }
+
+  SECTION("understand empty string is no uri") {
+    REQUIRE(!parse_uri("", protocol, user, host, port, path, query, fragment));
+
+    REQUIRE(protocol == "");
+    REQUIRE(user == "");
+    REQUIRE(host == "");
+    REQUIRE(port == "");
+    REQUIRE(path == "");
+    REQUIRE(fragment == "");
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
+
 TEST_CASE("utils parses args", "[utils]")
 {
   reset_assert_count();

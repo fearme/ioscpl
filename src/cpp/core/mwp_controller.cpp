@@ -43,6 +43,7 @@ void net_mobilewebprint::controller_t::set_argv(int argc, char const *argv[], in
 
 void net_mobilewebprint::controller_t::start(bool should_block)
 {
+  // Dump configuration
   for (strmap::const_iterator it = options.begin(); it != options.end(); ++it) {
     string const & key = it->first;
     string const & val = it->second;

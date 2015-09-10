@@ -77,6 +77,7 @@ namespace net_mobilewebprint {
 
   // ----- Parsing -----
   bool    parse_args(char const * args, strmap & dict, strset & flags);
+  bool    parse_uri(char const * uri, string & protocol, string & user, string & host, string & port, string & path, strmap & query, string & fragment);
 };
 
 #endif // __MWP_UTILS_HPP__

@@ -12,9 +12,11 @@ find_package(RAGEL 6.6 REQUIRED)
 # ----- Mario Core
 # -----
 include_directories(protocols)
+include_directories(parsers)
 include_directories(core)
 
 add_subdirectory(protocols)
+add_subdirectory(parsers)
 add_subdirectory(core)
 
 # --------------------------------- Platform -------------------------------
@@ -76,7 +78,7 @@ endif()
 # -----
 # ----- Mario Client-only library
 # -----
-set(MARIO_CLIENT_ONLY ${MARIO_CLIENT_ONLY} mwpcore mwpcoreprotos)
+set(MARIO_CLIENT_ONLY ${MARIO_CLIENT_ONLY} mwpcore mwpcoreprotos mwpparsers)
 
 # ----------------------------- Utilities/Binaries ---------------------------
 if (${MARIO_CLI})
