@@ -136,18 +136,6 @@ fi
 echo ""
 echo ""
 echo "===================================================================================="
-echo "====================================== IOS - Debug ================================="
-echo "===================================================================================="
-echo ""
-# ----- Build iOS debug -----
-mkdir -p cmake-build/ios && cd cmake-build/ios
-cmake -G Xcode ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/iOS.cmake -DIOS_PLATFORM="SIMULATOR"
-#xcodebuild -target mario_client_only -configuration Debug
-cd $START_DIR
-
-echo ""
-echo ""
-echo "===================================================================================="
 echo "====================================== Android - Debug ============================="
 echo "===================================================================================="
 echo ""
@@ -162,6 +150,18 @@ ant dist
 
 cd $START_DIR
 ${START_DIR}/scripts/publish-android --debug
+
+echo ""
+echo ""
+echo "===================================================================================="
+echo "====================================== IOS - Debug ================================="
+echo "===================================================================================="
+echo ""
+# ----- Build iOS debug -----
+mkdir -p cmake-build/ios && cd cmake-build/ios
+cmake -G Xcode ../../src/cpp -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/iOS.cmake -DIOS_PLATFORM="SIMULATOR"
+#xcodebuild -target mario_client_only -configuration Debug
+cd $START_DIR
 
 # ----------------------------------------------------
 # Stop, if we are only doing a full build

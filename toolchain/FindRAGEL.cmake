@@ -45,6 +45,10 @@
 cmake_minimum_required(VERSION 2.8)
 
 find_program(RAGEL_EXECUTABLE NAMES ragel DOC "path to the ragel executable")
+if( NOT RAGEL_EXECUTABLE)
+  find_host_program(RAGEL_EXECUTABLE NAMES ragel DOC "path to the ragel executable")
+endif()
+
 mark_as_advanced(RAGEL_EXECUTABLE)
 
 if(RAGEL_EXECUTABLE)

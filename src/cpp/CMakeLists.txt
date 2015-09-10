@@ -18,8 +18,10 @@ add_subdirectory(protocols)
 add_subdirectory(core)
 
 # --------------------------------- Platform -------------------------------
+
 if (IOS)
   set(MARIO_PLATFORM   "ios")
+  find_host_package(RAGEL 6.6 REQUIRED)
 
   include_directories(platform/posix)
   include_directories(platform/darwin)
@@ -52,6 +54,7 @@ elseif (APPLE)
 
 else()
   set(MARIO_PLATFORM     "android")
+  find_host_package(RAGEL 6.6 REQUIRED)
 
   include_directories(platform/posix)
   include_directories(platform/android)

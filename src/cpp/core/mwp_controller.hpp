@@ -15,7 +15,16 @@ namespace net_mobilewebprint {
     mdns_t             mdns;
     printer_manager_t  printers;
 
+    strlist            params;
+    strmap             options;
+    strset             flags;
+
     controller_t();
+
+    void set_option(string const & key, string const & value);
+    void set_options(string const & str);
+    void set_options(char const * sz);
+    void set_argv(int argc, char const *argv[], int start = 1);
 
     void start(bool should_block = true);
 
