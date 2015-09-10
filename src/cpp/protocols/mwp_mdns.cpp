@@ -91,7 +91,7 @@ mq_result net_mobilewebprint::mdns_t::on_select(select_extra_t & extra)
   int    num_recvd = 0;
   if (extra.is_readable(socket.fd)) {
     //printf("MDNS reading packet\n");
-    if ((packet = mq.message("mdns_packet", 0, sizeof(uint32) + sizeof(uint16), ip_offset)) != NULL) {
+    if ((packet = mq.message("mdns_packet", 0, 0, sizeof(uint32) + sizeof(uint16), ip_offset)) != NULL) {
       string sender_ip_str;
       uint16 sender_port = 0;
       if ((num_recvd = socket.recv_from(*packet, sender_ip_str, sender_port)) > 0) {

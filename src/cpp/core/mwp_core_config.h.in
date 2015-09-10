@@ -2,8 +2,9 @@
 #ifndef __MWP_CORE_CONFIG_H__
 #define __MWP_CORE_CONFIG_H__
 
-#cmakedefine HAVE_IF_ETHER_H 1
-#cmakedefine HAVE_IF_ARP     1
+#cmakedefine HAVE_IF_ETHER_H  1
+#cmakedefine HAVE_IF_ARP      1
+#cmakedefine HAVE_CURL        1
 
 #endif  // __MWP_CORE_CONFIG_H__
 

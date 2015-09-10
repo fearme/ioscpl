@@ -14,4 +14,5 @@ add_library(mwpcore
                 mwp_utils.cpp
                 mwp_socket.cpp
                 mwp_printer.cpp
+                mwp_json.cpp
                 )

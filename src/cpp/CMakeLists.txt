@@ -97,6 +97,7 @@ if (${MARIO_UNIT_TESTS})
                     test/test_buffer.cpp
                     test/test_mdns.cpp
                     test/test_utils.cpp
+                    test/test_json.cpp
                     platform/darwin/darwin_host.cpp
                     platform/posix/posix_host.cpp
                     )

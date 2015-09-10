@@ -71,6 +71,19 @@ char const * net_mobilewebprint::_find(char const * str, char const * sub, char 
   return NULL;
 }
 
+char const * net_mobilewebprint::_find(char const * p, char ch)
+{
+  while (*p != 0 && *p != ch) {
+    p += 1;
+  }
+
+  if (*p == 0) {
+    return NULL;
+  }
+
+  return p;
+}
+
 string net_mobilewebprint::_rtrim(string const & str, string const & to_remove)
 {
   string result = str;
@@ -83,42 +96,29 @@ string net_mobilewebprint::_rtrim(string const & str, string const & to_remove)
   return result;
 }
 
-/* reverse:  reverse string s in place -- From K&R */
-void reverse(char s[])
+string net_mobilewebprint::_ltrim(string const & str, char ch_to_remove)
 {
-  int i, j;
-  char c;
+  string result = str;
 
-  for (i = 0, j = (int)(strlen(s)-1); i<j; i++, j--) {
-    c = s[i];
-    s[i] = s[j];
-    s[j] = c;
+  while (result[0] == ch_to_remove) {
+    result = result.substr(1);
   }
+
+  return result;
 }
 
-string net_mobilewebprint::mwp_itoa(int n)
+bool net_mobilewebprint::_is_num(string const & str)
 {
-  char s[22];
+  return _is_num(str.c_str());
+}
 
-  int i, sign;
-
-  if ((sign = n) < 0) {  /* record sign */
-    n = -n;              /* make n positive */
+bool net_mobilewebprint::_is_num(char const * sz)
+{
+  while (*sz && *sz >= '0' && *sz <= '9') {
+    sz += 1;
   }
 
-  i = 0;
-  do {                       /* generate digits in reverse order */
-    s[i++] = n % 10 + '0';   /* get next digit */
-  } while ((n /= 10) > 0);   /* delete it */
-
-  if (sign < 0) {
-    s[i++] = '-';
-  }
-
-  s[i] = '\0';
-  reverse(s);
-
-  return s;
+  return *sz == 0;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -160,9 +160,55 @@ strlist net_mobilewebprint::_split(string const & str, char const * sep, int num
   return result;
 }
 
+strlist net_mobilewebprint::_compact(strlist const & list)
+{
+  strlist result;
+
+  for (strlist::const_iterator it = list.begin(); it != list.end(); ++it) {
+    if (it->length() > 0) {
+      result.push_back(*it);
+    }
+  }
+
+  return result;
+}
+
+string net_mobilewebprint::join(strlist const & list, char const * sep)
+{
+  string result;
+
+  for (strlist::const_iterator it = list.begin(); it != list.end(); ++it) {
+    result += *it;
+    if (it + 1 != list.end()) {
+      result += sep;
+    }
+  }
+
+  return result;
+}
+
 // ---------------------------------------------------------------------------------------
 // -------------------------------- strmap -----------------------------------------------
 // ---------------------------------------------------------------------------------------
+
+bool net_mobilewebprint::_split_kv(strmap_entry & result, string const & str, char const * sep)
+{
+  char const *begin = str.c_str(), *key_end = NULL, *value_begin = NULL;
+
+  if (*begin) {
+    if ((key_end = _find(begin, sep)) != NULL && *key_end != 0) {
+      string value, key(begin, key_end);
+      if (*(value_begin = key_end+1) != 0) {
+        value = string(value_begin);
+      }
+
+      result = make_pair(key, value);
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /**
  *  Adds a key/value pair to the map.
@@ -311,6 +357,10 @@ void net_mobilewebprint::mem_dump(byte const * p, size_t length, char const * ms
 
 }
 
+// ---------------------------------------------------------------------------------------
+// -------------------------------- Time -------------------------------------------------
+// ---------------------------------------------------------------------------------------
+
 uint32 net_mobilewebprint::_time_since(uint32 then, uint32 now)
 {
   if (now == 0) {
@@ -318,5 +368,110 @@ uint32 net_mobilewebprint::_time_since(uint32 then, uint32 now)
   }
 
   return now - then;
+}
+
+// ---------------------------------------------------------------------------------------
+// -------------------------------- Conversions ------------------------------------------
+// ---------------------------------------------------------------------------------------
+
+int net_mobilewebprint::mwp_atoi(char const * sz)
+{
+  int result = 0;
+
+  if (!sz || !*sz) { return result; }
+
+  if (!*(sz = _skip_ws(sz))) { return result; }
+
+  for (; *sz && *sz >= '0' && *sz <= '9'; ++sz) {
+    result *= 10;
+    result += (*sz - '0');
+  }
+
+  return result;
+}
+
+int net_mobilewebprint::mwp_atoi(string const & str)
+{
+  char const * sz = str.c_str();
+  return mwp_atoi(sz);
+}
+
+/* reverse:  reverse string s in place -- From K&R */
+void reverse(char s[])
+{
+  int i, j;
+  char c;
+
+  for (i = 0, j = (int)(strlen(s)-1); i<j; i++, j--) {
+    c = s[i];
+    s[i] = s[j];
+    s[j] = c;
+  }
+}
+
+string net_mobilewebprint::mwp_itoa(int n)
+{
+  char s[22];
+
+  int i, sign;
+
+  if ((sign = n) < 0) {  /* record sign */
+    n = -n;              /* make n positive */
+  }
+
+  i = 0;
+  do {                       /* generate digits in reverse order */
+    s[i++] = n % 10 + '0';   /* get next digit */
+  } while ((n /= 10) > 0);   /* delete it */
+
+  if (sign < 0) {
+    s[i++] = '-';
+  }
+
+  s[i] = '\0';
+  reverse(s);
+
+  return s;
+}
+
+string net_mobilewebprint::mwp_itoa(int n, int length)
+{
+  string result = mwp_itoa(n);
+  string pad("0");
+
+  while((int)result.length() < length) {
+    result = pad + result;
+  }
+
+  return result;
+}
+
+string net_mobilewebprint::mwp_ftoa(float n)
+{
+  char buffer[64];
+  sprintf(buffer, "%f", n);
+  return buffer;
+}
+
+string net_mobilewebprint::mwp_dtoa(double n)
+{
+  char buffer[64];
+  sprintf(buffer, "%lf", n);
+  return buffer;
+}
+
+char const * net_mobilewebprint::_skip_ws(char const *sz)
+{
+  char const * end = sz + ::strlen(sz);
+  return _skip_ws(sz, end);
+}
+
+char const * net_mobilewebprint::_skip_ws(char const *&p, char const *end)
+{
+  while (p < end && *p && (*p == ' ' || *p == '\t' || *p == '\n')) {
+    p += 1;
+  }
+
+  return p;
 }
 

@@ -67,6 +67,7 @@ namespace net_mobilewebprint {
     buffer_t *        data;
     string            name;
     uint32            id;
+    uint32            seq_num;
     buffer_range_t *  payload;
 
     message_extra_t(mq_t &);
@@ -152,8 +153,8 @@ namespace net_mobilewebprint {
 
     void register_handler(mq_handler_t &);
 
-    buffer_t * message(char const * name, uint32 id);
-    buffer_t * message(char const * name, uint32 id, size_t num_extra, uint32 & user_offset);
+    buffer_t * message(char const * name, uint32 id, uint32 seq_num);
+    buffer_t * message(char const * name, uint32 id, uint32 seq_num, size_t num_extra, uint32 & user_offset);
     bool       parse_message(buffer_t * msg, message_extra_t &);
 
     void       send(buffer_t * msg);

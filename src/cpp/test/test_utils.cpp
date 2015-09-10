@@ -13,6 +13,82 @@ const char   a_string[]     = "the quick brown fox\0jumped over the lazy dog";
 const char   a_kv[]         = "a=b";
 const char   a_mkv[]        = "foo;bar;baz;quxx";
 
+static string fqdn("dev.mobilewebprint.net");
+static string fqdnA("dev");
+static string fqdnB("mobilewebprint");
+static string fqdnC("net");
+
+static string keyA("foo");
+static string keyB("bar");
+
+static string empty("");
+
+TEST_CASE("utils compact join", "[utils]")
+{
+  reset_assert_count();
+
+  REQUIRE( num_asserts() == 0 );
+
+  SECTION("split_kv 1") {
+    strmap_entry kv;
+
+    REQUIRE(_split_kv(kv, join(_compact(A(keyA, keyB)), "."), "."));
+
+    REQUIRE(kv.first == keyA);
+    REQUIRE(kv.second == keyB);
+  }
+
+  SECTION("split_kv 2") {
+    strmap_entry kv;
+
+    REQUIRE(_split_kv(kv, join(_compact(A(fqdnA, fqdnB, fqdnC)), "."), "."));
+
+    REQUIRE(kv.first == fqdnA);
+    REQUIRE(kv.second == join(A(fqdnB, fqdnC), "."));
+  }
+
+  SECTION("split_kv 3") {
+    strmap_entry kv;
+
+    REQUIRE(!_split_kv(kv, join(_compact(A(empty, keyB)), "."), "."));
+  }
+
+  SECTION("A and join") {
+    REQUIRE(join(A(fqdnB), ".") == "mobilewebprint");
+    REQUIRE(join(A(fqdnB, fqdnC), ".") == "mobilewebprint.net");
+    REQUIRE(join(A(fqdnA, fqdnB, fqdnC), ".") == "dev.mobilewebprint.net");
+  }
+
+  SECTION("A and join and compact") {
+    REQUIRE(join(_compact(A(empty, keyB)), ".") == "bar");
+    REQUIRE(join(_compact(A(keyA, empty)), ".") == "foo");
+    REQUIRE(join(_compact(A(keyA, keyB)), ".") == "foo.bar");
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
+
+TEST_CASE("utils is_num works", "[utils]")
+{
+  reset_assert_count();
+
+  REQUIRE( num_asserts() == 0 );
+
+  SECTION("_is_num validates number") {
+    REQUIRE(_is_num(string("123")));
+  }
+
+  SECTION("_is_num invalidates number") {
+    REQUIRE(!_is_num(string("bigbird")));
+    REQUIRE(!_is_num(string("123bigbird")));
+    REQUIRE(!_is_num(string("123 bigbird")));
+    REQUIRE(!_is_num(string(" 123")));
+  }
+
+  REQUIRE( num_asserts() == 0 );
+}
+
+
 TEST_CASE("utils works", "[utils]")
 {
   reset_assert_count();

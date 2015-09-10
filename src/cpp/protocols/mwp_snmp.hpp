@@ -15,10 +15,6 @@ namespace net_mobilewebprint {
 
     packet_list_t           packet_list;
 
-//    static uint16           next_transaction_id;
-//    static buffer_t         pdl_query_request;
-//    static buffer_t         bjnp_query_request;
-
     snmp_t(controller_t &);
 
     void    on_scan_for_printers(string const & name, buffer_view_t const & payload, message_extra_t & extra);
@@ -37,10 +33,6 @@ namespace net_mobilewebprint {
 
     virtual mq_result         on_select_loop_end(select_loop_end_extra_t const &   extra);
     virtual mq_result        on_select_loop_idle(select_loop_idle_extra_t const &  extra);
-
-    // ----- Processing the list of records received
-    mdns_srv_record_t const * get_SRV(string const & key, bool needed = true);
-    mdns_a_record_t   const *   get_A(string const & key, bool needed = true);
   };
 };
 

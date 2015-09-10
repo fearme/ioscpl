@@ -271,13 +271,13 @@ mq_result net_mobilewebprint::mq_t::_on_message_dispatch(buffer_t * msg, message
   return result;
 }
 
-buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id)
+buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id, uint32 seq_num)
 {
   uint32 offset = 0;
-  return message(name, id, 0, offset);
+  return message(name, id, 0, seq_num, offset);
 }
 
-buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id, size_t num_extra, uint32 & user_offset)
+buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id, uint32 seq_num, size_t num_extra, uint32 & user_offset)
 {
   size_t name_len = strlen(name);
   if (name_len > 30) {
@@ -285,7 +285,7 @@ buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id, size_
   }
 
   buffer_t * buffer = new buffer_t;
-  buffer->zero_pad(1 + 31 + sizeof(id) + num_extra);
+  buffer->zero_pad(1 + 31 + sizeof(id) + sizeof(seq_num) + num_extra);
 
   byte * p = buffer->bytes;
 
@@ -293,6 +293,7 @@ buffer_t * net_mobilewebprint::mq_t::message(char const * name, uint32 id, size_
 
   memcpy(p, name, name_len);     p += 31;
   *(uint32*)p = htonl(id);       p += sizeof(id);
+  *(uint32*)p = htonl(seq_num);  p += sizeof(seq_num);
 
   user_offset = p - buffer->bytes;
   return buffer;
@@ -307,6 +308,7 @@ bool net_mobilewebprint::mq_t::parse_message(buffer_t * msg, message_extra_t & e
   extra.data        = msg;
   extra.name        = reader.read_string_nz(31);
   extra.id          = reader.read_uint32();
+  extra.seq_num     = reader.read_uint32();
   extra.payload     = new buffer_range_t(reader.p, msg->end());
 
   return true;
@@ -321,7 +323,7 @@ void net_mobilewebprint::mq_t::send(char const * name)
 {
   buffer_t * msg = NULL;
 
-  if ((msg = message(name, 0)) != NULL) {
+  if ((msg = message(name, 0, 0)) != NULL) {
     messages.push_back(msg);
   }
 }
