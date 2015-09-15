@@ -1,0 +1,8 @@
+
+cmake-build/
+xcode-build/
+deliveries/
+src/java/dist/
+src/java/obj/
+src/target/
+
