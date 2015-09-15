@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+die()
+{
+  echo "$*"
+  exit 1
+}
+
+DEBUG_RELEASE=debug
+#PLATFORM=
+#OS=
+
+for arg in "$@"; do
+  case $arg in
+
+    --type=*)
+      DEBUG_RELEASE="${arg#*=}";
+      shift;;
+
+    --platform=*)
+      PLATFORM="${arg#*=}";
+      shift;;
+
+    --os=*)
+      OS="${arg#*=}";
+      shift;;
+
+    --build-tool=*)
+      BUILD_TOOL="${arg#*=}";
+      shift;;
+  esac
+done
+
+# -------------------------------------------------------------
+# ---------- Make sure we have the proper parameters ----------
+test -n "$DEBUG_RELEASE" || die "must specify --type=debug or --type=release"
+test -n "$OS"            || die "must specify --os=xyz    (ios, android)"
+test -n "$PLATFORM"      || die "must specify --platform=xyz    (simulator, device)"
+test -n "$BUILD_TOOL"    || die "must specify --build-tool=xyz     (xcode, android-ndk)"
+
+# WORKSPACE is the name of the dir on Jenkins
+test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+
+echo "Workspace dir: $WORKSPACE"
+echo "Packaging $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
+
+
+
+
+# -------------------------------------------------------------
+# ---------- Package it up ----------
+
+# Zip it up
+cd ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}
+zip --recurse-paths mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip libs
+
+cd ${WORKSPACE}/client/deliveries
+zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip include
+

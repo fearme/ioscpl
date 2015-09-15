@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+kill_dir()
+{
+  if [ -d "$1" ]; then rm -rf $1; fi
+}
+
+test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+
+kill_dir ${WORKSPACE}/client/cmake-build/android_device
+kill_dir ${WORKSPACE}/client/deliveries/android
+
+START_DIR=$(pwd)
+cd src/java && ant clean
+
+cd ${START_DIR}/src/platform/android/MobileWebPrintApp
+./prep_for_mk --clean
+ant clean
+
+cd $START_DIR

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+$(dirname $0)/build-base --type=debug --os=ios --platform=simulator --build-tool=xcode
+$(dirname $0)/package --type=debug --os=ios --platform=simulator --build-tool=xcode
+

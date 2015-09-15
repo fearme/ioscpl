@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">Print</string>
+  <string name="main_activity">Mobile Web Print</string>
+  <string name="send_button">Send</string>
+  <string name="say_hello">Say Hello</string>
+  <string name="print_progress_label">Loading...</string>
+  <string name="print_progress_activity_label">Printing...</string>
+  <string name="asset_url">Asset URL</string>
+  <string name="asset">Assets</string>
+</resources>

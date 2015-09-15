@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="net.mobilewebprint.app"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+  <!--
+     -        Global packaging stuff
+    -->
+
+  <!--
+  <uses-sdk android:minSdkVersion="4" />
+  -->
+
+  <!--
+     -        Permissions
+    -->
+
+  <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+  <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+  <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+
+  <!--
+     -        The application
+     -->
+
+  <application android:name="MobileWebPrintApp"
+               android:icon="@drawable/ic_launcher"
+               android:label="@string/app_name" >
+
+    <!-- The print service -->
+    <service android:name=".PrintManagerService" />
+
+    <!-- The main activity -->
+    <activity android:name="MainActivity" android:label="@string/main_activity">
+
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+
+    </activity>
+
+    <!--
+       - The printer-destination activity
+       -->
+    <activity android:name="PrintActivity">
+
+      <!-- Handle the "send" intent -->
+      <intent-filter>
+        <action android:name="android.intent.action.SEND" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:mimeType="*/*" />
+      </intent-filter>
+
+      <!-- TODO: Either remove this, or make it work for the right URLs. This was just a test to see if PDFs print -->
+      <!-- Handle the "view like a browser would" intent -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+
+        <data
+          android:scheme="http"
+          android:host="clickit.cloudpublish.com"
+          android:pathPrefix="/social/print/v2/" />
+        <data android:scheme="printit" />
+
+        <!--
+        <data android:host="urlprint.mobilewebprint.net" android:scheme="http" />
+          -->
+
+        <!-- TODO: Should be hidden on production -->
+        <!--
+        <data android:host="*" android:scheme="http" />
+         -->
+      </intent-filter>
+
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+
+        <data
+          android:scheme="http"
+          android:host="urlprint.mobilewebprint.com"
+          android:pathPrefix="/urlprint/" />
+        <data android:scheme="urlprint" />
+
+      </intent-filter>
+
+    </activity>
+
+    <!-- The print progress activity -->
+    <activity android:name="PrintJobProgressActivity" android:label="@string/print_progress_activity_label">
+
+    </activity>
+
+  </application>
+</manifest>
+

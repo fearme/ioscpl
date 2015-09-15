@@ -1,0 +1,150 @@
+#!/bin/bash -e
+
+die()
+{
+  echo "$*"
+  exit 1
+}
+
+DEBUG_RELEASE=debug
+#PLATFORM=
+#OS=
+
+for arg in "$@"; do
+  case $arg in
+
+    --type=*)
+      DEBUG_RELEASE="${arg#*=}";
+      shift;;
+
+    --platform=*)
+      PLATFORM="${arg#*=}";
+      shift;;
+
+    --os=*)
+      OS="${arg#*=}";
+      shift;;
+
+    --build-tool=*)
+      BUILD_TOOL="${arg#*=}";
+      shift;;
+
+    --shared)
+      SHARED_LIB=1
+      shift;;
+  esac
+done
+
+# -------------------------------------------------------------
+# ---------- Make sure we have the proper parameters ----------
+if [ "$DEBUG_RELEASE" == "debug" ]; then
+  DEBUG_RELEASE_CAP="Debug"
+elif [ "$DEBUG_RELEASE" == "release" ]; then
+  DEBUG_RELEASE_CAP="Release"
+else
+  die "must specify --type=debug or --type=release"
+fi
+
+if [ "$OS" == "ios" ]; then
+  TOOLCHAIN_FILE="iOS.cmake"
+  OS_UC="IOS"
+elif [ "$OS" == "android" ]; then
+  TOOLCHAIN_FILE="android.cmake"
+  OS_UC="ANDROID"
+elif [ "$OS" == "macosx" ]; then
+  OS_UC="MACOSX"
+else
+  die "must specify --os=xyz    (ios, android)"
+fi
+
+if [ "$PLATFORM" == "simulator" ]; then
+  PLATFORM_UC="SIMULATOR"
+elif [ "$PLATFORM" == "simulator64" ]; then
+  PLATFORM_UC="SIMULATOR64"
+elif [ "$PLATFORM" == "device" ]; then
+  PLATFORM_UC="DEVICE"
+elif [ "$PLATFORM" == "workstation" ]; then
+  PLATFORM_UC="WORKSTATION"
+else
+  die "must specify --platform=xyz ($PLATFORM)   (simulator, device)"
+fi
+
+if [ "$BUILD_TOOL" == "xcode" ]; then
+  GENERATOR_CMAKE="Xcode"
+  MAKE_TOOL="xcodebuild"
+elif [ "$BUILD_TOOL" == "android-ndk" ]; then
+  GENERATOR_CMAKE="Unix Makefiles"
+  MAKE_TOOL="make"
+else
+  die "must specify --build-tool=xyz     (xcode, android-ndk)"
+fi
+
+test -n "$MAKE_TOOL" || die "No MAKE_TOOL. Should specify a build-tool"
+
+# WORKSPACE is the name of the dir on Jenkins
+test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+
+echo "Workspace dir: $WORKSPACE"
+echo "Buiding $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
+
+
+
+
+# -------------------------------------------------------------
+# ---------- CMake-buildify the project ----------
+mkdir -p ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} && cd $_
+
+if [ "$BUILD_TOOL" == "xcode" ]; then
+  if [ "$OS" == "ios" ]; then
+
+    if [ "$PLATFORM_UC" == "SIMULATOR" ]; then
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+    elif [ "$PLATFORM_UC" == "SIMULATOR64" ]; then
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+    else
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM="OS"
+    fi
+
+    ${MAKE_TOOL} -target mwp -configuration ${DEBUG_RELEASE_CAP}
+  else
+    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/
+    ${MAKE_TOOL} -target mwpcli -configuration ${DEBUG_RELEASE_CAP}
+  fi
+elif [ "$BUILD_TOOL" == "android-ndk" ]; then
+  cmake -G "${GENERATOR_CMAKE}" ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -DANDROID_STL=stlport_static
+  ${MAKE_TOOL} mwp
+fi
+
+# -------------------------------------------------------------
+# ---------- Collect deliverables ----------
+mkdir -p ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE} && cd $_
+
+# Copy the libs
+mkdir -p libs && cd $_
+
+if [ -z "$SHARED_LIB" ]; then
+  # cmake-build/xcode_ios_simulator/*.a
+  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
+
+  # src/cpp/platform/ios/*.a
+  find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
+else
+  # cmake-build/xcode_ios_simulator/*.so
+  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
+
+  # src/cpp/platform/ios/*.so
+  find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
+fi
+
+# Copy headers
+mkdir -p ${WORKSPACE}/client/deliveries/include && cd $_
+
+# cmake-build/xcode_ios_simulator/*.h -- auto-generated
+find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.h$' | while read f; do cp $f ./; done
+rm -r mwp_core_config.h
+
+# Various hpp files
+cp ${WORKSPACE}/client/src/cpp/core/mwp_core_api.hpp ./
+cp ${WORKSPACE}/client/src/cpp/core/mwp_secure_asset_printing_api.hpp ./
+cp ${WORKSPACE}/client/src/cpp/cpl/cpl_controlled_print_api.hpp ./
+

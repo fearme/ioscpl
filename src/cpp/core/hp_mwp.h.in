@@ -1,0 +1,166 @@
+/**
+ *
+ * @MWP_INTERFACE_NAME@
+ * @MWP_INTERFACE_NAME_UC@
+ */
+
+#ifndef __HP_@MWP_INTERFACE_NAME_UC@_H__
+#define __HP_@MWP_INTERFACE_NAME_UC@_H__
+
+/* Startup flags */
+#define HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING 0x00000001
+#define HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN 0x00000002
+
+/* Startup flags that cannot be part of Secure Assert Printing */
+#define HP_@MWP_INTERFACE_NAME_UC@_NON_SAP        0xff000000
+#define HP_@MWP_INTERFACE_NAME_UC@_START_LOCAL    HP_@MWP_INTERFACE_NAME_UC@_NON_SAP & 0x01000000
+
+/* Default startup flags: 1) start the scanner, 2) do not return from start function 'cuz
+ * the app called the start function from a thread dedicated for @MWP_INTERFACE_NAME_UC@ 
+ */
+#define HP_@MWP_INTERFACE_NAME_UC@_START_APP_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING /*| HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN*/)
+#define HP_@MWP_INTERFACE_NAME_UC@_START_CLI_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING | HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN)
+
+#define STATUS_WAITING0                   "WAITING0"
+#define STATUS_WAITING1                   "WAITING1"
+#define STATUS_PRINTING                   "PRINTING"
+#define STATUS_WAITING2                   "WAITING2"
+#define STATUS_CANCELLED                  "CANCELLED"
+#define STATUS_CANCELLING                 "CANCELLING"
+#define STATUS_SUCCESS                    "SUCCESS"
+
+/**
+ *  Messages that the app can listen for.
+ */
+#define HP_@MWP_INTERFACE_NAME_UC@_BEGIN_NEW_PRINTER_LIST_MSG "begin_new_printer_list"
+#define HP_@MWP_INTERFACE_NAME_UC@_BEGIN_PRINTER_CHANGES_MSG  "begin_printer_changes"
+
+#define HP_@MWP_INTERFACE_NAME_UC@_PRINTER_ATTRIBUTE_MSG      "printer_attribute"
+  #define HP_@MWP_INTERFACE_NAME_UC@_ATTR_IP                    "ip"
+  #define HP_@MWP_INTERFACE_NAME_UC@_ATTR_NAME                  "name"
+  #define HP_@MWP_INTERFACE_NAME_UC@_ATTR_1284_DEVICE_ID        "1284_device_id"
+
+#define HP_@MWP_INTERFACE_NAME_UC@_RM_PRINTER_ATTRIBUTE_MSG   "rm_printer_attribute"
+#define HP_@MWP_INTERFACE_NAME_UC@_RM_PRINTER_MSG             "rm_printer"
+
+#define HP_@MWP_INTERFACE_NAME_UC@_END_PRINTER_ENUM_MSG       "end_printer_enum"
+
+#define HP_@MWP_INTERFACE_NAME_UC@_PRINT_PROGRESS_MSG         "print_progress"
+
+/*
+ *  Messages that @MWP_INTERFACE_NAME_UC@ will respond to
+ */
+//#define HP_@MWP_INTERFACE_NAME_UC@_SEND_FULL_PRINTER_LIST     "send_full_printer_list"
+
+
+/* Some basic type definitions */
+#ifndef uint8
+  #define  uint8      unsigned  char
+#endif
+
+#ifndef int8
+  #define  int8                 char
+#endif
+
+#ifndef uint16
+  #define  uint16     unsigned  short
+#endif
+
+#ifndef int16
+  #define  int16                short
+#endif
+
+#ifndef uint32
+  #define  uint32     unsigned  int
+#endif
+
+#ifndef int32
+  #define  int32                int
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+  typedef struct @MWP_INTERFACE_NAME@_tag_callback_extra_params {
+    uint8 const * p2;
+    uint8 const * p3;
+    uint8 const * p4;
+    uint8 const * p5;
+
+    uint32        n1;
+    uint32        n2;
+    uint32        n3;
+    uint32        n4;
+    uint32        n5;
+  } @MWP_INTERFACE_NAME@_params;
+
+  typedef int(*hp_@MWP_INTERFACE_NAME@_callback_t)(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, @MWP_INTERFACE_NAME@_params const * params);
+
+  /* 1. ---------- Register your callback fn ---------- */
+  bool hp_@MWP_INTERFACE_NAME@_register_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
+  bool hp_@MWP_INTERFACE_NAME@_deregister_handler(char const * name);
+
+  /* 2. ---------- get/set options ---------- */
+  char const *  hp_@MWP_INTERFACE_NAME@_get_option          (char const *name, char * buffer_out, uint32 buf_size);
+  char const *  hp_@MWP_INTERFACE_NAME@_get_option_def      (char const *name, char const *def, char * buffer_out, uint32 buf_size);
+  int           hp_@MWP_INTERFACE_NAME@_get_int_option      (char const *name);
+  int           hp_@MWP_INTERFACE_NAME@_get_int_option_def  (char const *name, int def);
+  bool          hp_@MWP_INTERFACE_NAME@_get_flag            (char const *name);
+
+  int           hp_@MWP_INTERFACE_NAME@_set_option(char const *name, char const *value);
+  int           hp_@MWP_INTERFACE_NAME@_set_int_option(char const *name, int value);
+  int           hp_@MWP_INTERFACE_NAME@_set_flag(char const *name, bool value);
+  int           hp_@MWP_INTERFACE_NAME@_clear_flag(char const *name);
+
+  int           hp_@MWP_INTERFACE_NAME@_parse_cli(int argc, void const * argv[]);
+
+  /* 3. ---------- Start the service ---------- */
+  bool hp_@MWP_INTERFACE_NAME@_start();
+  bool hp_@MWP_INTERFACE_NAME@_start_ex(uint32 start_flags);
+
+  // Is the event queue done?
+  bool hp_@MWP_INTERFACE_NAME@_mq_is_done();
+
+  /* 4. ---------- Do various other things (optional) ---------- */
+  /* See "other things" below */
+
+  /* 5. ---------- Invoke a job ---------- */
+
+  /**
+   *  Print the asset given by url to the printer at printer_ip.
+   *
+   *  This is the main API for printing, when the app shows the printer
+   *  list.  Returns true if the print was started, not that it 
+   *  completes.
+   *
+   *  This function returns immediately.
+   */
+  bool hp_@MWP_INTERFACE_NAME@_send_job(char const * url, char const * printer_ip);
+
+  /**
+   *  Print the URL.
+   *
+   *  Starts the print motion.  Returns if the job *starts* not
+   *  if the job actually printed.
+   *
+   *  This function returns immediately.
+   */
+  bool hp_@MWP_INTERFACE_NAME@_print(char const * url);
+
+  /* 6. ---------- Stop the service ---------- */
+  void hp_@MWP_INTERFACE_NAME@_stop();
+
+  /* ---------- Other things ---------- */
+  bool hp_@MWP_INTERFACE_NAME@_send_full_printer_list();
+
+  /* Send a message through the event queue */
+  int  hp_@MWP_INTERFACE_NAME@_send(char const *message, char const *payload); // payload may be NULL
+  int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif  /* __HP_@MWP_INTERFACE_NAME_UC@_H__ */
+

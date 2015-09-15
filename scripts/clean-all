@@ -1,0 +1,18 @@
+#!/bin/bash -e
+
+kill_dir()
+{
+  if [ -d "$1" ]; then rm -rf $1; fi
+}
+
+test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+
+kill_dir ${WORKSPACE}/client/deliveries/include
+
+$(dirname $0)/clean-android
+$(dirname $0)/clean-ios
+$(dirname $0)/clean-macosx
+
+test -d ${WORKSPACE}/client/deliveries &&  rmdir ${WORKSPACE}/client/deliveries
+test -d ${WORKSPACE}/client/cmake-build && rmdir ${WORKSPACE}/client/cmake-build
+

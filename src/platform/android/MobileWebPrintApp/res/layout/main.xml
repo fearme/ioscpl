@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+
+  <!-- Pair Device button -->
+  <Button android:onClick="pair"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Pair Device" />
+
+  <EditText android:id="@+id/url"
+    android:layout_weight="1"
+    android:layout_height="0dp"
+    android:layout_width="fill_parent"
+    android:gravity="top"
+    android:hint="@string/asset_url" />
+
+  <Button android:onClick="asset"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="@string/asset" />
+
+  <!--
+  <TextView  
+      android:layout_width="fill_parent" 
+      android:layout_height="wrap_content" 
+      android:text="Hello World, MainActivity"
+      />
+  -->
+
+  <Button android:onClick="send"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="right"
+    android:text="@string/send_button" />
+
+</LinearLayout>
+

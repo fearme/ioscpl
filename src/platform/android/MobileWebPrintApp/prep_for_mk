@@ -1,0 +1,40 @@
+#!/bin/bash -e
+
+die()
+{
+  echo $1
+  exit 1
+}
+
+for arg in "$@"; do
+  case $arg in
+
+    --clean)
+      clean="1"
+      shift;;
+
+  esac
+done
+
+
+if [ -n "$clean" ]; then
+  cd libs
+  rm -rf *
+  cd ..
+else
+  # Prep this dir for building
+
+  # Make the libs sub-dirs
+  find ../../../java/libs -type f | egrep so$ | cut -d'/' -f5-6 | xargs mkdir -p
+
+  # Copy the .so files
+  find ../../../java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f5-); done
+
+  find ../../../../cmake-build/android_device -type f | egrep so$ | while read f; do cp $f ./libs/armeabi-v7a/; done
+
+  # Copy the .jar files
+  find ../../../java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
+
+  cp -r ../../../../src/cpp/platform/android/libs/* libs/
+fi
+

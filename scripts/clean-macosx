@@ -1,0 +1,12 @@
+#!/bin/bash -e
+
+kill_dir()
+{
+  if [ -d "$1" ]; then rm -rf $1; fi
+}
+
+test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+
+kill_dir ${WORKSPACE}/client/cmake-build/macosx_workstation
+kill_dir ${WORKSPACE}/client/deliveries/macosx
+

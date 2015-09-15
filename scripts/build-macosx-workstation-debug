@@ -1,0 +1,5 @@
+#!/bin/bash -e
+
+$(dirname $0)/build-base --type=debug --os=macosx --platform=workstation --build-tool=xcode
+$(dirname $0)/package --type=debug --os=macosx --platform=workstation --build-tool=xcode
+

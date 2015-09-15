@@ -1,0 +1,17 @@
+#!/bin/bash -e
+
+$(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --shared
+$(dirname $0)/package    --type=debug --os=android --platform=device --build-tool=android-ndk --shared
+
+START_DIR=$(pwd)
+cd src/java
+ndk-build
+ant dist
+
+cd ${START_DIR}/src/platform/android/MobileWebPrintApp
+./prep_for_mk
+ant debug
+
+cd $START_DIR
+
+

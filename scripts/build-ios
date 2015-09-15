@@ -1,0 +1,51 @@
+#!/bin/bash -e
+
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+
+START_DIR=$(pwd)
+
+$(dirname $0)/build-ios-simulator-debug
+$(dirname $0)/build-ios-simulator64-debug
+$(dirname $0)/build-ios-device-debug
+
+$(dirname $0)/build-ios-simulator-release
+$(dirname $0)/build-ios-simulator64-release
+$(dirname $0)/build-ios-device-release
+
+# Now package all the arch's into one huge fat file
+cd deliveries/ios
+mkdir -p fat/debug/libs && for lib in `(cd device/debug/libs/; ls; cd ../../..) | egrep -v libcurl`; do
+  lipo -output fat/debug/libs/$lib -create device/debug/libs/$lib -arch i386 simulator/debug/libs/$lib -arch x86_64 simulator64/debug/libs/$lib;
+done
+cp $(find . -type f | egrep 'libcurl\.a' | egrep debug | head -1) fat/debug/libs
+
+mkdir -p fat/release/libs && for lib in `(cd device/release/libs/; ls; cd ../../..) | egrep -v libcurl`; do
+  lipo -output fat/release/libs/$lib -create device/release/libs/$lib -arch i386 simulator/release/libs/$lib -arch x86_64 simulator64/release/libs/$lib;
+done
+cp $(find . -type f | egrep 'libcurl\.a' | egrep release | head -1) fat/release/libs
+
+# Zip it up
+cd $START_DIR/deliveries/ios/fat/debug
+zip --recurse-paths mwp_sap_cpl-ios-fat-debug_1.1-${BUILD_NUMBER}.zip libs
+
+cd $START_DIR/deliveries
+zip --recurse-paths ${START_DIR}/deliveries/ios/fat/debug/mwp_sap_cpl-ios-fat-debug_1.1-${BUILD_NUMBER}.zip include
+
+cd $START_DIR/deliveries/ios/fat/release
+zip --recurse-paths mwp_sap_cpl-ios-fat-release_1.1-${BUILD_NUMBER}.zip libs
+
+cd $START_DIR/deliveries
+zip --recurse-paths ${START_DIR}/deliveries/ios/fat/release/mwp_sap_cpl-ios-fat-release_1.1-${BUILD_NUMBER}.zip include
+
+mkdir -p $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes && cd $_
+cp $START_DIR/deliveries/include/* ./
+
+mkdir -p $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries && cd $_
+cp $START_DIR/deliveries/ios/fat/debug/libs/* ./
+
+# Copy include files and binaries to HPControlledPrint
+cp -Rf $START_DIR/deliveries/include/* $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes
+cp -Rf $START_DIR/deliveries/ios/fat/release/libs/* $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries
+
+cd $START_DIR
+
