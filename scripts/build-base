@@ -1,4 +1,9 @@
-#!/bin/bash -ex
+#!/bin/bash -e
+
+XTRACE="-x"
+shopt -u -o | grep xtrace > /dev/null && XTRACE="+x"
+
+set +x          # Stop logging while we are parsing the options
 
 die()
 {
@@ -34,6 +39,8 @@ for arg in "$@"; do
       shift;;
   esac
 done
+
+set $XTRACE     # Restart logging
 
 # -------------------------------------------------------------
 # ---------- Make sure we have the proper parameters ----------
