@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -ex
 
 kill_dir()
 {
@@ -20,3 +20,4 @@ if [ -z "$JOB_NAME" ]; then
 fi
 
 cd $START_DIR
+
