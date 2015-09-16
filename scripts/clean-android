@@ -13,8 +13,10 @@ kill_dir ${WORKSPACE}/client/deliveries/android
 START_DIR=$(pwd)
 cd src/java && ant clean
 
-cd ${START_DIR}/src/platform/android/MobileWebPrintApp
-./prep_for_mk --clean
-ant clean
+if [ -z "$JOB_NAME" ]; then
+  cd ${START_DIR}/src/platform/android/MobileWebPrintApp
+  ./prep_for_mk --clean
+  ant clean
+fi
 
 cd $START_DIR
