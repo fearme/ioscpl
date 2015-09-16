@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --shared
 $(dirname $0)/package    --type=debug --os=android --platform=device --build-tool=android-ndk --shared
