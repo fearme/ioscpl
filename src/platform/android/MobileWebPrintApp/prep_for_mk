@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash -ex
 
 die()
 {
@@ -25,7 +25,7 @@ else
   # Prep this dir for building
 
   # Make the libs sub-dirs
-  find ../../../java/libs -type f | egrep so$ | cut -d'/' -f5-6 | xargs mkdir -p
+  find ../../../java/libs -type f | egrep so$ | cut -d'/' -f5-6 | xargs --no-run-if-empty mkdir -p
 
   # Copy the .so files
   find ../../../java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f5-); done
