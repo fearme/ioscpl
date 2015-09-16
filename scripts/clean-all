@@ -13,6 +13,11 @@ $(dirname $0)/clean-android
 $(dirname $0)/clean-ios
 $(dirname $0)/clean-macosx
 
+# These are OK if the rmdir fails
+set +e
 test -d ${WORKSPACE}/client/deliveries &&  rmdir ${WORKSPACE}/client/deliveries
 test -d ${WORKSPACE}/client/cmake-build && rmdir ${WORKSPACE}/client/cmake-build
+set -e
+
+exit 0
 
