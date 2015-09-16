@@ -8,9 +8,11 @@ cd src/java
 ndk-build
 ant dist
 
-cd ${START_DIR}/src/platform/android/MobileWebPrintApp
-./prep_for_mk
-ant debug
+if [ -z "$JOB_NAME" ]; then
+  cd ${START_DIR}/src/platform/android/MobileWebPrintApp
+  ./prep_for_mk
+  ant debug
+fi
 
 cd $START_DIR
 
