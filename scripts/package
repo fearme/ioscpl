@@ -51,10 +51,10 @@ echo "Packaging $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
 # -------------------------------------------------------------
 # ---------- Package it up ----------
 
-# Zip it up
-cd ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}
-zip --recurse-paths mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip libs
-
-cd ${WORKSPACE}/client/deliveries
-zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip include
+## Zip it up
+#cd ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}
+#zip --recurse-paths mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip libs
+#
+#cd ${WORKSPACE}/client/deliveries
+#zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip include
 
