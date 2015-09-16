@@ -1,5 +1,7 @@
 #!/bin/bash -e
 
+test -n "$JENKINS_HOME" && set -x
+
 XTRACE="-x"
 shopt -u -o | grep xtrace > /dev/null && XTRACE="+x"
 

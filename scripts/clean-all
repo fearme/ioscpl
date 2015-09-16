@@ -1,4 +1,6 @@
-#!/bin/bash -ex
+#!/bin/bash -e
+
+test -n "$JENKINS_HOME" && set -x
 
 kill_dir()
 {
