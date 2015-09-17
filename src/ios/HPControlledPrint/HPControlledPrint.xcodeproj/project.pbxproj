@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		3715A2491B4343ED004CB3D4 /* HPAsyncHttp.h in Headers */ = {isa = PBXBuildFile; fileRef = 3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */; };
+		372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 372E9E011BAA304200F2796E /* libOCMock.a */; };
+		372E9E0E1BAA310D00F2796E /* HPControlledPrintManagerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 372E9E0D1BAA310D00F2796E /* HPControlledPrintManagerTest.m */; };
+		372E9E101BAA325700F2796E /* HPPrintJobRequestTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 372E9E0F1BAA325700F2796E /* HPPrintJobRequestTest.m */; };
 		374268AA1B8BCB31004D0DD1 /* HPTokenValidator.h in Headers */ = {isa = PBXBuildFile; fileRef = 374268A81B8BCB31004D0DD1 /* HPTokenValidator.h */; };
 		374268AB1B8BCB31004D0DD1 /* HPTokenValidator.m in Sources */ = {isa = PBXBuildFile; fileRef = 374268A91B8BCB31004D0DD1 /* HPTokenValidator.m */; };
 		3755306D1B39D42500659D37 /* HPControlledPrint.h in Headers */ = {isa = PBXBuildFile; fileRef = 3755306C1B39D42500659D37 /* HPControlledPrint.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -60,6 +63,18 @@
 /* Begin PBXFileReference section */
 		3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPAsyncHttp.h; sourceTree = "<group>"; };
 		3715A2481B4343ED004CB3D4 /* HPAsyncHttp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPAsyncHttp.m; sourceTree = "<group>"; };
+		372E9E011BAA304200F2796E /* libOCMock.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libOCMock.a; path = Libaries/libOCMock.a; sourceTree = "<group>"; };
+		372E9E041BAA305400F2796E /* NSNotificationCenter+OCMAdditions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSNotificationCenter+OCMAdditions.h"; sourceTree = "<group>"; };
+		372E9E051BAA305400F2796E /* OCMArg.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMArg.h; sourceTree = "<group>"; };
+		372E9E061BAA305400F2796E /* OCMConstraint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMConstraint.h; sourceTree = "<group>"; };
+		372E9E071BAA305400F2796E /* OCMLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMLocation.h; sourceTree = "<group>"; };
+		372E9E081BAA305400F2796E /* OCMMacroState.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMMacroState.h; sourceTree = "<group>"; };
+		372E9E091BAA305400F2796E /* OCMock.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMock.h; sourceTree = "<group>"; };
+		372E9E0A1BAA305400F2796E /* OCMockObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMockObject.h; sourceTree = "<group>"; };
+		372E9E0B1BAA305400F2796E /* OCMRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMRecorder.h; sourceTree = "<group>"; };
+		372E9E0C1BAA305400F2796E /* OCMStubRecorder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OCMStubRecorder.h; sourceTree = "<group>"; };
+		372E9E0D1BAA310D00F2796E /* HPControlledPrintManagerTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPControlledPrintManagerTest.m; sourceTree = "<group>"; };
+		372E9E0F1BAA325700F2796E /* HPPrintJobRequestTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPPrintJobRequestTest.m; sourceTree = "<group>"; };
 		374268A81B8BCB31004D0DD1 /* HPTokenValidator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPTokenValidator.h; sourceTree = "<group>"; };
 		374268A91B8BCB31004D0DD1 /* HPTokenValidator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPTokenValidator.m; sourceTree = "<group>"; };
 		375530671B39D42500659D37 /* HPControlledPrint.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = HPControlledPrint.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -122,12 +137,46 @@
 			buildActionMask = 2147483647;
 			files = (
 				375530731B39D42500659D37 /* HPControlledPrint.framework in Frameworks */,
+				372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		372E9DFF1BAA302000F2796E /* Includes */ = {
+			isa = PBXGroup;
+			children = (
+				372E9E031BAA305400F2796E /* OCMock */,
+			);
+			name = Includes;
+			sourceTree = "<group>";
+		};
+		372E9E001BAA302C00F2796E /* Libraries */ = {
+			isa = PBXGroup;
+			children = (
+				372E9E011BAA304200F2796E /* libOCMock.a */,
+			);
+			name = Libraries;
+			sourceTree = "<group>";
+		};
+		372E9E031BAA305400F2796E /* OCMock */ = {
+			isa = PBXGroup;
+			children = (
+				372E9E041BAA305400F2796E /* NSNotificationCenter+OCMAdditions.h */,
+				372E9E051BAA305400F2796E /* OCMArg.h */,
+				372E9E061BAA305400F2796E /* OCMConstraint.h */,
+				372E9E071BAA305400F2796E /* OCMLocation.h */,
+				372E9E081BAA305400F2796E /* OCMMacroState.h */,
+				372E9E091BAA305400F2796E /* OCMock.h */,
+				372E9E0A1BAA305400F2796E /* OCMockObject.h */,
+				372E9E0B1BAA305400F2796E /* OCMRecorder.h */,
+				372E9E0C1BAA305400F2796E /* OCMStubRecorder.h */,
+			);
+			name = OCMock;
+			path = Includes/OCMock;
+			sourceTree = "<group>";
+		};
 		3755305D1B39D42500659D37 = {
 			isa = PBXGroup;
 			children = (
@@ -172,6 +221,10 @@
 		375530761B39D42500659D37 /* HPControlledPrintTests */ = {
 			isa = PBXGroup;
 			children = (
+				372E9E0D1BAA310D00F2796E /* HPControlledPrintManagerTest.m */,
+				372E9E0F1BAA325700F2796E /* HPPrintJobRequestTest.m */,
+				372E9DFF1BAA302000F2796E /* Includes */,
+				372E9E001BAA302C00F2796E /* Libraries */,
 				375530771B39D42500659D37 /* Supporting Files */,
 			);
 			path = HPControlledPrintTests;
@@ -381,6 +434,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				372E9E0E1BAA310D00F2796E /* HPControlledPrintManagerTest.m in Sources */,
+				372E9E101BAA325700F2796E /* HPPrintJobRequestTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -567,8 +622,23 @@
 					"DEBUG=1",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/HPControlledPrintTests/Includes",
+				);
 				INFOPLIST_FILE = HPControlledPrintTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/HPControlledPrintTests/Libaries",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+					"-ObjC",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = "~/dev/mario/client/xcode-build";
 			};
@@ -581,8 +651,23 @@
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(PROJECT_DIR)/HPControlledPrintTests/Includes",
+				);
 				INFOPLIST_FILE = HPControlledPrintTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/HPControlledPrintTests/Libaries",
+				);
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-framework",
+					XCTest,
+					"-ObjC",
+				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SYMROOT = "~/dev/mario/client/xcode-build";
 			};

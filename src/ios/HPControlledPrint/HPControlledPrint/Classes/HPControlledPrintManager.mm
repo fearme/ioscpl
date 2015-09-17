@@ -66,6 +66,10 @@ BOOL printerScanStarted;
     timerInterval = seconds;
 }
 
+- (int)getScanIntervalSeconds {
+    return timerInterval;
+}
+
 //register_handler    (char const * name, void * app_data, hp_sap_callback_t callback);
 - (BOOL)registerStatusListener //:(NSString *)listener appData:(void *)appData callback:hp_sap_callback_t callback
 {
@@ -108,14 +112,14 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     char const * p1 = (p1_ != NULL ? (char const *)p1_ : "");
     char const * p2 = (params != NULL ? params->p2 != NULL ? (char const *)params->p2 : "" : "");
     char const * p3 = (params != NULL ? params->p3 != NULL ? (char const *)params->p3 : "" : "");
-    char const * p4 = (params != NULL ? params->p4 != NULL ? (char const *)params->p4 : "" : "");
-    char const * p5 = (params != NULL ? params->p5 != NULL ? (char const *)params->p5 : "" : "");
+    //char const * p4 = (params != NULL ? params->p4 != NULL ? (char const *)params->p4 : "" : "");
+    //char const * p5 = (params != NULL ? params->p5 != NULL ? (char const *)params->p5 : "" : "");
     
-    int n1 = (params != NULL ? params->n1 : 0);
-    int n2 = (params != NULL ? params->n2 : 0);
-    int n3 = (params != NULL ? params->n3 : 0);
-    int n4 = (params != NULL ? params->n4 : 0);
-    int n5 = (params != NULL ? params->n5 : 0);
+    //int n1 = (params != NULL ? params->n1 : 0);
+    //int n2 = (params != NULL ? params->n2 : 0);
+    //int n3 = (params != NULL ? params->n3 : 0);
+    //int n4 = (params != NULL ? params->n4 : 0);
+    //int n5 = (params != NULL ? params->n5 : 0);
     
     //begin_printer_changes
     //Doc URL: https://www.dropbox.com/s/o9m66y4h67yfwmq/Avatar1.jpg?dl=0

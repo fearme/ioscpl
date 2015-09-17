@@ -23,6 +23,8 @@ typedef enum {
 @property (strong, nonatomic) id <HPPrinterAttributesDelegate> printerAttributesDelegate;
 
 - (void)setScanIntervalSeconds:(int)seconds;
+- (int)getScanIntervalSeconds;
+
 - (void)proxy:(NSString *)host onPort:(NSString *)port;
 
 - (void)initialize: (ServerStack)stack withToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion;
