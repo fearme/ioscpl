@@ -4,4 +4,6 @@
 
 #cmakedefine HAVE_IF_ETHER_H 1
 
+#define BUILD_NUMBER "@BUILD_NUMBER@"
+
 #endif  // __MWP_CORE_CONFIG_H__

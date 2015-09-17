@@ -1,16 +1,41 @@
 #!/bin/bash -e
 
-$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --shared
-$(dirname $0)/package    --type=release --os=android --platform=device --build-tool=android-ndk --shared
+test -n "$JENKINS_HOME" && set -x
+
+XTRACE="-x"
+shopt -u -o | grep xtrace > /dev/null && XTRACE="+x"
 
 START_DIR=$(pwd)
-cd src/java
-ndk-build
-ant dist
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
 
-if [ -z "$JOB_NAME" ]; then
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="armeabi-v7a" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="armeabi" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="arm64-v8a" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86_64" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips64" --shared
+$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips" --shared
+
+# Build the JNI code and the JAR
+cd ${START_DIR}/src/java && ndk-build && ant dist
+cd $START_DIR
+
+# Copy the JNI modules to the deliveries
+cd $START_DIR/deliveries/android/device/release
+find ../../../../src/java/libs -type f | egrep so$ | cut -d'/' -f7-8 | xargs --no-run-if-empty mkdir -p
+find ../../../../src/java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f7-); done
+
+# Copy the JAR to the deliveries
+find ../../../../src/java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
+cd $START_DIR
+
+$(dirname $0)/package    --type=release --os=android --platform=device --build-tool=android-ndk --shared
+
+
+if [ -z "$JENKINS_HOME" ]; then
   cd ${START_DIR}/src/platform/android/MobileWebPrintApp
-  ./prep_for_mk
+  ./prep_for_mk --clean
+  ./prep_for_mk --mwp-zip="${START_DIR}/deliveries/android/mwp_sap_cpl-android-device-release_1.1-${BUILD_NUMBER}.zip"
   ant release
 
   cd $START_DIR
@@ -18,7 +43,6 @@ if [ -z "$JOB_NAME" ]; then
   set +e          # Stop 'exit on error' for a sec
 
   # Extra packaging -- copy the APK to the deliveries dir
-  test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
   find . -type f | grep -i '\.apk$' | grep -i release | grep -i -v unaligned | grep -v '/deliveries/' | \
     while read fullname; do
       f=$(basename "$fullname" .apk)
@@ -26,8 +50,7 @@ if [ -z "$JOB_NAME" ]; then
       [ -n "$install" ] && adb -d install -r ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
     done
 
-  set -e
+  set $XTRACE     # Restart logging
 
 fi
-
 

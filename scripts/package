@@ -47,7 +47,7 @@ set $XTRACE     # Restart logging
 
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
-test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
 
 echo "Workspace dir: $WORKSPACE"
 echo "Packaging $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
@@ -70,8 +70,10 @@ zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_REL
 cd ${WORKSPACE}/client/deliveries/${OS}
 mv ${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip ./
 
-rm    ${PLATFORM}/${DEBUG_RELEASE}/libs/*
-rmdir ${PLATFORM}/${DEBUG_RELEASE}/libs
-rmdir ${PLATFORM}/${DEBUG_RELEASE}
-rmdir ${PLATFORM}
+cp mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip mwp_sap_cpl-android-device_1.1-latest.zip
+
+#rm    ${PLATFORM}/${DEBUG_RELEASE}/libs/*
+#rmdir ${PLATFORM}/${DEBUG_RELEASE}/libs
+#rmdir ${PLATFORM}/${DEBUG_RELEASE}
+#rmdir ${PLATFORM}
 

@@ -10,6 +10,10 @@ set +x          # Stop logging while we are parsing the options
 for arg in "$@"; do
   case $arg in
 
+    --dev)
+      DEVELOPMENT="1"
+      shift;;
+
     --install)
       install="1"
       shift;;
@@ -19,22 +23,25 @@ done
 
 set $XTRACE     # Restart logging
 
-$(dirname $0)/build-android-debug
-$(dirname $0)/build-android-release
+START_DIR=$(pwd)
 
-#set +e          # Stop 'exit on error' for a sec
-#
-## Extra packaging
-#test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
-#find . -type f | grep -i '\.apk$' | grep -i -v unaligned | grep -v '/deliveries/' | \
-#  while read fullname; do
-#    f=$(basename "$fullname" .apk)
-#    cp $fullname deliveries/android/device/${f}_1.1-${BUILD_NUMBER}.apk
-#    [ -n "$install" ] && adb -d install -r $fullname
-#  done
-#
-#set -e
+if [ -z "$DEVELOPMENT" ]; then
+  # clean the jni/NDK stuff
+  cd src/java && ndk-build clean && ant clean
+  cd $START_DIR
 
-# If we get here, no error
-true
+  # Then build the debug version
+  $(dirname $0)/build-android-debug
+
+  # clean the jni/NDK stuff
+  cd src/java && ndk-build clean && ant clean
+  cd $START_DIR
+
+  # Then build the release version
+  $(dirname $0)/build-android-release
+
+else
+
+  $(dirname $0)/build-android-debug --dev
+fi
 

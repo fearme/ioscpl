@@ -2,7 +2,7 @@
 
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
-test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
 
 echo "Workspace dir: $WORKSPACE"
 echo "Build Number: $BUILD_NUMBER"

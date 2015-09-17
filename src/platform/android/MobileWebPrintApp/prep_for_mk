@@ -14,32 +14,34 @@ die()
 for arg in "$@"; do
   case $arg in
 
+    --mwp-zip=*)
+      MWP_ZIP="${arg#*=}";
+      shift;;
+
     --clean)
       clean="1"
       shift;;
 
   esac
 done
+
 set $XTRACE
 
 if [ -n "$clean" ]; then
+
+  ant clean
+
   cd libs
   rm -rf *
   cd ..
+
 else
+
   # Prep this dir for building
+  test -z "$MWP_ZIP" && die "Zip file needed: --mwp-zip=blah.zip"
 
-  # Make the libs sub-dirs
-  find ../../../java/libs -type f | egrep so$ | cut -d'/' -f5-6 | xargs --no-run-if-empty mkdir -p
+  unzip $MWP_ZIP
+  test -d include && rm -rf include
 
-  # Copy the .so files
-  find ../../../java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f5-); done
-
-  find ../../../../cmake-build/android_device -type f | egrep so$ | while read f; do cp $f ./libs/armeabi-v7a/; done
-
-  # Copy the .jar files
-  find ../../../java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
-
-  cp -r ../../../../src/cpp/platform/android/libs/* libs/
 fi
 

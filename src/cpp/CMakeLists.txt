@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project("mario_client")
 
+set(BUILD_NUMBER $ENV{BUILD_NUMBER})
+
 # TODO: move this to the right place (in an 'if' that knows we are building
 # for MacOSX)
 set(CMAKE_MACOSX_RPATH 1)
@@ -98,7 +100,7 @@ if (MARIO_APP)
                   ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
       target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
-                  ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/armeabi-v7a/libcurl.a
+                  ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/${ANDROID_ABI}/libcurl.a
                   ${ZLIB_LIBRARIES})
     endif()
   else()

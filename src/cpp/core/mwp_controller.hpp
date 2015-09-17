@@ -16,7 +16,7 @@
 #include "hp_mwp.h"
 #include "hp_sap.h"
 
-#define MWP_SERVER_NAME "hqdev.mobiledevprint.net"
+#define MWP_SERVER_NAME "hqext.mobiledevprint.net"
 //#define MWP_SERVER_NAME "hqpub.mobilewebprint.net"
 #define MWP_SERVER_PORT 80
 
@@ -78,10 +78,12 @@ namespace net_mobilewebprint {
   struct controller_http_request_t
   {
     uint32                txn_id;
+    std::string           verb;
     std::string           url;
     serialization_json_t  json_body;
 
-    controller_http_request_t(uint32 txn_id, std::string const & url, serialization_json_t const & json);
+    controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, serialization_json_t const & json);
+    controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, strmap const & query, serialization_json_t const & json);
   };
 
   struct server_command_response_t : public upstream_handler_t {
@@ -237,15 +239,12 @@ namespace net_mobilewebprint {
     // ---------- Utilities for anyone ----------
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json, upstream_handler_t *);
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json);
-//    string                send_upstream(string const & mod_name, string const & endpoint,         string const & body);
 
     private:
       uint32               curl_http_post(string const & url, serialization_json_t &);
-//      uint32               curl_http_post(string const & url, string const & body);
       uint32                curl_http_get(string const & url);
 
       uint32               curl_http_post(string const & url, serialization_json_t &, uint32 id);
-//      uint32               curl_http_post(string const & url, string const & body, uint32 id);
       uint32               curl_http_post(controller_http_request_t const & request);
       uint32                curl_http_get(string const & url, uint32 id);
 
@@ -297,7 +296,6 @@ namespace net_mobilewebprint {
     std::deque<controller_http_request_t>* delayed_http_requests;
 
     // Make an HTTP request that we (the controller) will handle
-    uint32                     _make_http_post(char const * url, serialization_json_t &);
     uint32                     _make_http_post(char const * url, strmap const & query, serialization_json_t &);
 
     //

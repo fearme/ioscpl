@@ -36,9 +36,14 @@ for arg in "$@"; do
       BUILD_TOOL="${arg#*=}";
       shift;;
 
+    --abi=*)
+      ABI="${arg#*=}";
+      shift;;
+
     --shared)
       SHARED_LIB=1
       shift;;
+
   esac
 done
 
@@ -92,9 +97,14 @@ test -n "$MAKE_TOOL" || die "No MAKE_TOOL. Should specify a build-tool"
 
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
+test -n "$ABI"       || ABI="armeabi-v7a"
 
+echo "-------------------------------------------------------------------------------------------------------------------------------"
+echo "Buiding $OS $ABI $DEBUG_RELEASE"
+echo "        ($PLATFORM $BUILD_TOOL)"
+echo ""
 echo "Workspace dir: $WORKSPACE"
-echo "Buiding $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
+echo "-------------------------------------------------------------------------------------------------------------------------------"
 
 
 
@@ -102,6 +112,7 @@ echo "Buiding $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
 # -------------------------------------------------------------
 # ---------- CMake-buildify the project ----------
 mkdir -p ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} && cd $_
+BUILD_TREE_ROOT=$(pwd)
 
 if [ "$BUILD_TOOL" == "xcode" ]; then
   if [ "$OS" == "ios" ]; then
@@ -120,7 +131,9 @@ if [ "$BUILD_TOOL" == "xcode" ]; then
     ${MAKE_TOOL} -target mwpcli -configuration ${DEBUG_RELEASE_CAP}
   fi
 elif [ "$BUILD_TOOL" == "android-ndk" ]; then
-  cmake -G "${GENERATOR_CMAKE}" ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -DANDROID_STL=stlport_static
+  mkdir -p $ABI && cd $_
+  BUILD_TREE_ROOT=$(pwd)
+  cmake -G "${GENERATOR_CMAKE}" ${WORKSPACE}/client/src/cpp/ -DANDROID_ABI="${ABI}" -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -DANDROID_STL=stlport_static
   ${MAKE_TOOL} mwp
 fi
 
@@ -133,23 +146,24 @@ mkdir -p libs && cd $_
 
 if [ -z "$SHARED_LIB" ]; then
   # cmake-build/xcode_ios_simulator/*.a
-  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
+  find ${BUILD_TREE_ROOT} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
 
   # src/cpp/platform/ios/*.a
   find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
 else
   # cmake-build/xcode_ios_simulator/*.so
-  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
+  mkdir -p $ABI
+  find ${BUILD_TREE_ROOT} -type f | egrep -i '\.so$' | while read f; do cp $f ./${ABI}; done
 
   # src/cpp/platform/ios/*.so
-  find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
+  find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.so$' | while read f; do cp $f ./${ABI}; done
 fi
 
 # Copy headers
 mkdir -p ${WORKSPACE}/client/deliveries/include && cd $_
 
 # cmake-build/xcode_ios_simulator/*.h -- auto-generated
-find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.h$' | while read f; do cp $f ./; done
+find ${BUILD_TREE_ROOT} -type f | egrep -i '\.h$' | while read f; do cp $f ./; done
 #rm -r mwp_core_config.h
 
 # Various hpp files

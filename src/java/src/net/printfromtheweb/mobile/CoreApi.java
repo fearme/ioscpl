@@ -200,18 +200,22 @@ public class CoreApi {
 //  }
 
   public void setOption(String name, String value) {
+    //mwp.logD(TAG, "setOption(" + name + ", " + value + ")");
     mwp.setOption(name, value);
   }
 
   public void setOption(String name, int value) {
+    //mwp.logD(TAG, "setOption(" + name + ", " + value + ")");
     mwp.setIntOption(name, value);
   }
 
   public void setOption(String name, boolean value) {
+    //mwp.logD(TAG, "setOption(" + name + ", " + value + ")");
     mwp.setFlag(name, value);
   }
 
   public void setOption(String name) {
+    //mwp.logD(TAG, "setOption(" + name + ")");
     mwp.setFlag(name, true);
   }
 
