@@ -101,7 +101,7 @@ echo "Buiding $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
 
 # -------------------------------------------------------------
 # ---------- CMake-buildify the project ----------
-mkdir -p ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} && cd $_
+mkdir -p ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} && cd $_
 
 if [ "$BUILD_TOOL" == "xcode" ]; then
   if [ "$OS" == "ios" ]; then
@@ -133,13 +133,13 @@ mkdir -p libs && cd $_
 
 if [ -z "$SHARED_LIB" ]; then
   # cmake-build/xcode_ios_simulator/*.a
-  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
+  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
 
   # src/cpp/platform/ios/*.a
   find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
 else
   # cmake-build/xcode_ios_simulator/*.so
-  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
+  find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
 
   # src/cpp/platform/ios/*.so
   find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.so$' | while read f; do cp $f ./; done
@@ -149,8 +149,8 @@ fi
 mkdir -p ${WORKSPACE}/client/deliveries/include && cd $_
 
 # cmake-build/xcode_ios_simulator/*.h -- auto-generated
-find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM} -type f | egrep -i '\.h$' | while read f; do cp $f ./; done
-rm -r mwp_core_config.h
+find ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} -type f | egrep -i '\.h$' | while read f; do cp $f ./; done
+#rm -r mwp_core_config.h
 
 # Various hpp files
 cp ${WORKSPACE}/client/src/cpp/core/mwp_core_api.hpp ./

@@ -35,7 +35,6 @@ for arg in "$@"; do
       shift;;
   esac
 done
-set $XTRACE     # Restart logging
 
 # -------------------------------------------------------------
 # ---------- Make sure we have the proper parameters ----------
@@ -43,6 +42,8 @@ test -n "$DEBUG_RELEASE" || die "must specify --type=debug or --type=release"
 test -n "$OS"            || die "must specify --os=xyz    (ios, android)"
 test -n "$PLATFORM"      || die "must specify --platform=xyz    (simulator, device)"
 test -n "$BUILD_TOOL"    || die "must specify --build-tool=xyz     (xcode, android-ndk)"
+
+set $XTRACE     # Restart logging
 
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
@@ -57,10 +58,20 @@ echo "Packaging $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"
 # -------------------------------------------------------------
 # ---------- Package it up ----------
 
-## Zip it up
-#cd ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}
-#zip --recurse-paths mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip libs
-#
-#cd ${WORKSPACE}/client/deliveries
-#zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip include
+# Zip up the libs
+cd ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}
+zip --recurse-paths mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip libs
+
+# Zip up the headers
+cd ${WORKSPACE}/client/deliveries
+zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip include
+
+# Put the zip file into the base delivery dir
+cd ${WORKSPACE}/client/deliveries/${OS}
+mv ${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip ./
+
+rm    ${PLATFORM}/${DEBUG_RELEASE}/libs/*
+rmdir ${PLATFORM}/${DEBUG_RELEASE}/libs
+rmdir ${PLATFORM}/${DEBUG_RELEASE}
+rmdir ${PLATFORM}
 

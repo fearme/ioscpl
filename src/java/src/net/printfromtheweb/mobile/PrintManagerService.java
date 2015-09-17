@@ -20,7 +20,7 @@ public class PrintManagerService implements Host.PrintManager {
 //  public  static final int    MSG_PRINTER_LIST      = 3;
 //  public  static final int    MSG_PRINT_PROGRESS    = 4;
 //
-//  private static final String TAG                   = "PrintFromTheWebMobile";
+//  private static final String TAG                   = "jMobileWebPrint";
 //
 //  public static        PrintManagerService  printManagerService;
 //

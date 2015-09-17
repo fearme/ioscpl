@@ -68,7 +68,7 @@ public class PrintActivity extends Activity {
   public  static final String   EXTRA_PAIR_ID   = "net.mobilewebprint.app.PAIR_ID";
   public  static final String   EXTRA_PICKER    = "net.mobilewebprint.app.PICKER";
 
-  private static final String   TAG             = "MobileWebPrint";
+  private static final String   TAG             = "jMobileWebPrint";
 
   // The printer list
   protected ArrayList<Properties>                     printerList;

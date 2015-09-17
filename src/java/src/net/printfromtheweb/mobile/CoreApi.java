@@ -55,7 +55,7 @@ public class CoreApi {
 //  protected Map<String, String>           options;
 //  protected Map<String, Integer>          intOptions;
 //
-  protected static final String             TAG             = "PrintFromTheWebMobile";
+  protected static final String             TAG             = "jMobileWebPrint";
 //  protected static final String             tmpDir          = "/tmp";
 
   public static int                       num_objects = 0;

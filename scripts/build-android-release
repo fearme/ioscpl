@@ -12,8 +12,22 @@ if [ -z "$JOB_NAME" ]; then
   cd ${START_DIR}/src/platform/android/MobileWebPrintApp
   ./prep_for_mk
   ant release
-fi
 
-cd $START_DIR
+  cd $START_DIR
+
+  set +e          # Stop 'exit on error' for a sec
+
+  # Extra packaging -- copy the APK to the deliveries dir
+  test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+  find . -type f | grep -i '\.apk$' | grep -i release | grep -i -v unaligned | grep -v '/deliveries/' | \
+    while read fullname; do
+      f=$(basename "$fullname" .apk)
+      cp $fullname ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
+      [ -n "$install" ] && adb -d install -r ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
+    done
+
+  set -e
+
+fi
 
 

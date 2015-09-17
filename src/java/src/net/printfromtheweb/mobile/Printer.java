@@ -18,7 +18,7 @@ package net.printfromtheweb.mobile;
 
 public class Printer {
 
-//  private static final String             TAG             = "PrintFromTheWebMobile";
+//  private static final String             TAG             = "jMobileWebPrint";
 //  public  static       Host               host            = null;
 //  public  static       SendSnmp           snmp            = null;
 //

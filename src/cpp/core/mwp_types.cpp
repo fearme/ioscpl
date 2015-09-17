@@ -1174,6 +1174,9 @@ static net_mobilewebprint::strset tags_to_log;
 static std::map<string, net_mobilewebprint::strset> tag_sets;
 
 static bool _should_log(char const * tags) {
+#if 1
+  return true;
+#else
   string const & user_tags = get_option("log_tags");
   if (user_tags.length() == 0) { return true; }
 
@@ -1187,6 +1190,7 @@ static bool _should_log(char const * tags) {
   }
 
   return (_intersection(tags_to_log, tag_sets[tags]).size() > 0);
+#endif
 }
 
 void net_mobilewebprint::log_d(string const & msg)
@@ -1365,9 +1369,9 @@ void net_mobilewebprint::log_w(char const * tags, char const * format, ...)
 void net_mobilewebprint::log_v(int level, char const * tags, char const * format, ...)
 {
   //return;
-  if (!get_flag("verbose"))                   { return; }
-  if (level > get_option("v_log_level", 0))   { return; }
-  if (!_should_log(tags))                     { return; }
+//  if (!get_flag("verbose"))                   { return; }
+//  if (level > get_option("v_log_level", 0))   { return; }
+//  if (!_should_log(tags))                     { return; }
 
   va_list argList;
 

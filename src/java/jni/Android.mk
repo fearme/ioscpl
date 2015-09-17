@@ -11,7 +11,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE    := mobilewebprint
 LOCAL_SRC_FILES := mobilewebprint-jni.cpp
-LOCAL_C_INCLUDES := ../../cmake-build/android_device/core/
+LOCAL_C_INCLUDES := ../../deliveries/include
 LOCAL_C_INCLUDES += ../cpp/core/
 LOCAL_C_INCLUDES += ../cpp/aprotocols/
 

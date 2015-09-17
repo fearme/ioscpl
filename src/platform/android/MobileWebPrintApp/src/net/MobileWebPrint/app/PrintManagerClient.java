@@ -27,7 +27,7 @@ public abstract class PrintManagerClient extends Handler implements ServiceConne
 //  public void onPrinterListChanged(Bundle printers);
 //  public void onPrintJobProgress(Bundle progress);
 
-  private static final String TAG                   = "MobileWebPrint";
+  private static final String TAG                   = "jMobileWebPrint";
 
   protected String    name;
   protected Context   that;

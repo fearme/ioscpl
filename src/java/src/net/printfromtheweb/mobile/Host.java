@@ -49,7 +49,7 @@ import java.util.concurrent.ExecutorService;
 
 public class Host implements PrinterListChangesListener, PrintProgressChangesListener {
 
-  private static final String     TAG               = "PrintFromTheWebMobile";
+  private static final String     TAG               = "jMobileWebPrint";
 
 //  public static final String      WIFI_NAG_NONE     = "";
 //  public static final String      WIFI_NAG_NAG      = "net.printfromtheweb.mobile.WIFI_NAG";

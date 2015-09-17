@@ -75,7 +75,7 @@ endif()
 
 
 # "mariocli" is a command-line tool to drive functionality during development
-add_executable(mwpcli 
+add_executable(mwpcli
                ${MARIO_BASE_CPP}
                ${MARIO_CURL_CPP}
                ${MARIO_PLATFORM_DIR}/mario_sys.cpp
@@ -97,7 +97,7 @@ if (MARIO_APP)
                   ${MARIO_PLATFORM_DIR}/mario_sys.cpp
                   ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
-      target_link_libraries(mwp mwpcore mwpcoreprotos cpl log 
+      target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
                   ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/armeabi-v7a/libcurl.a
                   ${ZLIB_LIBRARIES})
     endif()

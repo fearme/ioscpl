@@ -42,7 +42,7 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
   public  static final int    MSG_PRINT_PROGRESS    = 4;
   public  static final int    MSG_SEND_JOB          = 5;
 
-  private static final String TAG                   = "MobileWebPrint";
+  private static final String TAG                   = "jMobileWebPrint";
 
 
   public static net.mobilewebprint.Client               mwp_client;
@@ -225,8 +225,8 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
     Context context = getApplicationContext();
     String uniqueId = getUniqueHardwareId();
     mwp_client.setOption("hardwareid", uniqueId);
-    mwp_client.setOption("deviceid", uniqueId);
-    Log.d(TAG, "hardware_id " + uniqueId);
+    mwp_client.setOption("clientid", uniqueId);
+    Log.d(TAG, "clientId " + uniqueId);
 
     if(uniqueId != null && uniqueId.length() > 0){
       mwp_client.setOption("hardwareid", uniqueId);

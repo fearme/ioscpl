@@ -19,7 +19,7 @@ package net.mobilewebprint.secureassetprinting;
 //public class PrintActivity extends Activity {
 public class PrintActivity {
 
-//  private static final String               TAG = "PrintFromTheWebMobile";
+//  private static final String               TAG = "jMobileWebPrint";
   public  static final String   EXTRA_ASSET_URL = "net.printfromtheweb.mobile.ASSET_URL";
 
 //  protected                             String      url;

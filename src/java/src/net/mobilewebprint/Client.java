@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 public class Client {
 
-  private static final String TAG = "MobileWebPrint.Client";
+  private static final String TAG = "jMobileWebPrint.Client";
 
   public Client(net.mobilewebprint.Application application_)
   {

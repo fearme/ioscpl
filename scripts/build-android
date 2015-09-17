@@ -22,18 +22,18 @@ set $XTRACE     # Restart logging
 $(dirname $0)/build-android-debug
 $(dirname $0)/build-android-release
 
-set +e          # Stop 'exit on error' for a sec
-
-# Extra packaging
-test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
-find . -type f | grep -i '\.apk$' | grep -i -v unaligned | grep -v '/deliveries/' | \
-  while read fullname; do
-    f=$(basename "$fullname" .apk)
-    cp $fullname deliveries/android/device/${f}_1.1-${BUILD_NUMBER}.apk
-    [ -n "$install" ] && adb -d install -r $fullname
-  done
-
-set -e
+#set +e          # Stop 'exit on error' for a sec
+#
+## Extra packaging
+#test -n "$BUILD_NUMBER" || export BUILD_NUMBER="001"
+#find . -type f | grep -i '\.apk$' | grep -i -v unaligned | grep -v '/deliveries/' | \
+#  while read fullname; do
+#    f=$(basename "$fullname" .apk)
+#    cp $fullname deliveries/android/device/${f}_1.1-${BUILD_NUMBER}.apk
+#    [ -n "$install" ] && adb -d install -r $fullname
+#  done
+#
+#set -e
 
 # If we get here, no error
 true

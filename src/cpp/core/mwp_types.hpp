@@ -1370,6 +1370,36 @@ namespace net_mobilewebprint {
     return compact(array);
   }
 
+  template <typename T1>
+  std::map<std::string, T1> D(char const *key1, T1 const & val1) {
+    std::map<std::string, T1> result;
+
+    result.insert(std::make_pair(key1, val1));
+
+    return result;
+  }
+
+  template <typename T1, typename T2>
+  std::map<std::string, T1> D(char const *key1, T1 const & val1, char const *key2, T2 const & val2) {
+    std::map<std::string, T1> result;
+
+    result.insert(std::make_pair(key1, val1));
+    result.insert(std::make_pair(key2, val2));
+
+    return result;
+  }
+
+  template <typename T1, typename T2, typename T3>
+  std::map<std::string, T1> D(char const *key1, T1 const & val1, char const *key2, T2 const & val2, char const *key3, T3 const & val3) {
+    std::map<std::string, T1> result;
+
+    result.insert(std::make_pair(key1, val1));
+    result.insert(std::make_pair(key2, val2));
+    result.insert(std::make_pair(key3, val3));
+
+    return result;
+  }
+
   struct json_t
   {
     strmap                    str_attrs;

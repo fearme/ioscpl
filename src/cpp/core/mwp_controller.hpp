@@ -292,11 +292,13 @@ namespace net_mobilewebprint {
     args_t                    ARGS;
 
     uint32                    unique_number;
+    string                    clientId();
 
     std::deque<controller_http_request_t>* delayed_http_requests;
 
     // Make an HTTP request that we (the controller) will handle
     uint32                     _make_http_post(char const * url, serialization_json_t &);
+    uint32                     _make_http_post(char const * url, strmap const & query, serialization_json_t &);
 
     //
     e_handle_result process_upstream_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
@@ -311,6 +313,7 @@ namespace net_mobilewebprint {
     template <typename T> controller_base_t & set_args(int argc, T const *argv[]) {
       ARGS.merge(ARGS(argc, argv));
     }
+
 
   };
 

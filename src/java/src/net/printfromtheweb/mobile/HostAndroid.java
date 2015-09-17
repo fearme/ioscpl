@@ -45,7 +45,7 @@ import java.util.concurrent.Executors;
 
 public class HostAndroid extends Host {
 
-//  private static final String                       TAG             = "PrintFromTheWebMobile";
+//  private static final String                       TAG             = "jMobileWebPrint";
 //
 //  protected boolean                                 usingUploader;
 //  protected DefaultHttpClient                       client;

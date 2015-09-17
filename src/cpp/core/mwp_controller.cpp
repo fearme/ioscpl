@@ -73,7 +73,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
 
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
-  set_arg("deviceid", (string("FFFFFFFF")+random_string(56)).c_str());
+  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
   set_arg("v_log_level", 2);
   set_flag("verbose", true);
 
@@ -105,7 +105,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
 
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
-  set_arg("deviceid", (string("FFFFFFFF")+random_string(56)).c_str());
+  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
   set_arg("v_log_level", 2);
   set_flag("verbose", true);
 
@@ -115,6 +115,16 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
 std::string net_mobilewebprint::controller_base_t::mod_name()
 {
   return "controller_base_t";
+}
+
+std::string net_mobilewebprint::controller_base_t::clientId()
+{
+  string result = arg("clientid", "");
+  if (result.length() == 0) { result = arg("deviceid",              ""); }
+  if (result.length() == 0) { result = arg("hardwareid",            ""); }
+  if (result.length() == 0) { result = arg("last_resort_client_id", ""); }
+
+  return result;
 }
 
 /**
@@ -287,8 +297,10 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
     result = mq.send(scan_for_printers) && result;
   }
 
+  log_d("Am i starting in blockup?   0000");
+  log_v(2, "controller_t", "Controller trying to POST to %s", "asdfasfafsasfafasf------------------");
   if (!block) {
-    log_d("Not blocking in startup");
+    log_d("Not blocking in startup---------------------");
     return result;
   }
 
@@ -305,7 +317,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_up_a
   log_d(1, "controller_t", "Controller is up and running");
 
   serialization_json_t json;
-  client_start_in_flight_txn_id = _make_http_post("/clientStart", json);
+  client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", "241"), json);
   return handled;
 }
 
@@ -373,12 +385,13 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   json.set("meta.platform", platform_name());
   json.set("meta.version", "1.1.99");
   json.set("meta.user", arg("username", "noname@example.com"));
-  json.set("meta.deviceid", arg("deviceid", ""));
   json.set("meta.build", 2);
   json.set("meta.isTrue", true);
   json.set("meta.isFalse", false);
   json.set("meta.float", (float)1.1);
   json.set("meta.double", (double)1.1111);
+
+  json.set("meta.clientId", clientId());
 
   //log_v(3, "controller_t", "Controller POSTING %s", json.stringify().c_str());
 
@@ -429,6 +442,31 @@ uint32 net_mobilewebprint::controller_base_t::_make_http_post(char const * url_,
   return curl_http_post(controller_http_request_t(txn_id, url, json));
 }
 
+uint32 net_mobilewebprint::controller_base_t::_make_http_post(char const * url_, strmap const & query, serialization_json_t & json)
+{
+  uint32 txn_id = _unique();
+  chunkses.insert(make_pair(txn_id, deque<chunk_t*>()));
+  string url(url_);
+
+  string search;
+  for (strmap::const_iterator it = query.begin(); it != query.end(); ++it) {
+    if (search.length() > 0) {
+      search += "&";
+    }
+
+    search += it->first + "=" + it->second;
+  }
+
+  if (search.length() > 0) {
+    url = url + "?" + search;
+  }
+
+  //log_d('1', "controller_t", "Controller trying to POST to %s: (%s)", url_, url.c_str());
+  //log_v(2, "controller_t", "Controller trying to POST to %s: (%s)", url_, url.c_str());
+  log_v(2, "controller_t", "Controller trying to POST to %s", url_);
+  return curl_http_post(controller_http_request_t(txn_id, url, json));
+}
+
 net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_http_headers(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
 {
   if (chunkses.find(extra.txn_id) == chunkses.end()) { return unhandled; }
@@ -471,7 +509,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
         if (curl.server_name != new_server_name) {
           curl.server_name = new_server_name;
           serialization_json_t json;
-          client_start_in_flight_txn_id = _make_http_post("/clientStart", json);
+          client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", "241"), json);
           return handled;
         }
       }

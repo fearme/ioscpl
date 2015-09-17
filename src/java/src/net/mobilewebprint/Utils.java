@@ -30,7 +30,7 @@ public class Utils {
 
     if (result > Integer.MAX_VALUE) { return Integer.MAX_VALUE; }
     if (result < Integer.MIN_VALUE) { return Integer.MIN_VALUE; }
-    
+
     return (int)result;
   }
 }

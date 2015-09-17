@@ -15,7 +15,7 @@ package net.mobilewebprint.secureassetprinting;
 //public class PrintJobProgressActivity extends Activity {
 public class PrintJobProgressActivity {
 
-//  private static final String               TAG = "PrintFromTheWebMobile";
+//  private static final String               TAG = "jMobileWebPrint";
 //
 //  public               PrintJobProgressActivity myself = this;
 //  private              CoreApi              api;
