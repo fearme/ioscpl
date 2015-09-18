@@ -47,6 +47,7 @@ namespace net_mobilewebprint {
     string   _1284_device_id;         // Special -- the device id
     string   mac;                     // Special -- the MAC address
     bool *   is_supported;            // Special -- the server can generate PCL for this model
+    int      num_is_supported_asks;
     int      score() const;           // Special -- the display score
     string   name() const;            // Special -- the name
     string   status() const;          // Special -- the current status

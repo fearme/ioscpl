@@ -1369,9 +1369,9 @@ void net_mobilewebprint::log_w(char const * tags, char const * format, ...)
 void net_mobilewebprint::log_v(int level, char const * tags, char const * format, ...)
 {
   //return;
-//  if (!get_flag("verbose"))                   { return; }
-//  if (level > get_option("v_log_level", 0))   { return; }
-//  if (!_should_log(tags))                     { return; }
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+  if (!_should_log(tags))                     { return; }
 
   va_list argList;
 
@@ -1414,6 +1414,52 @@ void net_mobilewebprint::log_vs(int level, char const * tag, char const * format
     pnull = p + 100;
   } while (p < pend);
 
+  delete[] buffer;
+}
+
+void net_mobilewebprint::log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2)
+{
+  //return;
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+  if (!_should_log(tags))                     { return; }
+
+  int len = ::strlen(format) + 100 + s1.length() + s2.length();
+
+  // If the log entry will be small enough, just use the normal
+  if (len < 1800) {
+    log_v(level, tags, format, s1.c_str(), s2.c_str());
+    return;
+  }
+
+  /* otherwise -- allocate a buffer and use that */
+  char * buffer = new char[len];
+  ::memset(buffer, 0, len);
+  sprintf(buffer, format, s1.c_str(), s2.c_str());
+  log_v("%s", buffer);
+  delete[] buffer;
+}
+
+void net_mobilewebprint::log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2, string const & s3)
+{
+  //return;
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+  if (!_should_log(tags))                     { return; }
+
+  int len = ::strlen(format) + 100 + s1.length() + s2.length() + s3.length();
+
+  // If the log entry will be small enough, just use the normal
+  if (len < 1800) {
+    log_v(level, tags, format, s1.c_str(), s2.c_str(), s3.c_str());
+    return;
+  }
+
+  /* otherwise -- allocate a buffer and use that */
+  char * buffer = new char[len];
+  ::memset(buffer, 0, len);
+  sprintf(buffer, format, s1.c_str(), s2.c_str(), s3.c_str());
+  log_v("%s", buffer);
   delete[] buffer;
 }
 

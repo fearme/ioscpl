@@ -88,8 +88,8 @@ extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_start(JNIEn
   log_d("Client::start");
   storeClient(env, self, NULL);
 
-  get_api()->set_option("quiet", false);
-  get_api()->set_option("vvverbose", true);
+  //get_api()->set_option("quiet", false);
+  //get_api()->set_option("vvverbose", true);
   //get_api()->set_option("fast-fail", true);
 
   if (!secure) {

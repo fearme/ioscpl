@@ -75,8 +75,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
   set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
-  set_arg("v_log_level", 2);
-  set_flag("verbose", true);
+  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -107,8 +106,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
   set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
-  set_arg("v_log_level", 2);
-  set_flag("verbose", true);
+  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -290,6 +288,15 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
   log_api("start(scan=%d, block=%d)", start_scanning, block);
   bool result = true;
 
+  log_d("Starting; options:");
+  for (strmap::const_iterator it = ARGS.args.begin(); it != ARGS.args.end(); ++it) {
+    log_d("    %s: |%s|", it->first.c_str(), it->second.c_str());
+  }
+  log_d("            flags:");
+  for (set<string>::const_iterator it = ARGS.flags.begin(); it != ARGS.flags.end(); ++it) {
+    log_d("    %s", (*it).c_str());
+  }
+
   result = result && mq.run();
 
   result = mq.send(up_and_running) && result;
@@ -362,7 +369,10 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
     json.set("meta.user", arg("username", "noname@example.com"));
   }
 
-  log_v(3, "controller_t", "Controller POSTING to (%s) %s", request.url.c_str(), json.stringify().c_str());
+  // TODO: Remove this after app.js recognizes ".clientId"
+  json.set("meta.deviceid", clientId());
+
+  log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
 
   if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
     mini_curl.post_mwp_server(json, request.url, request.txn_id);
@@ -468,13 +478,53 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
         }
       }
 
-      log_d(1, "controller_t", "Using %s as upstream server", curl.server_name.c_str());
-      client_start_in_flight_txn_id = -1;
+    } else {
 
-      serialization_json_t json;
-      send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
-      return handled;
+      // We got a response from the server, but not an OK.  Depending on things, we may try another server, or we may just use
+      // this server, anyway.
+      string new_server_name;
+
+      // dev --> qa
+      if (curl.server_name.find("dev.mobiledevprint.net") != string::npos) {
+        // We got rejected from the dev server, switch to the qa server
+        if (curl.server_name[0] == 'h' && curl.server_name[1] == 'q') {
+          new_server_name = "hqqa.mobiledevprint.net";
+        } else {
+          new_server_name = "qa.mobiledevprint.net";
+        }
+
+      // qa --> stg
+      } else if (curl.server_name.find("qa.mobiledevprint.net") != string::npos) {
+        if (curl.server_name[0] == 'h' && curl.server_name[1] == 'q') {
+          new_server_name = "hqstg.mobiledevprint.net";
+        } else {
+          new_server_name = "stg.mobiledevprint.net";
+        }
+
+      // stg --> prod
+      } else if (curl.server_name.find("stg.mobiledevprint.net") != string::npos) {
+        if (curl.server_name[0] == 'h' && curl.server_name[1] == 'q') {
+          new_server_name = "hqpub.mobilewebprint.net";
+        } else {
+          new_server_name = "pub.mobilewebprint.net";
+        }
+      }
+
+      if (new_server_name.length() > 0) {
+        curl.server_name = new_server_name;
+        serialization_json_t json;
+        client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+        return handled;
+      }
     }
+
+    log_d(1, "controller_t", "Using %s as upstream server", curl.server_name.c_str());
+    client_start_in_flight_txn_id = -1;
+
+    serialization_json_t json;
+    send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
+    return handled;
+
   }
 
   return handled;
@@ -795,7 +845,7 @@ bool net_mobilewebprint::controller_base_t::flag(char const * key)
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, char const *value)
 {
-  log_v(2, "", "setOption(%s, \"%s\")", name, value);
+  log_d("setOption(%s, \"%s\")", name, value);
 
   // Some keys do not set an ARGS
   if (::strcmp(name, HP_MWP_HARD_CODE_PRINTER) == 0) {
@@ -835,14 +885,14 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, int value)
 {
-  log_v(2, "", "setIntOption(%s, %d)", name, value);
+  log_d("setIntOption(%s, %d)", name, value);
   ARGS.set_arg(name, mwp_itoa(value));
   return *this;
 }
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_flag(char const *name, bool value)
 {
-  log_v(2, "", "setFlag(%s, %s)", name, value ? "true" : "false");
+  log_d("setFlag(%s, %s)", name, value ? "true" : "false");
   if (value) {
     ARGS.set_flag(name);
   } else {
@@ -859,7 +909,7 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::clear_flag(char const *name)
 {
-  log_v(2, "", "setFlag(%s)", name);
+  log_d("setFlag(%s)", name);
   return set_flag(name, false);
 }
 

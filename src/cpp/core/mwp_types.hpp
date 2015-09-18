@@ -213,6 +213,8 @@ namespace net_mobilewebprint {
   void log_w(char const * tag, char const * format, ...);
   void log_v(int level, char const * tag, char const * format, ...);
   void log_vs(int level, char const * tag, char const * format, string const & big_str);
+  void log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2);
+  void log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2, string const & s3);
   void log_e(char const * tag, char const * format, ...);
 
   typedef unsigned char byte;

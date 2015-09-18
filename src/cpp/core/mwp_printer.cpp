@@ -24,13 +24,13 @@ static net_mobilewebprint::printer_list_t * g_printer_list = NULL;
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
   : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), status_interval(status_interval_normal), status_time(0),
-    is_supported(NULL)
+    is_supported(NULL), num_is_supported_asks(0)
 {
 }
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_, string const & ip_)
   : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), status_interval(status_interval_normal), status_time(0),
-    is_supported(NULL)
+    is_supported(NULL), num_is_supported_asks(0)
 {
 }
 
@@ -735,15 +735,19 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
-    if (sub_json && sub_json->has("ip") && sub_json->has_bool("is_supported")) {
+    if (sub_json && sub_json->has("ip")) {
+
+      string const & ip             = sub_json->lookup("ip");
+      bool           is_supported   = false;
+
+      if (sub_json->has_bool("is_supported")) {
+        is_supported = sub_json->lookup_bool("is_supported");
+      }
 
 //      // ---------------------------- TODO: remove brain damage -----------------------------------
 //      if ((rand() % 10) > 8) {
 //        continue;
 //      }
-
-      string const & ip           = sub_json->lookup("ip");
-      bool const &   is_supported = sub_json->lookup_bool("is_supported");
 
       if (by_ip.find(ip) != by_ip.end()) {
         printer_t * printer = (*by_ip.find(ip)).second;
@@ -817,6 +821,8 @@ int net_mobilewebprint::printer_list_t::unknown_is_supported_count()
 void net_mobilewebprint::printer_list_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
 {
   log_v(3, "", "-----------------------------------------------------------response from filterPrinters %d", code);
+  //log_vs(3, "", "-----------------------------------------------------------response from filterPrinters %s", json.stringify());
+
   if (g_printer_list) {
     g_printer_list->handle_filter_printers(code, http_version, headers, json, stats_out);
   }
@@ -1204,19 +1210,21 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
 
   plist_t::const_iterator it;
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
-//    log_d(1, "", "count1:      %d", count);
     if ((printer = it->second) != NULL) {
-//      log_d(1, "", "count2:      %d %d", count, printer->is_unknown(purpose));
-      //if (!purpose || printer->is_unknown(purpose)) {
       if (printer->is_unknown(purpose)) {
-        printer->make_server_json(json.getObject(dashify_key(printer->ip)));
-        count += 1;
-//        log_d(1, "", "count:      %d", count);
+
+        // Do not ask forever
+        if (printer->num_is_supported_asks < 4) {
+          printer->make_server_json(json.getObject(dashify_key(printer->ip)));
+          count += 1;
+          printer->num_is_supported_asks += 1;
+        } else {
+          printer->is_supported = new bool(false);
+        }
       }
     }
   }
 
-//  log_d(1, "", "count!      %d", count);
   return count;
 }
 
