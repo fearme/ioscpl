@@ -11,10 +11,10 @@ test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
 $(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="armeabi-v7a" --shared
 $(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="armeabi" --shared
 $(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="arm64-v8a" --shared
-$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86_64" --shared
-$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86" --shared
-$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips64" --shared
-$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips" --shared
+#$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86_64" --shared
+#$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="x86" --shared
+#$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips64" --shared
+#$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips" --shared
 
 # Build the JNI code and the JAR
 cd ${START_DIR}/src/java && ndk-build && ant dist
