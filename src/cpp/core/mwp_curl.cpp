@@ -261,19 +261,28 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
   return *this;
 }
 
-net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_url(string const & url)
+net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_url(string const & url, char const * verb)
 {
   int result = 0;
 
-  //log_d(1, "", "cUrl getting: %s", url.c_str());
+  char const * fmt = "cUrl POSTing: %s";
+  if (strcmp(verb, "GET") == 0) {
+    fmt = "cUrl GETting: %s";
+  }
+
+  log_v(1, "", fmt, url.c_str());
   result = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
   return *this;
 }
 
-net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_body(string const & body, char const * verb)
+net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_body(string const & body, bool do_logging)
 {
   _init_read_fn();
+
+  if (do_logging) {
+    log_v(1, "", "        body: %s", body.c_str());
+  }
 
   buffer_t * payload = new buffer_t(body.c_str()); /**/ num_buffer_allocations += 1;
   request_payload = new chunk_t(payload, *payload);
@@ -285,8 +294,10 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
 {
   int result = 0;
 
+  body.sjson_log_v(1, "");
+
   string json_str = body.stringify();
-  _set_body(json_str);
+  _set_body(json_str, false);
 
   result = curl_easy_setopt(curl, CURLOPT_POST, 1);
 

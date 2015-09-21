@@ -1063,6 +1063,29 @@ std::string net_mobilewebprint::serialization_json_t::stringify() const
   return string("{") + join(list, ",") + "}";
 }
 
+void net_mobilewebprint::serialization_json_t::sjson_log_v(int log_level, char const * tags, int disp_level) const
+{
+  string  quote("\"");
+  strlist list;
+
+  string indent = "    ";
+  for (int i = 0; i < disp_level; ++i) {
+    indent += "  ";
+  }
+
+  // First, my elements:
+  for (elements_t::const_iterator it = elements.begin(); it != elements.end(); ++it) {
+    log_v(log_level, "", "%s%s: %s", indent.c_str(), it->first.c_str(), it->second->stringify().c_str());
+  }
+
+  // Then the sub-elements
+  for (sub_elements_t::const_iterator it = sub_elements.begin(); it != sub_elements.end(); ++it) {
+    log_v(log_level, "", "%s%s", indent.c_str(), it->first.c_str());
+    it->second->sjson_log_v(log_level, tags, disp_level+1);
+  }
+
+}
+
 std::string net_mobilewebprint::serialization_json_t::serialization_json_elt_t::stringify()
 {
   if (type == string_type) {

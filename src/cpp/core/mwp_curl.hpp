@@ -85,8 +85,8 @@ namespace net_mobilewebprint {
 
     curl_connection_t & _init();
     curl_connection_t & _init_read_fn();
-    curl_connection_t & _set_url(string const & url);
-    curl_connection_t & _set_body(string const & body, char const * verb = "POST");
+    curl_connection_t & _set_url(string const & url, char const * verb = "POST");
+    curl_connection_t & _set_body(string const & body, bool do_logging = true);
     curl_connection_t & _set_body(serialization_json_t const & body, char const * verb = "POST");
     curl_connection_t & _go();
 

@@ -735,6 +735,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
+    log_v(3, "", "----- response from filterPrinter %s", sub_json->stringify().c_str());
     if (sub_json && sub_json->has("ip")) {
 
       string const & ip             = sub_json->lookup("ip");

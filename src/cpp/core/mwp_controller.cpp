@@ -344,7 +344,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_get(string const & url)
 
 uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url, serialization_json_t & json, uint32 txn_id)
 {
-  log_v(4, "controller_t", "Controller POSTING to %s", url.c_str());
+  //log_v(4, "controller_t", "Controller POSTING to %s", url.c_str());
 
   // If we are still resolving /clientStart, then just remember this request
   if (delayed_http_requests == NULL) {
@@ -372,7 +372,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   // TODO: Remove this after app.js recognizes ".clientId"
   json.set("meta.deviceid", clientId());
 
-  log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
+  //log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
 
   if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
     mini_curl.post_mwp_server(json, request.url, request.txn_id);
@@ -427,7 +427,7 @@ uint32 net_mobilewebprint::controller_base_t::_make_http_post(char const * url, 
   }
 #endif
 
-  log_v(2, "controller_t", "Controller trying to POST to %s", url);
+  //log_v(2, "controller_t", "Controller trying to POST to %s", url);
   return curl_http_post(controller_http_request_t(txn_id, "POST", url, query, json));
 }
 

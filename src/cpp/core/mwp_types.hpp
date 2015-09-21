@@ -1520,6 +1520,7 @@ namespace net_mobilewebprint {
 
     serialization_json_t & getObject(string const & key_);
     string stringify() const;
+    void   sjson_log_v(int log_level, char const * tags, int disp_level = 0) const;
 
 
     template <typename T>
