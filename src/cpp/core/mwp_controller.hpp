@@ -318,24 +318,46 @@ namespace net_mobilewebprint {
     map<string, serialization_json_t>      buckets;      // Data common to the bucket
     map<string, jsonlist>     bucketData;   // Data items
     void                      startBucket(string bucket, uint32 start_time = 0);
-    void                      sendTelemetry(string bucket, serialization_json_t const &);
+    void                      sendTelemetry(string bucket, char const * eventType, serialization_json_t const &);
 
     template <typename T>
-    void                      sendTelemetry(char const * bucketName, char const * key, T const & value)
+    void                      sendTelemetry(char const * bucketName,
+                                            char const * eventType,
+                                            char const * key, T const & value)
     {
       serialization_json_t json;
       json.set(key, value);
-      sendTelemetry(bucketName, json);
+      sendTelemetry(bucketName, eventType, json);
     }
 
     template <typename T1, typename T2, typename T3>
-    void                      sendTelemetry(char const * bucketName, char const * key1, T1 const & value1, char const * key2, T2 const & value2, char const * key3, T3 const & value3)
+    void                      sendTelemetry(char const * bucketName,
+                                            char const * eventType,
+                                            char const * key1, T1 const & value1,
+                                            char const * key2, T2 const & value2,
+                                            char const * key3, T3 const & value3)
     {
       serialization_json_t json;
       json.set(key1, value1);
       json.set(key2, value2);
       json.set(key3, value3);
-      sendTelemetry(bucketName, json);
+      sendTelemetry(bucketName, eventType, json);
+    }
+
+    template <typename T1, typename T2, typename T3, typename T4>
+    void                      sendTelemetry(char const * bucketName,
+                                            char const * eventType,
+                                            char const * key1, T1 const & value1,
+                                            char const * key2, T2 const & value2,
+                                            char const * key3, T3 const & value3,
+                                            char const * key4, T4 const & value4)
+    {
+      serialization_json_t json;
+      json.set(key1, value1);
+      json.set(key2, value2);
+      json.set(key3, value3);
+      json.set(key4, value4);
+      sendTelemetry(bucketName, eventType, json);
     }
 
   };

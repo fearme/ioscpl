@@ -276,23 +276,35 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
 
   if ((it = attrs_lc_local.find("mwp-sender")) != attrs_lc_local.end()) {
     ip = it->second;
-    json.set("mwp-ip", ip);
+    json.set("mwpIp", ip);
   }
 
   if ((it = attrs_lc_local.find("mwp-port")) != attrs_lc_local.end()) {
     port = mwp_atoi(it->second);
-    json.set("mwp-port", port);
+    json.set("mwpPort", port);
   }
 
   if ((it = attrs_lc_local.find("x-hp-mac")) != attrs_lc_local.end()) {
-    set_mac(it->second);
-    json.set("slp-mac", it->second);
+
+    string m(it->second), realMac;
+    set_mac(m);
+
+    if (m.length() >= 12) {
+      realMac = realMac + m[0] + m[1] + ":" + m[2] + m[3] + ":" + m[4] + m[5] + ":" + m[6] + m[7] + ":" + m[8] + m[9] + ":" + m[10] + m[11];
+      json.set("mac", realMac);
+    }
   }
 
   if ((it = attrs_lc_local.find("x-hp-p1")) != attrs_lc_local.end()) {
     strmap _1284_attrs_local;
     if (split_kv(_1284_attrs_local, it->second, ';', ':', NULL)) {
       from_1284_attrs(_1284_attrs_local);
+
+      for (strmap::const_iterator it = _1284_attrs_local.begin(); it != _1284_attrs_local.end(); ++it) {
+        string const & key = _lower(it->first);
+        string const & value = it->second;
+        json.set(key, value);
+      }
     }
   }
 
@@ -305,13 +317,13 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
     }
 
     slp_ip = join(list2, ".");
-    json.set("slp-ip", slp_ip);
+    json.set("ip", slp_ip);
     if (!has_ip()) {
       ip = slp_ip;
     }
   }
 
-  controller.sendTelemetry("printerScan", json);
+  controller.sendTelemetry("printerScan", "slpResponse", json);
 
   snapshot.fixup(*this);
   return true;
@@ -1221,6 +1233,11 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
       if (printer->is_unknown(purpose)) {
+
+        // If the printer does not have a deviceId, it cannot play any reindeer games
+        if (printer->_1284_device_id.length() == 0) {
+          continue;
+        }
 
         // Do not ask forever
         if (printer->num_is_supported_asks < 4) {

@@ -657,7 +657,7 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
 // -----------------------------------------------------------------------------------------------------------------------------------------
 //                                                                       Telemetry
 // -----------------------------------------------------------------------------------------------------------------------------------------
-void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, serialization_json_t const & data_)
+void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType, serialization_json_t const & data_)
 {
   uint32 now = get_tick_count();
   if (now - scan_start_time > 15000) {
@@ -668,6 +668,7 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, ser
 
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
+  data.set("eventType", eventType);
   log_v(2, "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
   bucketData[bucketName].push_back(data);
 }
