@@ -952,7 +952,7 @@ namespace net_mobilewebprint {
     }
 
     static char * format_mac(char * temp, byte * p) {
-      snprintf(temp, 32, "%02x:%02x:%02x:%02x:%02x:%02x", *p++, *p++, *p++, *p++, *p++, *p++);
+      snprintf(temp, 32, "%02x:%02x:%02x:%02x:%02x:%02x", *p, *(p+1), *(p+2), *(p+3), *(p+4), *(p+5));
       return temp;
     }
 
@@ -1205,18 +1205,18 @@ namespace net_mobilewebprint {
       sender = addr;
 
       if (raw) {
-        log_d(1, "", "NumRead: %d", result);
+//        log_d(1, "", "NumRead: %d", result);
         byte * p = (byte*)buffer;
-        log_d(1, "", "Dest MAC: %02x:%02x:%02x:%02x:%02x:%02x", *p++, *p++, *p++, *p++, *p++, *p++);
-        log_d(1, "", "Src  MAC: %02x:%02x:%02x:%02x:%02x:%02x", *p++, *p++, *p++, *p++, *p++, *p++);
+//        log_d(1, "", "Dest MAC: %02x:%02x:%02x:%02x:%02x:%02x", *p++, *p++, *p++, *p++, *p++, *p++);
+//        log_d(1, "", "Src  MAC: %02x:%02x:%02x:%02x:%02x:%02x", *p++, *p++, *p++, *p++, *p++, *p++);
 
-        log_d(1, "", "len/type: %02x %02x", *p++, *p++);
+//        log_d(1, "", "len/type: %02x %02x", *p++, *p++);
 
         p += 12;
-        log_d(1, "", "Dest IP : %d.%d.%d.%d", *p++, *p++, *p++, *p++);
-        log_d(1, "", "Src  IP : %d.%d.%d.%d", *p++, *p++, *p++, *p++);
+//        log_d(1, "", "Dest IP : %d.%d.%d.%d", *p++, *p++, *p++, *p++);
+//        log_d(1, "", "Src  IP : %d.%d.%d.%d", *p++, *p++, *p++, *p++);
 
-        log_d(1, "", "Sender: %s:%d", sender.ip.c_str(), sender.port);
+//        log_d(1, "", "Sender: %s:%d", sender.ip.c_str(), sender.port);
 
         memcpy(buffer, buffer + 14 + 24, buf_size - (14 + 24));
       }

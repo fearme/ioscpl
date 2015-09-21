@@ -72,10 +72,12 @@ extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM * pjvm, void * /*reserved*/)
   return JNI_VERSION_1_6;
 }
 
-extern "C" JNIEXPORT jstring JNICALL Java_net_mobilewebprint_Client_initJni(JNIEnv *env, jobject self, jobject application)
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_initJni(JNIEnv *env, jobject self, jobject application)
 {
   // Grab a reference to "self" to keep everything alive and reference-counted.
   storeClient(env, self, application);
+
+  return true;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setSecureMode(JNIEnv *env, jobject self)

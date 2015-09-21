@@ -18,7 +18,7 @@ using net_mobilewebprint::get_flag;
 //static jstring to_jstring(JNIEnv *env, char const * str);
 static string  to_string(JNIEnv * env, jstring jstr);
 
-extern "C" JNIEXPORT jstring JNICALL Java_net_mobilewebprint_Client_initJni(JNIEnv *env, jobject self)
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_initJni(JNIEnv *env, jobject self)
 {
   // TODO: grab a reference to "self" to keep the everything alive and reference-counted.
 }

@@ -248,7 +248,7 @@ namespace net_mobilewebprint {
       uint32               curl_http_post(controller_http_request_t const & request);
       uint32                curl_http_get(string const & url, uint32 id);
 
-    friend upstream_t;
+    friend struct upstream_t;
     public:
 
     // ---------- Internal to MWP ----------
