@@ -76,6 +76,8 @@ e_handle_result net_mobilewebprint::mdns_t::on_select_loop_start(mq_select_loop_
     }
     ignore_start_time = get_tick_count();
   }
+
+  return handled;
 }
 
 e_handle_result net_mobilewebprint::mdns_t::handle(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)

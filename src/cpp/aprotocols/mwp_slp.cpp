@@ -60,6 +60,8 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::slp_t::on_select_loop_st
     //log_d(1, "", "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ SLP timeout after %d", resend_req.interval);
     check_udp_writableness = true;
   }
+
+  return handled;
 }
 
 e_handle_result net_mobilewebprint::slp_t::handle(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)

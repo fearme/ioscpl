@@ -364,6 +364,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   json.set("meta.platform", platform_name());
   json.set("meta.version", "1.1");
   json.set("meta.build", BUILD_NUMBER);
+  json.set("meta.dataFormat", 11);
 
   if (arg("username", "").length() > 0) {
     json.set("meta.user", arg("username", "noname@example.com"));
