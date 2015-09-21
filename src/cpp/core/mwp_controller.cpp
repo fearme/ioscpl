@@ -63,7 +63,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
-    scan_start_time(0)
+    scan_start_time(0),
+    telemetry_report(0, 2500)
 {
   mwp_app_callbacks_ = new mwp_app_cb_list_t();
   //sap_app_callbacks_ = new sap_app_cb_list_t();
@@ -94,7 +95,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
-    scan_start_time(0)
+    scan_start_time(0),
+    telemetry_report(0, 2500)
 {
   //mwp_app_callbacks_ = new mwp_app_cb_list_t();
   sap_app_callbacks_ = new sap_app_cb_list_t();
@@ -181,7 +183,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
   }
 
-  // Push telemetry up to the server
+  // Push progress-telemetry up to the server
   if (upload_job_stats.has_elapsed(loop_start_data.current_loop_start)) {
 
     // Loop over job stats and upload any that are not complete (or have changed)
@@ -220,6 +222,47 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
 
   if (alloc_report.has_elapsed(loop_start_data.current_loop_start)) {
     log_d(1, "controller_t", "MQ-length: %4d; Allocations: %d; Chunks: %d; Buffers: %d; buffer-mems: %d; buffer-mem: %d", mq.mq_normal.size(), num_allocations, num_chunk_allocations, num_buffer_allocations, num_buf_bytes_allocations, num_buf_bytes);
+  }
+
+  if (telemetry_report.has_elapsed(loop_start_data.current_loop_start)) {
+
+    serialization_json_t json;
+
+    // See if there are any telemetry items to send
+//    strlist sent;
+    strset  sent;
+    for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
+      string const & bucketName = it->first;
+      log_v(2, "", "sending bucket %s", bucketName.c_str());
+      map<string, serialization_json_t>::const_iterator itMap;
+      if ((itMap = buckets.find(bucketName)) != buckets.end()) {
+
+        serialization_json_t const &     bucket = itMap->second;
+        jsonlist const &                   data = it->second;
+
+        serialization_json_t & subjson = json.getObject(bucketName);
+        subjson << bucket;
+
+        serialization_json_t::serialization_json_list_t & sublist = subjson.getList("items");
+        for (jsonlist::const_iterator itItem = data.begin(); itItem != data.end(); ++itItem) {
+          sublist.push_back(*itItem);
+          sent.insert(bucketName);
+        }
+
+//        sent.push_back(bucketName);
+      }
+    }
+
+    //log_v(2, "", "Sending telemetry? size: %d", sent.size());
+    if (sent.size() > 0) {
+      upstream.send("telemetry", string("/telemetry"), json);
+
+      // We have sent it, now reset the data
+      for (strset::const_iterator it = sent.begin(); it != sent.end(); ++it) {
+        string const & bucketName = *it;
+        bucketData.erase(bucketName);
+      }
+    }
   }
 
   //// Log packet stats
@@ -302,6 +345,8 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
   result = mq.send(up_and_running) && result;
   if (start_scanning) {
     scan_start_time = get_tick_count();
+    startBucket("printerScan", scan_start_time);
+
     result = mq.send(scan_for_printers) && result;
   }
 
@@ -370,8 +415,10 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
     json.set("meta.user", arg("username", "noname@example.com"));
   }
 
-  // TODO: Remove this after app.js recognizes ".clientId"
-  json.set("meta.deviceid", clientId());
+  // TODO: Remove this after netapp_command.js recognizes ".clientId" on stg/prod
+  if (request.url == "netapp::/command") {
+    json.set("meta.deviceid", clientId());
+  }
 
   //log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
 
@@ -606,6 +653,52 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
     next_has_been_scheduled = true;
   }
 }
+
+// -----------------------------------------------------------------------------------------------------------------------------------------
+//                                                                       Telemetry
+// -----------------------------------------------------------------------------------------------------------------------------------------
+void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, serialization_json_t const & data_)
+{
+  uint32 now = get_tick_count();
+  if (now - scan_start_time > 15000) {
+    if (bucketName == "printerScan") { return; }
+  }
+
+  startBucket(bucketName);
+
+  serialization_json_t data(data_);
+  data.set("eventTime", (int)now);
+  log_v(2, "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
+  bucketData[bucketName].push_back(data);
+}
+
+void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint32 start_time /* = 0 */)
+{
+  if (start_time == 0) {
+    start_time = get_tick_count();
+  }
+
+  // Insert a list for the data, if necessary
+  if (bucketData.find(bucketName) == bucketData.end()) {
+    bucketData.insert(make_pair(bucketName, jsonlist()));
+  }
+
+  // Insert a map for the bucket attributes, if necessary
+  if (buckets.find(bucketName) != buckets.end()) {
+    return;
+  }
+
+  /* otherwise */
+  buckets.insert(make_pair(bucketName, serialization_json_t()));
+
+  serialization_json_t & common = buckets[bucketName];
+
+  common.set("startTime", (int)start_time);
+  common.set("bucket", bucketName);
+  common.set("bucketId", random_string(32));
+}
+    //map<string, strmap>       buckets;      // Data common to the bucket
+    //map<string, jsonlist>     bucketData;   // Data items
 
 bool net_mobilewebprint::controller_base_t::mq_is_done()
 {

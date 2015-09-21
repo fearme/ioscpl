@@ -378,6 +378,7 @@ void net_mobilewebprint::mdns_t::_report_discovery(mdns_SRV_record_t * srv_recor
   add_kv(attrs, "name", srv_record->name);
 
   controller.from_attrs(attrs);
+  controller.sendTelemetry("printerScan", "mdnsRecordName", srv_record->name, "ip", srv_record->ip, "port", srv_record->port);
 }
 
 net_mobilewebprint::mdns_t const & net_mobilewebprint::mdns_t::_init_group_mcast()

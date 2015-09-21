@@ -143,6 +143,14 @@ std::string net_mobilewebprint::curl_t::translate_path(string const & path)
   return full_url;
 }
 
+int net_mobilewebprint::curl_t::verbose_adj(string const & url)
+{
+  if (_starts_with(url, "/poll"))      { return 3; }
+  if (_starts_with(url, "/telemetry")) { return 1; }
+
+  return 0;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 static size_t _conn_write_data(void * buffer, size_t size, size_t nmemb, void *userp)
 {
@@ -166,12 +174,12 @@ static size_t _conn_read_data(void * buffer, size_t size, size_t nmemb, void *us
  *
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, char const * verb_, string const & path_, uint32 connection_id_)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
     request_payload(NULL), req_headers(NULL)
 {
   _init();
 
-  string full_url = parent->translate_path(path);
+  full_url = parent->translate_path(path);
   _set_url(full_url);
   _go();
 }
@@ -182,12 +190,12 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
  *  For JSON POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, serialization_json_t const & json, string const & path_, uint32 connection_id_)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
     request_payload(NULL), req_headers(NULL)
 {
   _init();
 
-  string full_url = parent->translate_path(path);
+  full_url = parent->translate_path(path);
   _set_url(full_url);
 
   _set_body(json);
@@ -201,12 +209,12 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
  *  For JSON_str POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, string const & path_, uint32 connection_id_, string const & body_str)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
     request_payload(NULL), req_headers(NULL)
 {
   _init();
 
-  string full_url = parent->translate_path(path);
+  full_url = parent->translate_path(path);
   _set_url(full_url);
 
   _set_body(body_str);
@@ -270,7 +278,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
     fmt = "cUrl GETting: %s";
   }
 
-  log_v(1, "", fmt, url.c_str());
+  log_v(1 + verbose_adj(), "", fmt, url.c_str());
   result = curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
 
   return *this;
@@ -281,7 +289,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
   _init_read_fn();
 
   if (do_logging) {
-    log_v(1, "", "        body: %s", body.c_str());
+    log_v(1 + verbose_adj(), "", "        body: %s", body.c_str());
   }
 
   buffer_t * payload = new buffer_t(body.c_str()); /**/ num_buffer_allocations += 1;
@@ -294,7 +302,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
 {
   int result = 0;
 
-  body.sjson_log_v(1, "");
+  body.sjson_log_v(1 + verbose_adj(), "");
 
   string json_str = body.stringify();
   _set_body(json_str, false);
@@ -335,6 +343,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::curl_connection_t::_mq_s
 {
   return not_impl;
 }
+
+int net_mobilewebprint::curl_connection_t::verbose_adj()
+{
+  return parent->verbose_adj(path);
+}
+
 
 //---------------------------------------------------------------------------------------------------------------------------
 //

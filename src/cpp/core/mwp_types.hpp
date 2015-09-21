@@ -1507,21 +1507,35 @@ namespace net_mobilewebprint {
       string stringify();
     };
 
-    typedef std::map<string, serialization_json_elt_t *> elements_t;
-    typedef std::map<string, serialization_json_t *>     sub_elements_t;
+    struct serialization_json_list_t
+    {
+      std::deque<serialization_json_t> list;
+
+      //serialization_json_list_t();
+
+      serialization_json_list_t & push_back(serialization_json_t const &);
+      string stringify();
+    };
+
+    typedef std::map<string, serialization_json_elt_t *>  elements_t;
+    typedef std::map<string, serialization_json_t *>      sub_elements_t;
+    typedef std::map<string, serialization_json_list_t *> sub_list_t;
 
     elements_t       elements;
     sub_elements_t   sub_elements;
+    sub_list_t       sub_list;
 
     serialization_json_t();
     serialization_json_t(serialization_json_t const & that);
 
     ~serialization_json_t();
 
-    serialization_json_t & getObject(string const & key_);
+    serialization_json_t &      getObject(string const & key_);
+    serialization_json_list_t & getList(string const & key_);
+
     string stringify() const;
     void   sjson_log_v(int log_level, char const * tags, int disp_level = 0) const;
-
+    serialization_json_t & operator<<(serialization_json_t const & that);
 
     template <typename T>
     serialization_json_t & set(string const & key_, T const & value) {
@@ -1583,6 +1597,8 @@ namespace net_mobilewebprint {
     private:
       serialization_json_t & operator=(serialization_json_t const &);
   };
+  typedef std::deque<serialization_json_t> jsonlist;
+  typedef std::map<string, serialization_json_t> jsonmap;
 
 #if 1
   template <typename T>

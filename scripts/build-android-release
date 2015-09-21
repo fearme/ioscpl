@@ -22,7 +22,7 @@ cd $START_DIR
 
 # Copy the JNI modules to the deliveries
 cd $START_DIR/deliveries/android/device/release
-find ../../../../src/java/libs -type f | egrep so$ | cut -d'/' -f7-8 | xargs --no-run-if-empty mkdir -p
+find ../../../../src/java/libs -type f | egrep so$ | cut -d'/' -f7-8 | while read f; do mkdir -p $f; done
 find ../../../../src/java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f7-); done
 
 # Copy the JAR to the deliveries

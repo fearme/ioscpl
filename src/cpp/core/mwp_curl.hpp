@@ -48,7 +48,9 @@ namespace net_mobilewebprint {
 
     connections_t::iterator        _find_by_curl_handle(CURL*);
 
-    string                    translate_path(string const & url);
+    string                   translate_path(string const & url);
+
+    int                         verbose_adj(string const & path);
   };
 
   struct curl_connection_t : public mq_select_handler_t
@@ -60,6 +62,7 @@ namespace net_mobilewebprint {
     uint32              connection_id;
     string              verb;
     string              path;
+    string              full_url;
 
     CURLM *             mcurl;       // Owned by curl_t
     CURL *              curl;
@@ -98,6 +101,8 @@ namespace net_mobilewebprint {
     size_t  conn_write_data(void * buffer, size_t size, size_t nmemb);
     size_t conn_header_data(void * buffer, size_t size, size_t nmemb);
     size_t   conn_read_data(void * buffer, size_t size, size_t nmemb);
+
+    int         verbose_adj();
   };
 };
 

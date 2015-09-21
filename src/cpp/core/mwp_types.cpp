@@ -998,14 +998,16 @@ net_mobilewebprint::serialization_json_t::serialization_json_t()
 
 net_mobilewebprint::serialization_json_t::serialization_json_t(serialization_json_t const & that)
 {
-  if (this != &that) {
-    for (elements_t::const_iterator it = that.elements.begin(); it != that.elements.end(); ++it) {
-      elements.insert(make_pair(it->first, new serialization_json_elt_t(*(it->second))));
-    }
+  for (elements_t::const_iterator it = that.elements.begin(); it != that.elements.end(); ++it) {
+    elements.insert(make_pair(it->first, new serialization_json_elt_t(*(it->second))));
+  }
 
-    for (sub_elements_t::const_iterator it = that.sub_elements.begin(); it != that.sub_elements.end(); ++it) {
-      sub_elements.insert(make_pair(it->first, new serialization_json_t(*(it->second))));
-    }
+  for (sub_elements_t::const_iterator it = that.sub_elements.begin(); it != that.sub_elements.end(); ++it) {
+    sub_elements.insert(make_pair(it->first, new serialization_json_t(*(it->second))));
+  }
+
+  for (sub_list_t::const_iterator it = that.sub_list.begin(); it != that.sub_list.end(); ++it) {
+    sub_list.insert(make_pair(it->first, new serialization_json_list_t(*(it->second))));
   }
 }
 
@@ -1045,6 +1047,65 @@ net_mobilewebprint::serialization_json_t & net_mobilewebprint::serialization_jso
   return *sub_elements[key];
 }
 
+net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobilewebprint::serialization_json_t::getList(string const & key_)
+{
+  log_v(2, "", "getList: %s", key_.c_str());
+
+  string parent_key;
+  string key        = key_;
+
+  if (_normalize_keys(parent_key, key)) {
+    // The key was parent.key;  Must return List from parent
+    if (!_has(sub_elements, parent_key)) {
+      sub_elements[parent_key] = new serialization_json_t();
+    }
+
+    return sub_elements[parent_key]->getList(key);
+  }
+
+  /* otherwise */
+  if (!_has(sub_list, key)) {
+    sub_list[key] = new serialization_json_list_t();
+  }
+
+  return *sub_list[key];
+}
+
+net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobilewebprint::serialization_json_t::serialization_json_list_t::push_back(serialization_json_t const & item)
+{
+  list.push_back(item);
+  return *this;
+}
+
+string net_mobilewebprint::serialization_json_t::serialization_json_list_t::stringify()
+{
+  strlist strlistItems;
+  for (std::deque<serialization_json_t>::const_iterator it = list.begin(); it != list.end(); ++it) {
+    strlistItems.push_back(it->stringify());
+  }
+
+  return string("[") + join(strlistItems, ",") + "]";
+}
+
+net_mobilewebprint::serialization_json_t & net_mobilewebprint::serialization_json_t::operator<<(serialization_json_t const & that)
+{
+  if (this != &that) {
+    for (elements_t::const_iterator it = that.elements.begin(); it != that.elements.end(); ++it) {
+      elements.insert(make_pair(it->first, new serialization_json_elt_t(*(it->second))));
+    }
+
+    for (sub_elements_t::const_iterator it = that.sub_elements.begin(); it != that.sub_elements.end(); ++it) {
+      sub_elements.insert(make_pair(it->first, new serialization_json_t(*(it->second))));
+    }
+
+    for (sub_list_t::const_iterator it = that.sub_list.begin(); it != that.sub_list.end(); ++it) {
+      sub_list.insert(make_pair(it->first, new serialization_json_list_t(*(it->second))));
+    }
+  }
+
+  return *this;
+}
+
 std::string net_mobilewebprint::serialization_json_t::stringify() const
 {
   string  quote("\"");
@@ -1057,6 +1118,11 @@ std::string net_mobilewebprint::serialization_json_t::stringify() const
 
   // Then the sub-elements
   for (sub_elements_t::const_iterator it = sub_elements.begin(); it != sub_elements.end(); ++it) {
+    list.push_back(quote + it->first + "\":" + it->second->stringify());
+  }
+
+  // Then the sub-lists
+  for (sub_list_t::const_iterator it = sub_list.begin(); it != sub_list.end(); ++it) {
     list.push_back(quote + it->first + "\":" + it->second->stringify());
   }
 
@@ -1082,6 +1148,17 @@ void net_mobilewebprint::serialization_json_t::sjson_log_v(int log_level, char c
   for (sub_elements_t::const_iterator it = sub_elements.begin(); it != sub_elements.end(); ++it) {
     log_v(log_level, "", "%s%s", indent.c_str(), it->first.c_str());
     it->second->sjson_log_v(log_level, tags, disp_level+1);
+  }
+
+  // Then the sub-lists
+  for (sub_list_t::const_iterator it = sub_list.begin(); it != sub_list.end(); ++it) {
+    log_v(log_level, "", "%s%s[]", indent.c_str(), it->first.c_str());
+    serialization_json_list_t const * list = it->second;
+    int index = 0;
+    for (jsonlist::const_iterator itItem = list->list.begin(); itItem != list->list.end(); ++itItem, ++index) {
+      log_v(log_level, "", "%s[%d]", indent.c_str(), index);
+      itItem->sjson_log_v(log_level, tags, disp_level+2);
+    }
   }
 
 }

@@ -272,16 +272,21 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
   strlist list, list2;
   strlist::const_iterator lit;
 
+  serialization_json_t json;
+
   if ((it = attrs_lc_local.find("mwp-sender")) != attrs_lc_local.end()) {
     ip = it->second;
+    json.set("mwp-ip", ip);
   }
 
   if ((it = attrs_lc_local.find("mwp-port")) != attrs_lc_local.end()) {
     port = mwp_atoi(it->second);
+    json.set("mwp-port", port);
   }
 
   if ((it = attrs_lc_local.find("x-hp-mac")) != attrs_lc_local.end()) {
     set_mac(it->second);
+    json.set("slp-mac", it->second);
   }
 
   if ((it = attrs_lc_local.find("x-hp-p1")) != attrs_lc_local.end()) {
@@ -300,10 +305,13 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
     }
 
     slp_ip = join(list2, ".");
+    json.set("slp-ip", slp_ip);
     if (!has_ip()) {
       ip = slp_ip;
     }
   }
+
+  controller.sendTelemetry("printerScan", json);
 
   snapshot.fixup(*this);
   return true;
