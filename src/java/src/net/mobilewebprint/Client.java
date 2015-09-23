@@ -35,6 +35,7 @@ public class Client {
   }
 
   public native boolean start();
+  public native boolean reScan();
   public native boolean sendJob(String url, String printer_ip);
 
 

@@ -76,6 +76,7 @@ namespace net_mobilewebprint {
   extern char const *  or_blank(uint8 const * p);
 
   extern string        random_string(size_t length);
+  extern bool          _normalize_keys(string & parent, string & key);
 
   //-----------------------------------------------------------------------------
   //
@@ -279,6 +280,7 @@ namespace net_mobilewebprint {
 
     map<string, string> args;
     set<string>         flags;
+    set<string>         antiFlags;
 
     args_t();
 
@@ -300,17 +302,18 @@ namespace net_mobilewebprint {
     string const & operator[](char const * key);
     string const & get(char const * key, string const & def);
     bool           get_flag(char const * key);
+    bool           get_flag(char const * key, bool def);
 
     args_t &       set_arg(char const * key, char const * value);
     args_t &       set_arg(char const * key, string const & value);
-    args_t &       set_flag(char const *flag);
+    args_t &       set_flag(char const *flag, bool value = true);
     args_t &       clear_flag(char const *flag);
 
   protected:
     bool no_more_args;
     bool _parse(char const * str, string & key, string & value);
     args_t & _insert(string key, string value);
-    args_t & _insert(string key);
+    args_t & _insert_bool(string key, bool value = true);
   };
 
   // ----- Non-standard implementations -----

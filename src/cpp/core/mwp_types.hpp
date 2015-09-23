@@ -1452,6 +1452,9 @@ namespace net_mobilewebprint {
 
     string      stringify() const;
 
+    bool             keys(strset & str_keys, strset & int_keys, strset & bool_keys) const;
+    strset           keys() const;
+
     json_t const &   dump(bool force = false) const;
 
     /* private */

@@ -95,6 +95,21 @@ fi
 
 test -n "$MAKE_TOOL" || die "No MAKE_TOOL. Should specify a build-tool"
 
+# Fixup
+if [ "$BUILD_TOOL" == "xcode" ]; then
+  if [ "$OS" == "ios" ]; then
+    # iOS
+    echo "ios"
+  else
+    # Mac osX
+    echo "Mac osX"
+    ABI="x86_64"
+  fi
+elif [ "$BUILD_TOOL" == "android-ndk" ]; then
+  # Android
+  echo "Android"
+fi
+
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
 test -n "$ABI"       || ABI="armeabi-v7a"

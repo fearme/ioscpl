@@ -64,7 +64,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     server_command_timer(0, 100, false),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
-    telemetry_report(0, 2500)
+    telemetry_report(0, 2500),
+    heartbeat_timer(0, 5000)
 {
   mwp_app_callbacks_ = new mwp_app_cb_list_t();
   //sap_app_callbacks_ = new sap_app_cb_list_t();
@@ -96,7 +97,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     server_command_timer(0, 100, false),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
-    telemetry_report(0, 2500)
+    telemetry_report(0, 2500),
+    heartbeat_timer(0, 5000)
 {
   //mwp_app_callbacks_ = new mwp_app_cb_list_t();
   sap_app_callbacks_ = new sap_app_cb_list_t();
@@ -224,16 +226,19 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     log_d(1, "controller_t", "MQ-length: %4d; Allocations: %d; Chunks: %d; Buffers: %d; buffer-mems: %d; buffer-mem: %d", mq.mq_normal.size(), num_allocations, num_chunk_allocations, num_buffer_allocations, num_buf_bytes_allocations, num_buf_bytes);
   }
 
+  if (heartbeat_timer.has_elapsed(loop_start_data.current_loop_start)) {
+    log_v(1, "", "mwp is %s", "alive and well");
+  }
+
   if (telemetry_report.has_elapsed(loop_start_data.current_loop_start)) {
 
     serialization_json_t json;
 
     // See if there are any telemetry items to send
-//    strlist sent;
     strset  sent;
     for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
       string const & bucketName = it->first;
-      log_v(2, "", "sending bucket %s", bucketName.c_str());
+      log_v(4, "", "sending bucket %s", bucketName.c_str());
       map<string, serialization_json_t>::const_iterator itMap;
       if ((itMap = buckets.find(bucketName)) != buckets.end()) {
 
@@ -249,13 +254,14 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
           sent.insert(bucketName);
         }
 
-//        sent.push_back(bucketName);
       }
     }
 
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
-      upstream.send("telemetry", string("/telemetry"), json);
+      if (flag("telemetry", /* default= */false)) {
+        send_upstream("telemetry", "/telemetry", json, new telemetry_response_t());
+      }
 
       // We have sent it, now reset the data
       for (strset::const_iterator it = sent.begin(); it != sent.end(); ++it) {
@@ -329,17 +335,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
 bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool block)
 {
   log_api("start(scan=%d, block=%d)", start_scanning, block);
+  show_options();
+
   bool result = true;
-
-  log_d("Starting; options:");
-  for (strmap::const_iterator it = ARGS.args.begin(); it != ARGS.args.end(); ++it) {
-    log_d("    %s: |%s|", it->first.c_str(), it->second.c_str());
-  }
-  log_d("            flags:");
-  for (set<string>::const_iterator it = ARGS.flags.begin(); it != ARGS.flags.end(); ++it) {
-    log_d("    %s", (*it).c_str());
-  }
-
   result = result && mq.run();
 
   result = mq.send(up_and_running) && result;
@@ -361,6 +359,23 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
   }
 
   return result;
+}
+
+void net_mobilewebprint::controller_base_t::show_options()
+{
+
+  log_d("Starting; options:");
+  for (strmap::const_iterator it = ARGS.args.begin(); it != ARGS.args.end(); ++it) {
+    log_d("    %s: |%s|", it->first.c_str(), it->second.c_str());
+  }
+  log_d("            flags:");
+  for (set<string>::const_iterator it = ARGS.flags.begin(); it != ARGS.flags.end(); ++it) {
+    log_d("    %s", (*it).c_str());
+  }
+  for (set<string>::const_iterator it = ARGS.antiFlags.begin(); it != ARGS.antiFlags.end(); ++it) {
+    log_d("   !%s", (*it).c_str());
+  }
+
 }
 
 net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_up_and_running(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
@@ -406,6 +421,8 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   serialization_json_t json(request.json_body);
 
   json.set("clientId", clientId());
+  json.set("provider", arg("providerName", "HP_CP"));
+
   json.set("meta.platform", platform_name());
   json.set("meta.version", "1.1");
   json.set("meta.build", BUILD_NUMBER);
@@ -508,6 +525,33 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
   JSON_parse(json, json_str);
 
   if (extra.txn_id == client_start_in_flight_txn_id) {
+
+    strset str_keys, int_keys, bool_keys;
+    if (json.keys(str_keys, int_keys, bool_keys)) {
+
+      for (strset::const_iterator it = str_keys.begin(); it != str_keys.end(); ++it) {
+        string parent, key = *it;
+        if (_normalize_keys(parent, key) && parent == "preference") {
+          set_arg(key, json.lookup(*it));
+        }
+      }
+
+      for (strset::const_iterator it = int_keys.begin(); it != int_keys.end(); ++it) {
+        string parent, key = *it;
+        if (_normalize_keys(parent, key) && parent == "preference") {
+          set_arg(key, json.lookup_int(*it));
+        }
+      }
+
+      for (strset::const_iterator it = bool_keys.begin(); it != bool_keys.end(); ++it) {
+        string parent, key = *it;
+
+        if (_normalize_keys(parent, key) && parent == "preference") {
+          set_flag(key, json.lookup_bool(*it));
+        }
+      }
+    }
+
     if (json.lookup_bool("ok")) {
 
       // singleNodeName means to stop looking, and just use it
@@ -540,6 +584,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
         } else {
           new_server_name = "qa.mobiledevprint.net";
         }
+        set_arg("domainName", ".mobiledevprint.net");
 
       // qa --> stg
       } else if (curl.server_name.find("qa.mobiledevprint.net") != string::npos) {
@@ -548,14 +593,17 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
         } else {
           new_server_name = "stg.mobiledevprint.net";
         }
+        set_arg("domainName", ".mobiledevprint.net");
 
-      // stg --> prod
-      } else if (curl.server_name.find("stg.mobiledevprint.net") != string::npos) {
-        if (curl.server_name[0] == 'h' && curl.server_name[1] == 'q') {
-          new_server_name = "hqpub.mobilewebprint.net";
-        } else {
-          new_server_name = "pub.mobilewebprint.net";
-        }
+//      // stg --> prod
+//      } else if (curl.server_name.find("stg.mobiledevprint.net") != string::npos) {
+//        if (curl.server_name[0] == 'h' && curl.server_name[1] == 'q') {
+//          new_server_name = "hqpub.mobilewebprint.net";
+//        } else {
+//          new_server_name = "pub.mobilewebprint.net";
+//        }
+//        set_arg("domainName", ".mobilewebprint.net");
+
       }
 
       if (new_server_name.length() > 0) {
@@ -567,6 +615,13 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
     }
 
     log_d(1, "controller_t", "Using %s as upstream server", curl.server_name.c_str());
+
+    set_arg("upstreamServer",     curl.server_name);
+    set_arg("fallbackServiceOne", curl.server_name);
+    set_arg("fallbackServiceTwo", curl.server_name);
+
+    show_options();
+
     client_start_in_flight_txn_id = -1;
 
     serialization_json_t json;
@@ -580,8 +635,6 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
 
 net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::process_upstream_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
 {
-  log_v(2, "controller_t", "command: %s", extra.txn_name.c_str());
-
   int http_resp_code = 0;
   string http_version;
   strmap headers;
@@ -590,14 +643,19 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::proce
 
   if (upstream.parse_response(payload, http_resp_code, http_version, headers, json, stats)) {
 
-    log_d(1, "", "parsed response: ");
-
     upstream_handler_map_t::iterator it = upstream_messages.find(extra.txn_name);
     if (it != upstream_messages.end()) {
+
+      log_v(2, "controller_t", "processing upstream response for: %s (%d)", extra.txn_name.c_str(), http_resp_code);
+
       upstream_handler_t * p = it->second;
       p->handle(http_resp_code, http_version, headers, json, stats);
       delete p;
+    } else {
+      log_w("controller_t", "processing upstream response. CANNOT_FIND_HANDLER");
     }
+  } else {
+    log_w("controller_t", "processing upstream response. PARSE_FAILED");
   }
 
   return handled;
@@ -659,6 +717,8 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
 // -----------------------------------------------------------------------------------------------------------------------------------------
 void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType, serialization_json_t const & data_)
 {
+  bool telemetry_preference = flag("telemetry", false);
+
   uint32 now = get_tick_count();
   if (now - scan_start_time > 15000) {
     if (bucketName == "printerScan") { return; }
@@ -669,7 +729,7 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
   data.set("eventType", eventType);
-  log_v(2, "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
+  log_v(2 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
   bucketData[bucketName].push_back(data);
 }
 
@@ -698,8 +758,6 @@ void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint3
   common.set("bucket", bucketName);
   common.set("bucketId", random_string(32));
 }
-    //map<string, strmap>       buckets;      // Data common to the bucket
-    //map<string, jsonlist>     bucketData;   // Data items
 
 bool net_mobilewebprint::controller_base_t::mq_is_done()
 {
@@ -820,8 +878,38 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     }
 
     // Lookup printer status ("state") and job status
-    if ((printerState   = http_stats.attrs["status"]) == "") { printerState = "y"; }
+    if ((printerState   = http_stats.attrs["status"]) == "") { printerState = ""; }
     if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus = "y"; }
+
+    int numSent = -1;
+    if (_has(http_stats.int_attrs, "numSent")) {
+      numSent = _lookup(http_stats.int_attrs, "numSent", 0);
+    }
+
+    bool is_done = false;
+    if (_has(http_stats.bool_attrs, "byte_stream_done")) {
+      is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
+    }
+
+    log_v(3, "", "progress0: printerState: |%s|, jobStatus: |%s| numSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), numSent, is_done ? "true" : "false");
+
+    // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
+    if (printerState.length() == 0) {
+
+      // First, assume IDLE -- this is the 'safe' choice.
+      printerState = PML_STATUS_IDLE;
+
+      // Then, see if the connection to the printer is closed
+      if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) == true) {
+        printerState = PML_STATUS_IDLE;
+
+      // Then, see if we have sent any bytes to the printer
+      } else if (_has(http_stats.int_attrs, "numSent") && _lookup(http_stats.int_attrs, "numSent", 0) > 0) {
+        printerState = PML_STATUS_PRINTING;
+      }
+
+    }
+    log_v(3, "", "progress: printerState: |%s|, jobStatus: |%s| numSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), numSent, is_done ? "true" : "false");
 
     // ---------- Messaging
     // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
@@ -938,6 +1026,19 @@ bool net_mobilewebprint::controller_base_t::flag(char const * key)
   return ARGS.get_flag(key);
 }
 
+/**
+ *  Get the named flag (true or false), if not present, returns the default.
+ */
+bool net_mobilewebprint::controller_base_t::flag(char const * key, bool def)
+{
+  return ARGS.get_flag(key, def);
+}
+
+net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(string const & name, string const & value)
+{
+  return set_arg(name.c_str(), value.c_str());
+}
+
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, char const *value)
 {
   log_d("setOption(%s, \"%s\")", name, value);
@@ -978,6 +1079,11 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
   return *this;
 }
 
+net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(string const & name, int value)
+{
+  return set_arg(name.c_str(), value);
+}
+
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, int value)
 {
   log_d("setIntOption(%s, %d)", name, value);
@@ -985,14 +1091,15 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
   return *this;
 }
 
+net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_flag(string const & name, bool value)
+{
+  return set_flag(name.c_str(), value);
+}
+
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_flag(char const *name, bool value)
 {
   log_d("setFlag(%s, %s)", name, value ? "true" : "false");
-  if (value) {
-    ARGS.set_flag(name);
-  } else {
-    ARGS.clear_flag(name);
-  }
+  ARGS.set_flag(name, value);
 
   // Flags that are known to affect others
   if (::strcmp("log_api", name) == 0) {
@@ -1180,7 +1287,7 @@ int net_mobilewebprint::controller_base_t::send_to_app(char const * message, int
   mwp_params local_params = {};
   mwp_params const * params = (params_ != NULL ? params_ : &local_params);
 
-  log_d('4', "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
+  log_v(4, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
 
   int result = 0;
   for (mwp_app_cb_list_t::const_iterator it = mwp_app_callbacks().begin(); it != mwp_app_callbacks().end(); ++it) {
@@ -1213,7 +1320,7 @@ int net_mobilewebprint::controller_base_t::send_to_app(char const * message, int
   sap_params local_params = {};
   sap_params const * params = (params_ != NULL ? params_ : &local_params);
 
-  log_d('4', "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
+  log_v(4, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
 
   int result = 0;
   for (sap_app_cb_list_t::const_iterator it = sap_app_callbacks().begin(); it != sap_app_callbacks().end(); ++it) {
@@ -1517,5 +1624,10 @@ net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 
   if (search.length() > 0) {
     url = url + "?" + search;
   }
+}
+
+void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+{
+  log_v(3, "", "telemetry response: %d", code);
 }
 

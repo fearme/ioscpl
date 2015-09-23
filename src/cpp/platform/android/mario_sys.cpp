@@ -103,6 +103,13 @@ extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_start(JNIEn
   return get_api()->start(true, false);
 }
 
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_reScan(JNIEnv *env, jobject self)
+{
+  log_d("Client::reScan");
+
+  return get_api()->reScan();
+}
+
 extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendJob(JNIEnv *env, jobject self, jstring url, jstring printer_ip)
 {
   return get_api()->send_job(to_string(env, url).c_str(), to_string(env, printer_ip).c_str());

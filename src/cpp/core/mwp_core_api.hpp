@@ -19,6 +19,7 @@ namespace net_mobilewebprint {
 
     // ---------- The easiest ----------
     virtual bool                   start               (bool start_scanning = true, bool block = true);
+    virtual bool                   reScan              ();
     virtual bool                   mq_is_done          ();
     virtual bool                   send_job            (char const * url, const char * printer_ip);
 

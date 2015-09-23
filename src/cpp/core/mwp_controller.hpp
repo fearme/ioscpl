@@ -123,6 +123,11 @@ namespace net_mobilewebprint {
     string const &               arg(char const * key, string const & def);
     int                          arg(char const * key, int def);
     bool                        flag(char const * key);
+    bool                        flag(char const * key, bool def);
+
+    controller_base_t &      set_arg(string const & name, string const & value);
+    controller_base_t &      set_arg(string const & name, int value);
+    controller_base_t &     set_flag(string const & name, bool value = true);
 
     controller_base_t &      set_arg(char const *name, char const *value);
     controller_base_t &      set_arg(char const *name, int value);
@@ -130,6 +135,8 @@ namespace net_mobilewebprint {
     controller_base_t &   clear_flag(char const *name);
 
     controller_base_t &    parse_cli(int argc, void const * argv[]);
+
+    void                show_options();
 
     // ---------- The app is messaging with MWP ----------
 
@@ -312,6 +319,9 @@ namespace net_mobilewebprint {
       ARGS.merge(ARGS(argc, argv));
     }
 
+    // ---------------------- Heartbeat ----------------------
+    mq_manual_timer_t         heartbeat_timer;
+
     // ---------------------- Telemetry ----------------------
     mq_manual_timer_t         telemetry_report;
 
@@ -360,6 +370,10 @@ namespace net_mobilewebprint {
       sendTelemetry(bucketName, eventType, json);
     }
 
+  };
+
+  struct telemetry_response_t : public upstream_handler_t {
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
   };
 
   extern controller_base_t * g_controller;

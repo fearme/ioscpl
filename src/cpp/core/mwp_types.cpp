@@ -819,6 +819,41 @@ bool net_mobilewebprint::json_t::lookup_bool(string const & key) const
   return lookup(key, false);
 }
 
+bool net_mobilewebprint::json_t::keys(strset & str_keys, strset & int_keys, strset & bool_keys) const
+{
+  for (strmap::const_iterator it = str_attrs.begin(); it != str_attrs.end(); ++it) {
+    str_keys.insert(it->first);
+  }
+
+  for (std::map<std::string, int>::const_iterator it = int_attrs->begin(); it != int_attrs->end(); ++it) {
+    int_keys.insert(it->first);
+  }
+
+  for (std::map<std::string, bool>::const_iterator it = bool_attrs->begin(); it != bool_attrs->end(); ++it) {
+    bool_keys.insert(it->first);
+  }
+
+  return true;
+}
+
+net_mobilewebprint::strset net_mobilewebprint::json_t::keys() const
+{
+  strset result;
+
+  for (strmap::const_iterator it = str_attrs.begin(); it != str_attrs.end(); ++it) {
+    result.insert(it->first);
+  }
+
+  for (std::map<std::string, int>::const_iterator it = int_attrs->begin(); it != int_attrs->end(); ++it) {
+    result.insert(it->first);
+  }
+
+  for (std::map<std::string, bool>::const_iterator it = bool_attrs->begin(); it != bool_attrs->end(); ++it) {
+    result.insert(it->first);
+  }
+
+  return result;
+}
 
 std::string net_mobilewebprint::json_t::stringify() const
 {
@@ -1049,8 +1084,6 @@ net_mobilewebprint::serialization_json_t & net_mobilewebprint::serialization_jso
 
 net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobilewebprint::serialization_json_t::getList(string const & key_)
 {
-  log_v(2, "", "getList: %s", key_.c_str());
-
   string parent_key;
   string key        = key_;
 
@@ -1484,7 +1517,8 @@ void net_mobilewebprint::log_v(int level, char const * tags, char const * format
   log_v(buffer, (log_param_t)NULL);
 }
 
-void net_mobilewebprint::log_vs(int level, char const * tag, char const * format, string const & big_str)
+#if 0
+void net_mobilewebprint::log_vs2(int level, char const * tag, char const * format, string const & big_str)
 {
   if (!get_flag("verbose"))                         { return; }
   if (get_option("v_log_level", 0) < level - '0')   { return; }
@@ -1514,6 +1548,30 @@ void net_mobilewebprint::log_vs(int level, char const * tag, char const * format
     pnull = p + 100;
   } while (p < pend);
 
+  delete[] buffer;
+}
+#endif
+
+void net_mobilewebprint::log_vs(int level, char const * tags, char const * format, string const & s1)
+{
+  //return;
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+  if (!_should_log(tags))                     { return; }
+
+  int len = ::strlen(format) + 100 + s1.length();
+
+  // If the log entry will be small enough, just use the normal
+  if (len < 1800) {
+    log_v(level, tags, format, s1.c_str());
+    return;
+  }
+
+  /* otherwise -- allocate a buffer and use that */
+  char * buffer = new char[len];
+  ::memset(buffer, 0, len);
+  sprintf(buffer, format, s1.c_str());
+  log_v("%s", buffer);
   delete[] buffer;
 }
 

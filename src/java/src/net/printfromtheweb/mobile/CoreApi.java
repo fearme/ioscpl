@@ -122,7 +122,7 @@ public class CoreApi {
 
   public void reScan(boolean autoScan) {
     mwp.logD(TAG, "-----------------------------CoreApi-reScan");
-//    controller.reScan(autoScan);
+    mwp.reScan();
     scanStartTime = System.currentTimeMillis();
   }
 

@@ -10,6 +10,7 @@ using std::set;
 
 using net_mobilewebprint::strmap;
 using net_mobilewebprint::strlist;
+using net_mobilewebprint::log_vs;
 
 bool          is(char const *&p,  const char *&end, char const * str);
 bool          match(char const *&p_, const char *&end, bool(*char_class)(char));
@@ -51,8 +52,25 @@ string const & net_mobilewebprint::args_t::get(char const * key, string const & 
 
 bool net_mobilewebprint::args_t::get_flag(char const * key)
 {
-  bool result = (flags.find(key) != flags.end());
-  return result;
+  if (antiFlags.find(key) != antiFlags.end()) {
+    return false;
+  }
+
+  /* otherwise */
+  return (flags.find(key) != flags.end());
+}
+
+bool net_mobilewebprint::args_t::get_flag(char const * key, bool def)
+{
+  if (antiFlags.find(key) != antiFlags.end()) {
+    return false;
+  }
+
+  if (flags.find(key) != flags.end()) {
+    return true;
+  }
+
+  return def;
 }
 
 net_mobilewebprint::args_t & net_mobilewebprint::args_t::set_arg(char const * key, char const * value)
@@ -65,14 +83,15 @@ net_mobilewebprint::args_t & net_mobilewebprint::args_t::set_arg(char const * ke
   return _insert(key, value);
 }
 
-net_mobilewebprint::args_t & net_mobilewebprint::args_t::set_flag(char const *flag)
+net_mobilewebprint::args_t & net_mobilewebprint::args_t::set_flag(char const *flag, bool value)
 {
-  return _insert(flag);
+  return _insert_bool(flag, value);
 }
 
 net_mobilewebprint::args_t & net_mobilewebprint::args_t::clear_flag(char const *flag)
 {
   flags.erase(flag);
+  antiFlags.erase(flag);
   return *this;
 }
 
@@ -86,20 +105,29 @@ net_mobilewebprint::args_t & net_mobilewebprint::args_t::_insert(string key, str
   return *this;
 }
 
-net_mobilewebprint::args_t & net_mobilewebprint::args_t::_insert(string flag)
+net_mobilewebprint::args_t & net_mobilewebprint::args_t::_insert_bool(string flag, bool value)
 {
-  // Special processing
-  if (flag == "vvvvvvvverbose")        { _insert("v_log_level", "8"); flag = "verbose"; }
-  else if (flag == "vvvvvvverbose")    { _insert("v_log_level", "7"); flag = "verbose"; }
-  else if (flag == "vvvvvverbose")     { _insert("v_log_level", "6"); flag = "verbose"; }
-  else if (flag == "vvvvverbose")      { _insert("v_log_level", "5"); flag = "verbose"; }
-  else if (flag == "vvvverbose")       { _insert("v_log_level", "4"); flag = "verbose"; }
-  else if (flag == "vvverbose")        { _insert("v_log_level", "3"); flag = "verbose"; }
-  else if (flag == "vverbose")         { _insert("v_log_level", "2"); flag = "verbose"; }
-  else if (flag == "verbose")          { _insert("v_log_level", "1"); flag = "verbose"; }
-
   flag = replace_chars(flag, "-", "_");
-  flags.insert(flag);
+
+  // Special processing
+  if (value) {
+    if (flag == "vvvvvvvverbose")        { _insert("v_log_level", "8"); flag = "verbose"; }
+    else if (flag == "vvvvvvverbose")    { _insert("v_log_level", "7"); flag = "verbose"; }
+    else if (flag == "vvvvvverbose")     { _insert("v_log_level", "6"); flag = "verbose"; }
+    else if (flag == "vvvvverbose")      { _insert("v_log_level", "5"); flag = "verbose"; }
+    else if (flag == "vvvverbose")       { _insert("v_log_level", "4"); flag = "verbose"; }
+    else if (flag == "vvverbose")        { _insert("v_log_level", "3"); flag = "verbose"; }
+    else if (flag == "vverbose")         { _insert("v_log_level", "2"); flag = "verbose"; }
+    else if (flag == "verbose")          { _insert("v_log_level", "1"); flag = "verbose"; }
+
+    flags.insert(flag);
+    antiFlags.erase(flag);
+
+  } else {
+    antiFlags.insert(flag);
+    flags.erase(flag);
+  }
+
   return *this;
 }
 
@@ -130,7 +158,7 @@ bool net_mobilewebprint::args_t::_parse(char const * str, string & key, string &
         // No "=", so this is a flag
 
         //flags.insert(key);
-        _insert(key);
+        _insert_bool(key);
         return false;
       }
     }
@@ -352,6 +380,26 @@ string net_mobilewebprint::random_string(size_t length)
 
   while (result.length() < length) {
     result += hex_digits[rand() % ::strlen(hex_digits)];
+  }
+
+  return result;
+}
+
+bool net_mobilewebprint::_normalize_keys(string & parent, string & key)
+{
+  bool result = false;
+
+  strmap_entry kv;
+  if (split_kv(kv, join(A(parent, key), "."), ".")) {
+    if (kv.first.length() > 0) {
+      parent = kv.first;
+      key    = kv.second;
+      result = true;
+    } else {
+      // This key wasn't composite
+      parent = "";
+      key    = kv.second;
+    }
   }
 
   return result;
@@ -1160,7 +1208,18 @@ static bool JSON_parse_sub_unit(T & out, char const *& p, char const *& end_ /* 
               }
 
               return false;
+            } else {
+              // Error - this is not valid JSON
+              return false;
             }
+          }
+        } else {
+          skip_ws(p, mem_end);
+          if (*p == '}') {
+            break;
+          } else {
+            // Error -- this is not valid JSON
+            return false;
           }
         }
       }
@@ -1169,9 +1228,15 @@ static bool JSON_parse_sub_unit(T & out, char const *& p, char const *& end_ /* 
     } else if (*p == '"') {
       // A string value
       if ((start = JSON_parse_string(p, end)) != NULL) {
+
         out.insert(unit_key, string(start, end));
         return true;
+
+      } else {
+        // Error -- this is not valid JSON
+        return false;
       }
+
     } else if (*p == '[') {
       p += 1;
 
@@ -1189,6 +1254,14 @@ static bool JSON_parse_sub_unit(T & out, char const *& p, char const *& end_ /* 
           }
 
           return false;
+        } else {
+          skip_ws(p, mem_end);
+          if (*p == ']') {
+            break;
+          } else {
+            // Error -- this is not valid JSON
+            return false;
+          }
         }
       }
 
@@ -1224,6 +1297,7 @@ static bool JSON_parse_sub_unit(T & out, char const *& p, char const *& end_ /* 
 
 bool net_mobilewebprint::JSON_parse(json_t & out, string const & json_str)
 {
+
   out._init(true);
   char const* start = json_str.c_str(), *end = start + json_str.length();
   if (JSON_parse_sub_unit(out, start, end, "")) {
