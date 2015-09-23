@@ -881,9 +881,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     if ((printerState   = http_stats.attrs["status"]) == "") { printerState = ""; }
     if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus = "y"; }
 
-    int numSent = -1;
-    if (_has(http_stats.int_attrs, "numSent")) {
-      numSent = _lookup(http_stats.int_attrs, "numSent", 0);
+    int totalSent = -1;
+    if (_has(http_stats.int_attrs, "totalSent")) {
+      totalSent = _lookup(http_stats.int_attrs, "totalSent", 0);
     }
 
     bool is_done = false;
@@ -891,7 +891,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
     }
 
-    log_v(3, "", "progress0: printerState: |%s|, jobStatus: |%s| numSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), numSent, is_done ? "true" : "false");
+    log_v(3, "", "progress0: printerState: |%s|, jobStatus: |%s| totalSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
 
     // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
     if (printerState.length() == 0) {
@@ -904,12 +904,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
         printerState = PML_STATUS_IDLE;
 
       // Then, see if we have sent any bytes to the printer
-      } else if (_has(http_stats.int_attrs, "numSent") && _lookup(http_stats.int_attrs, "numSent", 0) > 0) {
+      } else if (_has(http_stats.int_attrs, "totalSent") && _lookup(http_stats.int_attrs, "totalSent", 0) > 0) {
         printerState = PML_STATUS_PRINTING;
       }
 
     }
-    log_v(3, "", "progress: printerState: |%s|, jobStatus: |%s| numSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), numSent, is_done ? "true" : "false");
+    log_v(3, "", "progress: printerState: |%s|, jobStatus: |%s| totalSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
 
     // ---------- Messaging
     // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
