@@ -25,28 +25,12 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "HPControlledPrintConsumer/ControlledPrint.swift"
-            timestampString = "463017724.868868"
-            startingColumnNumber = "9223372036854775807"
-            endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "51"
-            endingLineNumber = "51"
-            landmarkName = "exit()"
-            landmarkType = "5">
-         </BreakpointContent>
-      </BreakpointProxy>
-      <BreakpointProxy
-         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
-         <BreakpointContent
-            shouldBeEnabled = "No"
-            ignoreCount = "0"
-            continueAfterRunningActions = "No"
             filePath = "../HPControlledPrint/HPControlledPrint/Classes/HPControlledPrintManager.mm"
-            timestampString = "463016805.936198"
+            timestampString = "464650601.394442"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "337"
-            endingLineNumber = "337"
+            startingLineNumber = "349"
+            endingLineNumber = "349"
             landmarkName = "-scanForPrinters"
             landmarkType = "5">
          </BreakpointContent>
@@ -95,8 +79,8 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "105"
             endingLineNumber = "105"
-            landmarkName = "-asyncHttpErrored:"
-            landmarkType = "5">
+            landmarkName = "@implementation HPTokenValidator"
+            landmarkType = "3">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
@@ -110,8 +94,102 @@
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "108"
-            endingLineNumber = "108"
-            landmarkName = "-asyncHttpErrored:"
+            endingLineNumber = "108">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "../HPControlledPrint/HPControlledPrint/Classes/HPControlledPrintManager.mm"
+            timestampString = "464650601.394442"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "288"
+            endingLineNumber = "288"
+            landmarkName = "-initialize:withToken:doValidation:withCompletion:"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "HPControlledPrintConsumer/ServerStackViewController.swift"
+            timestampString = "464656075.37642"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "109"
+            endingLineNumber = "109"
+            landmarkName = "prepareForSegue(_:sender:)"
+            landmarkType = "5">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "HPControlledPrintConsumer/ControlledPrint.swift"
+            timestampString = "464650923.476879"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "25"
+            endingLineNumber = "25"
+            landmarkName = "initialize(_:token:validation:completion:)"
+            landmarkType = "5">
+            <Locations>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "HPControlledPrintConsumer.ControlledPrint.initialize (HPControlledPrintConsumer.ControlledPrint)(C.ServerStack, token : Swift.String, validation : Swift.Bool, completion : (C.InitStatus) -&gt; ()) -&gt; ()"
+                  moduleName = "HPControlledPrintConsumer"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/fredy/workspace/coupons/mario/client/src/ios/HPControlledPrintConsumer/HPControlledPrintConsumer/ControlledPrint.swift"
+                  timestampString = "464655177.233371"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "25"
+                  endingLineNumber = "25"
+                  offsetFromSymbolStart = "60">
+               </Location>
+               <Location
+                  shouldBeEnabled = "No"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "HPControlledPrintConsumer.ControlledPrint.(initialize (HPControlledPrintConsumer.ControlledPrint) -&gt; (C.ServerStack, token : Swift.String, validation : Swift.Bool, completion : (C.InitStatus) -&gt; ()) -&gt; ()).(closure #1)"
+                  moduleName = "HPControlledPrintConsumer"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/fredy/workspace/coupons/mario/client/src/ios/HPControlledPrintConsumer/HPControlledPrintConsumer/ControlledPrint.swift"
+                  timestampString = "464655177.233602"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "26"
+                  endingLineNumber = "26"
+                  offsetFromSymbolStart = "15">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "HPControlledPrintConsumer/ControlledPrint.swift"
+            timestampString = "464651337.177681"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "25"
+            endingLineNumber = "25"
+            landmarkName = "initialize(_:token:validation:completion:)"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -122,12 +200,12 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "../HPControlledPrint/HPControlledPrint/Classes/HPControlledPrintManager.mm"
-            timestampString = "463016805.936198"
+            timestampString = "464653929.320247"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "284"
-            endingLineNumber = "284"
-            landmarkName = "-initialize:withToken:withCompletion:"
+            startingLineNumber = "267"
+            endingLineNumber = "267"
+            landmarkName = "-validateToken:withCompletion:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>
@@ -137,13 +215,13 @@
             shouldBeEnabled = "No"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "HPControlledPrintConsumer/PrinterListViewController.swift"
-            timestampString = "463017811.814043"
+            filePath = "../HPControlledPrint/HPControlledPrint/Classes/HPControlledPrintManager.mm"
+            timestampString = "464653931.682506"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "34"
-            endingLineNumber = "34"
-            landmarkName = "viewDidLoad()"
+            startingLineNumber = "269"
+            endingLineNumber = "269"
+            landmarkName = "-validateToken:withCompletion:"
             landmarkType = "5">
          </BreakpointContent>
       </BreakpointProxy>

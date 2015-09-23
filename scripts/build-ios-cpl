@@ -17,7 +17,7 @@ xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPr
 
 xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPrint.xcodeproj -scheme HPControlledPrint -sdk iphoneos8.4 ARCHS="armv7 arm64" VALID_ARCHS="i386 x86_64 armv7 arm64" -configuration Release ONLY_ACTIVE_ARCH=NO CONFIGURATION_BUILD_DIR="${OUTPUT_DIR}/device" clean build
 
-cp -R ${OUTPUT_DIR}/simulator/ ${OUTPUT_DIR}/release
+cp -R ${OUTPUT_DIR}/device/ ${OUTPUT_DIR}/release
 cd $OUTPUT_DIR
 lipo $OUTPUT_DIR/simulator/HPControlledPrint.framework/HPControlledPrint $OUTPUT_DIR/device/HPControlledPrint.framework/HPControlledPrint -create -output $OUTPUT_DIR/release/HPControlledPrint.framework/HPControlledPrint
 

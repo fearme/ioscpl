@@ -19,7 +19,7 @@ class PrintViewController: UIViewController, ControlledPrintDelegate {
             self.printJobStatusLabel.text = "Please wait ..."
         }        
         showSpinner()
-        if (self.cpl?.print(printJob!.imageUrl, printerIp: printJob!.printerIp) == false) {
+        if (self.cpl?.print(printJob!.printSource, printerIp: printJob!.printerIp) == false) {
             //Proccess error
         }
     }

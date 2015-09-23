@@ -11,5 +11,5 @@ import Foundation
 struct PrintJob {
     var printerName: String
     var printerIp: String
-    var imageUrl: String
+    var printSource: String
 }

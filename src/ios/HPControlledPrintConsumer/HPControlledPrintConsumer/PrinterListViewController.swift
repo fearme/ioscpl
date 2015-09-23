@@ -13,7 +13,8 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     var printers = [HPPrinterAttributes]()
     var printJob: PrintJob?
     var selectedServerStack: ServerStack?
-    var imageUrl: String?
+    var printSource: String?
+    var doValidation = true
     var clearPrinterList = false
     
     let availablePrinterSection = 0
@@ -29,7 +30,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         
         //Valid Token: QPLESLIKETOKEN-2321321312321321321
         //Valid File: http://www.pdfpdf.com/samples/Sample5.PDF
-        self.cpl?.initialize(selectedServerStack!, token: self.imageUrl!, completion:{(status: InitStatus) -> () in
+        self.cpl?.initialize(selectedServerStack!, token: self.printSource!, validation: self.doValidation, completion:{(status: InitStatus) -> () in
             if (status.value == InitStatusServerStackNotAvailable.value) {
                 self.spinner.removeFromSuperview()
                 self.clearPrinterList = true
@@ -154,7 +155,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
                 let selectedPrinterName = cell.textLabel?.text
                 let selectedPrinterIp = cell.detailTextLabel?.text
                 // http://welcome.hp-ww.com/country/us/en/home-b/system/i_stub/hpe_US_EN_HHO_PSG_Mod-1u_new-laptops_20150607.jpg
-                self.printJob = PrintJob(printerName: selectedPrinterName!, printerIp: selectedPrinterIp!, imageUrl: self.imageUrl!)
+                self.printJob = PrintJob(printerName: selectedPrinterName!, printerIp: selectedPrinterIp!, printSource: self.printSource!)
             }
             
         }

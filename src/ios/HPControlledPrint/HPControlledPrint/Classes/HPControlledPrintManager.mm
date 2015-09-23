@@ -273,17 +273,25 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 #pragma mark - initialize()
 
-- (void)initialize: (ServerStack)stack withToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion
+- (void)initialize: (ServerStack)stack withToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion {
+    [self initialize:stack withToken:token doValidation:YES withCompletion:completion];
+}
+
+- (void)initialize: (ServerStack)stack withToken:(NSString *)token doValidation:(BOOL)validate withCompletion:(void (^)(InitStatus status))completion
 {
     __weak HPControlledPrintManager *weakSelf = self;
     [self setEnvironment:stack withCompletion:^(InitStatus status){
         if (status == InitStatusServerStackAvailable) {
-            if (token != nil ) {
+            if (token != nil && validate) {
                 [weakSelf validateToken:token withCompletion:^(InitStatus status){
                     if (completion){
                         completion(status);
                     }
                 }];
+            } else {
+                if (completion){
+                    completion(status);
+                }
             }
         }  else {
             if (completion){
@@ -300,8 +308,12 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         discoveryUrl = [NSString stringWithFormat:@"http://cayman-dev-02.cloudpublish.com/coupons/discovery?env=Dev"];
         NSLog(@"Server Stack: Dev ======================");
         
-    } else if (stack == ServerStackExternalTest) {
-        discoveryUrl = [NSString stringWithFormat:@"http://cayman-ext.cloudpublish.com/coupons/discovery?env=Ext"];
+    } else if (stack == ServerStackQa) {
+        discoveryUrl = [NSString stringWithFormat:@"http://cayman-qa.cloudpublish.com/coupons/discovery?env=QA"];
+        NSLog(@"Server Stack: QA ======================");
+        
+    } else if (stack == ServerStackStaging) {
+        discoveryUrl = [NSString stringWithFormat:@"http://cayman-stg.cloudpublish.com/coupons/discovery?env=Stg"];
         NSLog(@"Server Stack: Ext ======================");
         
     } else if (stack == ServerStackProduction) {

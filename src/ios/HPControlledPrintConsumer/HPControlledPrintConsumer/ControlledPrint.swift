@@ -21,8 +21,8 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         ControlledPrint.cpl.printerAttributesDelegate = self
     }
     
-    func initialize(stack: ServerStack, token: String, completion: ((InitStatus) -> ())) {
-        ControlledPrint.cpl.initialize(stack, withToken: token, withCompletion:{(status: InitStatus) in
+    func initialize(stack: ServerStack, token: String, validation: Bool, completion: ((InitStatus) -> ())) {
+        ControlledPrint.cpl.initialize(stack, withToken: token, doValidation: validation, withCompletion:{(status: InitStatus) in
             completion(status)
         })
     }
@@ -35,12 +35,12 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         return ControlledPrint.cpl.scanForPrinters()
     }
     
-    func print(url: String, printerIp:String) -> Bool{
+    func print(source: String, printerIp:String) -> Bool{
         var printer = HPPrinter()
         printer.ipAddress = printerIp
         
         var printJob = HPPrintJobRequest()
-        printJob.tokenId = url
+        printJob.tokenId = source
         printJob.providerId = ProviderQples
         printJob.hardwareId = "PhoneID"
         
