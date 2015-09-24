@@ -361,9 +361,17 @@ public class CoreApi {
       if (printerProps.containsKey("MFG"))             { printer.manufacturer    = printerProps.getProperty("MFG"); }
       if (printerProps.containsKey("mac"))             { printer.mac             = printerProps.getProperty("mac"); }
 
-//      if (printerProps.containsKey("is_supported")) {
-//                                                           printer.is_supported    = printerProps.getProperty("is_supported");
-//      }
+      if (printerProps.containsKey("is_supported")) {
+            mwp.logD(TAG, "is_supported Sandeep :" + printerProps.getProperty("is_supported"));
+
+            if("1".equals(printerProps.getProperty("is_supported"))) {
+              printer.is_supported = true;
+            } else {
+              printer.is_supported = false;
+            }
+
+//          printer.is_supported    = printerProps.getProperty("is_supported");
+      }
 
       // TODO: knownEzStatus
 
