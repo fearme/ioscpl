@@ -3,6 +3,7 @@ HPControlledPrint/Includes/hp_cpl.h
 HPControlledPrint/Includes/hp_mwp.h
 HPControlledPrint/Includes/hp_sap.h
 HPControlledPrint/Includes/mwp_core_api.hpp
+HPControlledPrint/Includes/mwp_core_config.h
 HPControlledPrint/Includes/mwp_secure_asset_printing_api.hpp
 HPControlledPrint/Libraries/libcpl.a
 HPControlledPrint/Libraries/libcurl.a

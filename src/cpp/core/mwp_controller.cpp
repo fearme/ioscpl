@@ -253,7 +253,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
         serialization_json_t & subjson = json.getObject(bucketName);
         subjson << bucket;
 
-        serialization_json_t::serialization_json_list_t & sublist = subjson.getList("items");
+        serialization_json_list_t & sublist = subjson.getList("items");
         for (jsonlist::const_iterator itItem = data.begin(); itItem != data.end(); ++itItem) {
           sublist.push_back(*itItem);
           sent.insert(bucketName);

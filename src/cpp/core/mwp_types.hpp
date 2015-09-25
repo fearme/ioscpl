@@ -1537,6 +1537,8 @@ namespace net_mobilewebprint {
     void            log_v_(int level, char const * mod, char const * pre) const;
   };
 
+  struct serialization_json_list_t;
+
   struct serialization_json_t
   {
     static int string_type;
@@ -1557,16 +1559,6 @@ namespace net_mobilewebprint {
       serialization_json_elt_t(float);
       serialization_json_elt_t(double);
 
-      string stringify();
-    };
-
-    struct serialization_json_list_t
-    {
-      std::deque<serialization_json_t> list;
-
-      //serialization_json_list_t();
-
-      serialization_json_list_t & push_back(serialization_json_t const &);
       string stringify();
     };
 
@@ -1652,6 +1644,18 @@ namespace net_mobilewebprint {
   };
   typedef std::deque<serialization_json_t> jsonlist;
   typedef std::map<string, serialization_json_t> jsonmap;
+
+  struct serialization_json_list_t
+  {
+    std::deque<serialization_json_t> list;
+
+    //serialization_json_list_t();
+
+    serialization_json_list_t & push_back(serialization_json_t const &);
+    string stringify();
+  };
+
+//  typedef std::map<string, serialization_json_list_t *> sub_list_t;
 
 #if 1
   template <typename T>

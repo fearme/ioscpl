@@ -1087,7 +1087,7 @@ net_mobilewebprint::serialization_json_t & net_mobilewebprint::serialization_jso
   return *sub_elements[key];
 }
 
-net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobilewebprint::serialization_json_t::getList(string const & key_)
+net_mobilewebprint::serialization_json_list_t & net_mobilewebprint::serialization_json_t::getList(string const & key_)
 {
   string parent_key;
   string key        = key_;
@@ -1109,13 +1109,13 @@ net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobile
   return *sub_list[key];
 }
 
-net_mobilewebprint::serialization_json_t::serialization_json_list_t & net_mobilewebprint::serialization_json_t::serialization_json_list_t::push_back(serialization_json_t const & item)
+net_mobilewebprint::serialization_json_list_t & net_mobilewebprint::serialization_json_list_t::push_back(serialization_json_t const & item)
 {
   list.push_back(item);
   return *this;
 }
 
-string net_mobilewebprint::serialization_json_t::serialization_json_list_t::stringify()
+string net_mobilewebprint::serialization_json_list_t::stringify()
 {
   strlist strlistItems;
   for (std::deque<serialization_json_t>::const_iterator it = list.begin(); it != list.end(); ++it) {
