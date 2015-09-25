@@ -377,6 +377,7 @@ static char hex_digits[] = "0123456789abcdef";
 string net_mobilewebprint::random_string(size_t length)
 {
   string result = "";
+  srand(get_tick_count());
 
   while (result.length() < length) {
     result += hex_digits[rand() % ::strlen(hex_digits)];
@@ -384,6 +385,23 @@ string net_mobilewebprint::random_string(size_t length)
 
   return result;
 }
+
+string & net_mobilewebprint::_accumulate(string & str, string const & part, char const * sep)
+{
+  return _accumulate(str, part.c_str(), sep);
+}
+
+string & net_mobilewebprint::_accumulate(string & str, char const * part, char const * sep)
+{
+  if (str.length() > 0 && sep != NULL) {
+    str += sep;
+  }
+
+  str += part;
+
+  return str;
+}
+
 
 bool net_mobilewebprint::_normalize_keys(string & parent, string & key)
 {
@@ -772,6 +790,17 @@ strlist & net_mobilewebprint::add_kvs(strlist & list, strmap const & dict)
   }
 
   return list;
+}
+
+net_mobilewebprint::boolmap net_mobilewebprint::true_map(strlist const & list)
+{
+  boolmap result;
+
+  for (strlist::const_iterator it = list.begin(); it != list.end(); ++it) {
+    result.insert(make_pair(*it, true));
+  }
+
+  return result;
 }
 
 void net_mobilewebprint::dump(strmap const & dict)
@@ -1317,6 +1346,53 @@ bool net_mobilewebprint::JSON_parse_array(json_array_t & out, string const & jso
   }
 
   return false;
+}
+
+string net_mobilewebprint::JSON_debug_string(strmap const & dict, strlist const & skip_keys_, strlist const & key_order, std::map<string, int> const * numbers, std::map<string, bool> const * bools)
+{
+  string  result;
+
+  string  quote("\"");
+  boolmap skip_keys = true_map(skip_keys_);
+  strmap  intermediate;
+
+  if (bools != NULL) {
+    for (std::map<string, bool>::const_iterator it = bools->begin(); it != bools->end(); ++it) {
+      if (_has(skip_keys, it->first)) { continue; }
+      intermediate.insert(make_pair(it->first, it->second ? " true" : "false"));
+    }
+  }
+
+  for (strmap::const_iterator it = dict.begin(); it != dict.end(); ++it) {
+    if (_has(skip_keys, it->first)) { continue; }
+    intermediate.insert(make_pair(it->first, quote + it->second + quote));
+  }
+
+  if (numbers != NULL) {
+    for (std::map<string, int>::const_iterator it = numbers->begin(); it != numbers->end(); ++it) {
+      if (_has(skip_keys, it->first)) { continue; }
+      intermediate.insert(make_pair(it->first, mwp_itoa(it->second)));
+    }
+  }
+
+  // Output the keys from key_order
+
+  for (strlist::const_iterator it = key_order.begin(); it != key_order.end(); ++it) {
+    if (_has(intermediate, *it)) {
+      _accumulate(result, intermediate.find(*it)->first + ": " + intermediate.find(*it)->second, ", ");
+    }
+  }
+
+  boolmap key_order_map = true_map(key_order);
+  for (strmap::const_iterator it = intermediate.begin(); it != intermediate.end(); ++it) {
+    if (!_has(key_order_map, it->first)) {
+      _accumulate(result, it->first + ": " + it->second, ", ");
+    }
+  }
+
+  result = string("{") + result + "}";
+
+  return result;
 }
 
 string net_mobilewebprint::JSON_stringify(strmap const & dict, std::map<string, int> const * numbers, std::map<string, bool> const * bools)

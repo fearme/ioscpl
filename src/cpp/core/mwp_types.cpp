@@ -860,6 +860,11 @@ std::string net_mobilewebprint::json_t::stringify() const
   return JSON_stringify(str_attrs, int_attrs, bool_attrs);
 }
 
+std::string net_mobilewebprint::json_t::debug_string(strlist const & skipKeys, strlist const & key_order) const
+{
+  return JSON_debug_string(str_attrs, skipKeys, key_order, int_attrs, bool_attrs);
+}
+
 net_mobilewebprint::json_t const & net_mobilewebprint::json_t::dump(bool force) const
 {
   if (!force) {

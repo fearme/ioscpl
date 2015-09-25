@@ -52,6 +52,9 @@ namespace net_mobilewebprint {
 
   extern string        dashify_key(string const & key);
 
+  extern string &      _accumulate(string & str, string const & part, char const * sep);
+  extern string &      _accumulate(string & str, char const * part, char const * sep);
+
   extern char const *  skip_ws(char const *p);
   extern char *        skip_ws(char *p);
 
@@ -140,7 +143,10 @@ namespace net_mobilewebprint {
 
   extern void       dump(strmap const & dict);
 
+  extern boolmap    true_map(strlist const & list);
+
   extern string     JSON_stringify(strmap const & dict, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);
+  extern string     JSON_debug_string(strmap const & dict, strlist const & keys, strlist const & key_order, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);
   extern bool       JSON_parse(json_t & out, string const & json);
   extern bool       JSON_parse_array(json_array_t & out, string const & json);
 

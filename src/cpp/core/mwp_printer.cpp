@@ -652,7 +652,8 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
         sending_printer_list.time = get_tick_count();
       } else {
         log_v(3, "", "-----------------------------------------------------------sending filterPrinters %d/%d: #%d", count, by_ip.size(), num_printer_list_sends);
-        string stream_name = controller.send_upstream("info_for_printers", "/filterPrinters", json, new printer_list_response_t());
+        string pathname = string("/filterPrinters?total=") + mwp_itoa(by_ip.size()) + "&count=" + mwp_itoa(count);
+        string stream_name = controller.send_upstream("info_for_printers", pathname, json, new printer_list_response_t());
         if (send_scan_done != NULL) { send_scan_done->delay(250); }
         printer_list_in_flight = true;
         num_printer_list_sends += 1;
@@ -755,7 +756,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
-    log_v(3, "", "----- response from filterPrinter %s", sub_json->stringify().c_str());
+    log_v(3, "", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
     if (sub_json && sub_json->has("ip")) {
 
       string const & ip             = sub_json->lookup("ip");

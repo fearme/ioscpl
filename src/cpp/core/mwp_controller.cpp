@@ -67,6 +67,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     telemetry_report(0, 2500),
     heartbeat_timer(0, 5000)
 {
+  srand(get_tick_count());
+
   mwp_app_callbacks_ = new mwp_app_cb_list_t();
   //sap_app_callbacks_ = new sap_app_cb_list_t();
 
@@ -100,6 +102,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     telemetry_report(0, 2500),
     heartbeat_timer(0, 5000)
 {
+  srand(get_tick_count());
+
   //mwp_app_callbacks_ = new mwp_app_cb_list_t();
   sap_app_callbacks_ = new sap_app_cb_list_t();
 
@@ -235,6 +239,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     serialization_json_t json;
 
     // See if there are any telemetry items to send
+    int     count = 0;
     strset  sent;
     for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
       string const & bucketName = it->first;
@@ -252,15 +257,17 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
         for (jsonlist::const_iterator itItem = data.begin(); itItem != data.end(); ++itItem) {
           sublist.push_back(*itItem);
           sent.insert(bucketName);
-        }
 
+          count += 1;
+        }
       }
     }
 
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
       if (flag("telemetry", /* default= */false)) {
-        send_upstream("telemetry", "/telemetry", json, new telemetry_response_t());
+        string pathname = string("/telemetry?count=") + mwp_itoa(count);
+        send_upstream("telemetry", pathname, json, new telemetry_response_t());
       }
 
       // We have sent it, now reset the data
@@ -342,7 +349,10 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
 
   result = mq.send(up_and_running) && result;
   if (start_scanning) {
+
     scan_start_time = get_tick_count();
+    sessionId       = random_string(64);
+
     startBucket("printerScan", scan_start_time);
 
     result = mq.send(scan_for_printers) && result;
@@ -421,6 +431,9 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   serialization_json_t json(request.json_body);
 
   json.set("clientId", clientId());
+  json.set("sessionId", sessionId);
+
+  // TODO: this does not belong on every POST, move it to those that make sense
   json.set("provider", arg("providerName", "HP_CP"));
 
   json.set("meta.platform", platform_name());
@@ -729,7 +742,7 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
   data.set("eventType", eventType);
-  log_v(2 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
+  log_v(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
   bucketData[bucketName].push_back(data);
 }
 

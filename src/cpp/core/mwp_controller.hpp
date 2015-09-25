@@ -323,6 +323,7 @@ namespace net_mobilewebprint {
     mq_manual_timer_t         heartbeat_timer;
 
     // ---------------------- Telemetry ----------------------
+    string                    sessionId;
     mq_manual_timer_t         telemetry_report;
 
     map<string, serialization_json_t>      buckets;      // Data common to the bucket

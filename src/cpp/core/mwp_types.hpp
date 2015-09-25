@@ -1365,10 +1365,59 @@ namespace net_mobilewebprint {
 
   // Some literal-like functions
   template <typename T>
+  std::deque<T> A(T a) {
+    std::deque<T> array;
+    array.push_back(a);
+    return compact(array);
+  }
+
+  template <typename T>
   std::deque<T> A(T a, T b) {
     std::deque<T> array;
     array.push_back(a);
     array.push_back(b);
+    return compact(array);
+  }
+
+  template <typename T>
+  std::deque<T> A(T a, T b, T c) {
+    std::deque<T> array;
+    array.push_back(a);
+    array.push_back(b);
+    array.push_back(c);
+    return compact(array);
+  }
+
+  template <typename T>
+  std::deque<T> A(T a, T b, T c, T d) {
+    std::deque<T> array;
+    array.push_back(a);
+    array.push_back(b);
+    array.push_back(c);
+    array.push_back(d);
+    return compact(array);
+  }
+
+  template <typename T>
+  std::deque<T> A(T a, T b, T c, T d, T e) {
+    std::deque<T> array;
+    array.push_back(a);
+    array.push_back(b);
+    array.push_back(c);
+    array.push_back(d);
+    array.push_back(e);
+    return compact(array);
+  }
+
+  template <typename T>
+  std::deque<T> A(T a, T b, T c, T d, T e, T f) {
+    std::deque<T> array;
+    array.push_back(a);
+    array.push_back(b);
+    array.push_back(c);
+    array.push_back(d);
+    array.push_back(e);
+    array.push_back(f);
     return compact(array);
   }
 
@@ -1451,6 +1500,7 @@ namespace net_mobilewebprint {
     bool      lookup_bool(string const & key) const;
 
     string      stringify() const;
+    string   debug_string(strlist const & skipKeys, strlist const & key_order) const;
 
     bool             keys(strset & str_keys, strset & int_keys, strset & bool_keys) const;
     strset           keys() const;
