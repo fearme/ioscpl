@@ -904,7 +904,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
     }
 
-    log_v(3, "", "progress0: printerState: |%s|, jobStatus: |%s| totalSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
+    log_v(5, "", "progress0: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
 
     // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
     if (printerState.length() == 0) {
@@ -922,7 +922,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       }
 
     }
-    log_v(3, "", "progress: printerState: |%s|, jobStatus: |%s| totalSent: %d, done: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
+    log_v(5, "", "progress:  printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
 
     // ---------- Messaging
     // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
@@ -975,6 +975,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       message = "Cancelling...";
     }
 
+    bool is_finishing = false;
     if (printerState != PML_STATUS_IDLE) {
       job_stat(http_txn_id, "has_started", true);
 
@@ -982,20 +983,33 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
 
       // Back to idle... We are done
       message = "Done";
-      job_stat(http_txn_id, "done", true);
       if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
         jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_CANCELLED);
       } else {
         jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_SUCCESS);
       }
+      is_finishing = true;
     }
 
-    // Grab the job ID, and send the message to the app
-    job_id = http_stats.attrs["job_id"];
+    // As long as we are not done, send status
+    if (!_lookup_job_stat(http_txn_id, "frozen", false)) {
 
-    send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
+      // Grab the job ID, and send the message to the app
+      job_id = http_stats.attrs["job_id"];
+
+      log_v(4, "", "progress2: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s, state: |%s|", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false", state.c_str());
+      send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
+
+    } else {
+      log_v(5, "", "progress2: ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s, state: |%s|", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false", state.c_str());
+    }
 
     job_stat(http_txn_id, "getting_progress", false, true);
+
+    if (is_finishing) {
+      job_stat(http_txn_id, "done", true);
+      job_stat(http_txn_id, "frozen", true);
+    }
   }
   return handled;
 }
@@ -1440,6 +1454,12 @@ std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char cons
 {
   string orig_value = _lookup_job_stat(id, stat_name, string());
 
+  // If we are frozen, do not allow updating the stat
+  if (job_frozen(id, stat_name)) {
+    log_v(4, "", "job %d is frozen -- not updating %s to %s", id, stat_name, value);
+    return orig_value;
+  }
+
   job_stats[id].attrs[stat_name] = value;
   log_v(4, "controller_t", "setting job_stat(%d): |%s|=|%s|\n%s", id, stat_name, value, job_stats[id].debug_to_json().c_str());
 
@@ -1450,6 +1470,12 @@ std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char cons
 std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char const * stat_name, string const & value, bool silent)
 {
   string orig_value = _lookup_job_stat(id, stat_name, string());
+
+  // If we are frozen, do not allow updating the stat
+  if (job_frozen(id, stat_name)) {
+    log_v(4, "", "job %d is frozen -- not updating %s to %s", id, stat_name, value.c_str());
+    return orig_value;
+  }
 
   job_stats[id].attrs[stat_name] = value;
   log_v(4, "controller_t", "setting job_stat(%d): |%s|=|%s|\n%s", id, stat_name, value.c_str(), job_stats[id].debug_to_json().c_str());
@@ -1462,6 +1488,12 @@ int net_mobilewebprint::controller_base_t::job_stat(uint32 id, char const * stat
 {
   int orig_value = _lookup_job_stat(id, stat_name, 0);
 
+  // If we are frozen, do not allow updating the stat
+  if (job_frozen(id, stat_name)) {
+    log_v(4, "", "job %d is frozen -- not updating %s to %d", id, stat_name, value);
+    return orig_value;
+  }
+
   job_stats[id].int_attrs[stat_name] = value;
   //log_d(1, "controller_t", "%s", job_stats[id].to_json().c_str());
 
@@ -1471,6 +1503,12 @@ int net_mobilewebprint::controller_base_t::job_stat(uint32 id, char const * stat
 
 int net_mobilewebprint::controller_base_t::job_stat_incr(uint32 id, char const * stat_name, int value, bool silent)
 {
+  // If we are frozen, do not allow updating the stat
+  if (job_frozen(id, stat_name)) {
+    log_v(4, "", "job %d is frozen -- not incrementing %s by %d", id, stat_name, value);
+    return 0;
+  }
+
   if (job_stats.find(id) == job_stats.end()) {
     return (job_stats[id].int_attrs[stat_name] = value);
   }
@@ -1490,12 +1528,27 @@ bool net_mobilewebprint::controller_base_t::job_stat(uint32 id, char const * sta
 {
   bool orig_value = _lookup_job_stat(id, stat_name, false);
 
+  // If we are frozen, do not allow updating the stat
+  if (job_frozen(id, stat_name)) {
+    log_v(4, "", "job %d is frozen -- not updating %s to %d", id, stat_name, (int)value);
+    return orig_value;
+  }
+
   job_stats[id].bool_attrs[stat_name] = value;
   //log_d(1, "controller_t", "%s", job_stats[id].to_json().c_str());
 
   if (!silent) { job_stat_changed(id, value != orig_value, stat_name); }
 
   return value;
+}
+
+bool net_mobilewebprint::controller_base_t::job_frozen(uint32 id, char const * stat_name)
+{
+  if (string(stat_name) == "getting_progress") {
+    return false;
+  }
+
+  return _lookup_job_stat(id, "frozen", false);
 }
 
 bool net_mobilewebprint::controller_base_t::job_stat_changed(uint32 id, bool value, char const * stat_name)

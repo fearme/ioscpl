@@ -443,15 +443,15 @@ void net_mobilewebprint::mq_t::_show_queue_state(int select_result, char const *
       // Log the state of the queue
       log_d(1, "",
       //printf(
-             "MQ_select_loop(%s-%03d): %3d network events(%2d/%d, %2d/%d, %2d/%d); %3d items on the queue; %3d timers pending   ",
+             "MQ_select_loop(%s-%03d): %3d network events(%2d/%d, %2d/%d, %2d/%d); %3d timers pending; items on the queue %3d;",
              msg,
              current_loop_num,
              select_result,
              _num_curr_reads(), (int)read_fds_for_current_select.size(),
              _num_curr_writes(), (int)write_fds_for_current_select.size(),
              _num_curr_exceptions(), (int)_union(read_fds_for_current_select, write_fds_for_current_select).size(),
-             (int)mq_normal.size(),
-             (int)timers.size());
+             (int)timers.size(),
+             (int)mq_normal.size());
 
 #if 0
       // Add the fds
@@ -481,6 +481,7 @@ void net_mobilewebprint::mq_t::_show_queue_state(int select_result, char const *
         }
       }
 
+      log_d(1, "", "%30s: %5d", "count", msg_count);
       for (std::map<string, int>::const_iterator it = hist.begin(); it != hist.end(); it++) {
         log_d(1, "", "%30s: %5d", (*it).first.c_str(), it->second);
       }

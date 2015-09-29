@@ -1455,7 +1455,7 @@ void net_mobilewebprint::log_e(char const * format, ...)
 
 void net_mobilewebprint::log_d(int level, char const * tags, char const * format, ...)
 {
-  return;
+//  return;
   if (get_flag("quiet"))  { return; }
   if (!_should_log(tags)) { return; }
 
