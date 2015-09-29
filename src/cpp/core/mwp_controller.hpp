@@ -222,6 +222,7 @@ namespace net_mobilewebprint {
     bool      job_stat(uint32 id, char const * stat_name,           bool value, bool silent = false);
 
     bool      job_stat_changed(uint32 id, bool did_change, char const * stat_name);
+    bool      job_frozen(uint32 id, char const * stat_name);
 
     map<string, stats_t> packet_stats;
 
