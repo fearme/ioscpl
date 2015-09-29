@@ -394,23 +394,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-fetlhwygqatrcsenaibmureaioht/Build/Products/Debug-iphonesimulator",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-duronpvowxzhxuhjvyrwtixlbeth/Build/Products/Debug-iphoneos",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-duronpvowxzhxuhjvyrwtixlbeth/Build/Products/Debug-iphonesimulator",
 					"$(PROJECT_DIR)",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-ewddxwniyolwgkghffjudahgbgue/Build/Products/Debug-iphonesimulator",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-bayrwmfbqukgyigojxlqezppzifq/Build/Products/Debug-iphonesimulator",
-					/Users/fredy/Downloads,
-					"/Users/sparksb/dev/mario/client/src/ios/HPControlledPrint/build/Debug-iphoneos",
-					"/Users/fredy/dev/mario/client/xcode-build/Debug-iphonesimulator",
-					"/Users/fredy/dev/mario/client/xcode-build/Debug-iphoneos",
-					"/Users/fredy/dev/mario/client/xcode-build/ReleaseFDC",
 					/Users/fredy/workspace/coupons/mario/client/deliveries/ios/cpl/release,
 				);
 				INFOPLIST_FILE = HPControlledPrintConsumer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/HPControlledPrintConsumer/HPControlledPrint-Bridging-Header.h";
+				SYMROOT = "~/workspace/xcode_build";
 			};
 			name = Debug;
 		};
@@ -421,23 +412,14 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-fetlhwygqatrcsenaibmureaioht/Build/Products/Debug-iphonesimulator",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-duronpvowxzhxuhjvyrwtixlbeth/Build/Products/Debug-iphoneos",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-duronpvowxzhxuhjvyrwtixlbeth/Build/Products/Debug-iphonesimulator",
 					"$(PROJECT_DIR)",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-ewddxwniyolwgkghffjudahgbgue/Build/Products/Debug-iphonesimulator",
-					"$(USER_LIBRARY_DIR)/Developer/Xcode/DerivedData/HPControlledPrint-bayrwmfbqukgyigojxlqezppzifq/Build/Products/Debug-iphonesimulator",
-					/Users/fredy/Downloads,
-					"/Users/sparksb/dev/mario/client/src/ios/HPControlledPrint/build/Debug-iphoneos",
-					"/Users/fredy/dev/mario/client/xcode-build/Debug-iphonesimulator",
-					"/Users/fredy/dev/mario/client/xcode-build/Debug-iphoneos",
-					"/Users/fredy/dev/mario/client/xcode-build/ReleaseFDC",
 					/Users/fredy/workspace/coupons/mario/client/deliveries/ios/cpl/release,
 				);
 				INFOPLIST_FILE = HPControlledPrintConsumer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "$(PROJECT_DIR)/HPControlledPrintConsumer/HPControlledPrint-Bridging-Header.h";
+				SYMROOT = "~/workspace/xcode_build";
 			};
 			name = Release;
 		};
@@ -456,6 +438,7 @@
 				INFOPLIST_FILE = HPControlledPrintConsumerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = "~/workspace/xcode_build";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HPControlledPrintConsumer.app/HPControlledPrintConsumer";
 			};
 			name = Debug;
@@ -471,6 +454,7 @@
 				INFOPLIST_FILE = HPControlledPrintConsumerTests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SYMROOT = "~/workspace/xcode_build";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/HPControlledPrintConsumer.app/HPControlledPrintConsumer";
 			};
 			name = Release;

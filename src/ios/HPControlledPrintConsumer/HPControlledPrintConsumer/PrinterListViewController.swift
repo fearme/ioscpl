@@ -112,7 +112,11 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
             cell.textLabel?.text = printerAttributes.name
             cell.detailTextLabel?.text = printerAttributes.ip
             
-            cell.imageView?.image = UIImage(named: "HPPrinter")
+            if printerAttributes.isSupported.value == PrinterSupportedYes.value {
+                cell.imageView?.image = UIImage(named: "PrinterSupported")
+            } else {
+                cell.imageView?.image = UIImage(named: "PrinterNotSupported")
+            }
         }
         
         return cell

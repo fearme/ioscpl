@@ -161,10 +161,10 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             attributes.manufacturer = value;
             
         } else if ([property isEqualToString:@"is_supported"]) {
-            if ([value isEqualToString:@"true"]) {
-                attributes.isSupported = YES;
+            if ([value isEqualToString:@"1"]) {
+                attributes.isSupported = PrinterSupportedYes;
             } else {
-                attributes.isSupported = NO;
+                attributes.isSupported = PrinterSupportedNo;
             }
         }
         
@@ -232,11 +232,11 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     
     if ([[self printerAttributesDelegate] respondsToSelector:@selector(didReceivePrinters:)]) {
-        //make sure we only send printers with IPs and names
+        //make sure we only send printers with IPs, names, and isSupported set
         HPDiscoveredPrinters *printersToSend = [[HPDiscoveredPrinters alloc] init];
         for (NSString *ip in printers) {
             HPPrinterAttributes *printer = [printers objectForKey:ip];
-            if (printer.ip != nil && printer.name != nil) {
+            if (printer.ip != nil && printer.name != nil && printer.isSupported != PrinterSupportedUnassigned) {
                 [printersToSend.printers setObject:printer forKey:ip];
             }
         }
