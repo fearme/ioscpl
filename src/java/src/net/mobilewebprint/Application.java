@@ -103,7 +103,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
   public void onPrinterAttribute(String ip, String name, String value) {
     try {
-      //Client.logD("MobileWebPrint", "+++onPrinterAttribute " + ip + " " + name + " " + value);
+      Client.logD("MobileWebPrint", "+++onPrinterAttribute " + ip + " " + name + " " + value);
       printersMutex.acquire();
     } catch (InterruptedException e) {
       return;
@@ -141,7 +141,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
   public void onRemovePrinter(String ip) {
     try {
-      //Client.logD("MobileWebPrint", "+++onRemovePrinter " + ip);
+      Client.logD("MobileWebPrint", "+++onRemovePrinter " + ip);
       printersMutex.acquire();
     } catch (InterruptedException e) {
       return;
@@ -150,7 +150,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
     try {
       printers.remove(ip);
     } finally {
-      //Client.logD("MobileWebPrint", "-------------------- release");
+      Client.logD("MobileWebPrint", "-------------------- release onRemovePrinter");
       printersMutex.release();
     }
   }
@@ -256,7 +256,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
     String fName, s1="", s2="", s3="", s4="", s5="", s6="", s7="", s8="";
     if ((fName = stringDictionary.get(message)) == null) { return false; }
-    //Client.logD("MobileWebPrint", "fName: " + fName);
+    Client.logD("MobileWebPrint", "fName: " + fName + " numStrings: " + numStrings);
 
     if (numStrings >= 1) { if ((s1 = stringDictionary.get(n1)) == null) { return false; } }
     if (numStrings >= 2) { if ((s2 = stringDictionary.get(n2)) == null) { return false; } }
@@ -281,6 +281,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       return true;
     }
 
+    Client.logD("MobileWebPrint", "fName2: " + fName);
     return false;
   }
 

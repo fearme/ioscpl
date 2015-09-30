@@ -209,8 +209,37 @@ int app_callback(void * app_data, char const * msg, int ident, int32 transaction
     }
 
   } else if (strcmp(msg, HP_MWP_RM_PRINTER_MSG) == 0) {
-    if (onRemovePrinterId != NULL) {
-      getEnv()->CallVoidMethod(jApplication, onRemovePrinterId);
+    log_d("RM_PRINTER1");
+    if (setDictionaryItemsId != NULL && sendMessageId != NULL) {
+      log_d("RM_PRINTER2");
+      string diffs;
+      int num_diffs = 0;
+
+      int n_msg = ensure_is_in("onRemovePrinter", diffs, num_diffs);
+      int n1    = ensure_is_in((char const *)p1, diffs, num_diffs);
+      int n2    = 0;
+      int n3    = 0;
+
+      int n4    = 0;
+      int n5    = 0;
+      int n6    = 0;
+      int n7    = 0;
+      int n8    = 0;
+
+
+      jstring jdiffs;
+      if (num_diffs > 0) {
+        jdiffs = to_jstring(diffs);
+        getEnv()->CallVoidMethod(jApplication, setDictionaryItemsId, jdiffs);
+      }
+
+      log_d("RM_PRINTER3");
+      getEnv()->CallBooleanMethod(jApplication, sendMessageId, n_msg, 1, n1, n2, n3, n4, n5, n6, n7, n8);
+      log_d("RM_PRINTER4");
+
+      if (num_diffs > 0) {
+        getEnv()->DeleteLocalRef(jdiffs);
+      }
     }
 
   } else if (strcmp(msg, HP_MWP_END_PRINTER_ENUM_MSG) == 0) {

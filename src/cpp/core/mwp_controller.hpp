@@ -287,6 +287,7 @@ namespace net_mobilewebprint {
     mq_manual_timer_t         packet_stats_report;
     mq_manual_timer_t         cleanup_time;
     mq_manual_timer_t         server_command_timer;
+    mq_manual_timer_t         network_ifaces_timer;
     //uint32                    job_stats_upload_time,          job_stats_upload_interval;
 
     app_timer_table_t         timer_table;

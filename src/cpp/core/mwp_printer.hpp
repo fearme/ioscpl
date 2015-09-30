@@ -56,6 +56,8 @@ namespace net_mobilewebprint {
     strlist tags;
     strmap _1284_attrs, _1284_attrs_lc;
 
+    int     num_network_errors;
+
 
     uint32 status_time;
     uint32 status_interval;
@@ -137,6 +139,8 @@ namespace net_mobilewebprint {
     bool from_slp(slp_t & slp, buffer_view_i const & payload);
     bool assimilate_printer_stats(printer_t * printer);
     int  send_list_to_app();
+
+    void network_error(string const & ip, int errno);
 
     void send_print_job(uint32 & connection_id, string const & ip);
 

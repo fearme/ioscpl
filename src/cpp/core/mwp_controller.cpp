@@ -7,6 +7,8 @@
 #include "mwp_printer.hpp"
 #include "mwp_mq.hpp"
 
+
+
 #define HP_MWP_SEND_FULL_PRINTER_LIST     "send_full_printer_list"
 #define HP_MWP_HARD_CODE_PRINTER          "add_printer"
 
@@ -62,10 +64,11 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     //job_stats_upload_time(0), job_stats_upload_interval(2000),
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
+    network_ifaces_timer(0, 1000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 2500),
-    heartbeat_timer(0, 5000)
+    heartbeat_timer(0, 20000)
 {
   srand(get_tick_count());
 
@@ -97,10 +100,11 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     upload_job_stats(0, 500),
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
+    network_ifaces_timer(0, 1000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 2500),
-    heartbeat_timer(0, 5000)
+    heartbeat_timer(0, 20000)
 {
   srand(get_tick_count());
 
@@ -190,6 +194,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
   }
 
+  if (network_ifaces_timer.has_elapsed(loop_start_data.current_loop_start)) {
+  }
+
   // Push progress-telemetry up to the server
   if (upload_job_stats.has_elapsed(loop_start_data.current_loop_start)) {
 
@@ -232,7 +239,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   }
 
   if (heartbeat_timer.has_elapsed(loop_start_data.current_loop_start)) {
-    log_v(1, "", "mwp %s", "up");
+    log_v(3, "", "mwp %s", "up");
   }
 
   if (telemetry_report.has_elapsed(loop_start_data.current_loop_start)) {

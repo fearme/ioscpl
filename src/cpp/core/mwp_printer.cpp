@@ -23,13 +23,13 @@ static char const * _snmp_status_oid(net_mobilewebprint::printer_t const &);
 static net_mobilewebprint::printer_list_t * g_printer_list = NULL;
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
-  : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), status_interval(status_interval_normal), status_time(0),
+  : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), num_network_errors(0), status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
 }
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_, string const & ip_)
-  : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), status_interval(status_interval_normal), status_time(0),
+  : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), num_network_errors(0), status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
 }
@@ -912,6 +912,33 @@ bool net_mobilewebprint::printer_list_t::from_1284_attrs(strmap const & attrs, s
   }
 
   return false;
+}
+
+void net_mobilewebprint::printer_list_t::network_error(string const & ip, int errno)
+{
+//  log_v(2, "", "Encountered network error (%d) for %s", errno, ip.c_str());
+//  return;
+
+  printer_t * printer = NULL;
+
+  plist_t::const_iterator it;
+  if ((it = by_ip.find(ip)) != by_ip.end()) {
+    if ((printer = it->second)) {
+      printer->num_network_errors += 1;
+      log_v(2, "", "Encountered network error (%d) for %s, count: %d", errno, ip.c_str(), printer->num_network_errors);
+      if (printer->num_network_errors >= 5) {
+
+        printer_enum_id += 1;
+        controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
+        controller.send_to_app(HP_MWP_RM_PRINTER_MSG, -1, printer_enum_id, ip.c_str(), NULL, NULL);
+        controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+
+        // TODO: Do not leak this
+        by_ip.erase(ip);
+        delete printer;
+      }
+    }
+  }
 }
 
 bool net_mobilewebprint::printer_list_t::from_slp(slp_t & slp, buffer_view_i const & payload)

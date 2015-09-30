@@ -1139,6 +1139,7 @@ namespace net_mobilewebprint {
       socklen_t	addrlen = sizeof(addr);
       int result = (int)sendto(udp_fd, (char*)packet.bytes, packet.data_length, 0, (struct sockaddr*)&addr, addrlen);
       last_error = get_last_network_error();
+//      log_v(2, "", "send_udp_to (%d): len: %d", last_error, result);
 
       return result;
     }
@@ -1163,6 +1164,7 @@ namespace net_mobilewebprint {
       if (_act_like_unreliable_udp(mod)) { return (int)packet.data_length; }
       int result = (int)sendto(udp_fd, (char*)packet.bytes, packet.data_length, 0, (struct sockaddr*)&local_addr, addrlen);
       last_error = get_last_network_error();
+//      log_v(2, "", "send_udp_to2 (%d): len: %d", last_error, result);
 
       return result;
     }
@@ -1178,6 +1180,7 @@ namespace net_mobilewebprint {
 
       int result = (recv_result.data_length = recv(udp_fd, (char*)recv_result.bytes, recv_result.mem_length, 0));
       last_error = get_last_network_error();
+//      log_v(2, "", "recv_udp (%d): len: %d", last_error, result);
 
       return result;
     }
@@ -1201,6 +1204,8 @@ namespace net_mobilewebprint {
 
       recv_result.data_length += (result = (int)recvfrom(udp_fd, buffer, buf_size, 0, (struct sockaddr*)&addr, &addrlen));
       last_error = get_last_network_error();
+
+//      log_v(2, "", "recv_from (%d): len: %d", last_error, result);
 
       sender = addr;
 
