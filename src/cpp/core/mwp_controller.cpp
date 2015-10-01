@@ -442,7 +442,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
   json.set("meta.dataFormat", 11);
 
   if (arg("username", "").length() > 0) {
-    json.set("meta.user", arg("username", "noname@example.com"));
+    json.set("meta.username", arg("username", "noname@example.com"));
   }
 
   // TODO: Remove this after netapp_command.js recognizes ".clientId" on stg/prod
@@ -818,8 +818,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_allo
   job_stats[http_txn_id].attrs["asset_url"]  = asset_url;
   job_stats[http_txn_id].attrs["jobStatus"]  = STATUS_WAITING0;
 
+  serialization_json_t json;
   stats_t stats("txn_id", http_txn_id);
-  string stream_name = upstream.get("/allocateJobId", "_send_job", stats);
+  string stream_name = upstream.send("/allocateJobId", json, "_send_job", stats);
 
   return handled;
 }
