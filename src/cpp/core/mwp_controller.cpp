@@ -1470,6 +1470,12 @@ std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char cons
   log_v(4, "controller_t", "setting job_stat(%d): |%s|=|%s|\n%s", id, stat_name, value, job_stats[id].debug_to_json().c_str());
 
   if (!silent) { job_stat_changed(id, orig_value != value, stat_name); }
+
+  // Set "current" when "jobStatus" is set
+  if (string(stat_name) == "jobStatus") {
+    job_stat(id, "current", value, silent);
+  }
+
   return value;
 }
 
@@ -1487,6 +1493,12 @@ std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char cons
   log_v(4, "controller_t", "setting job_stat(%d): |%s|=|%s|\n%s", id, stat_name, value.c_str(), job_stats[id].debug_to_json().c_str());
 
   if (!silent) { job_stat_changed(id, value != orig_value, stat_name); }
+
+  // Set "current" when "jobStatus" is set
+  if (string(stat_name) == "jobStatus") {
+    job_stat(id, "current", value, silent);
+  }
+
   return value;
 }
 
