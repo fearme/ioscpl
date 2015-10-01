@@ -344,6 +344,7 @@ void net_mobilewebprint::printer_t::send_print_job(uint32 & connection_id_)
 
   // Canon is a bit harder
   if (_is_canon(*this)) {
+
     bjnp_connection = controller.bjnp.send_to_printer(connection_id_, ip, port);
     connection_id = connection_id_;
 //    bjnp_send_to_printer_start = get_tick_count();

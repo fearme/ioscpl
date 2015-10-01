@@ -43,12 +43,17 @@ net_mobilewebprint::bjnp_connection_t * net_mobilewebprint::bjnp_t::discover(uin
   return connection;
 }
 
-net_mobilewebprint::bjnp_connection_t * net_mobilewebprint::bjnp_t::send_to_printer(uint32 & connection_id, string const & ip, uint16 port)
+net_mobilewebprint::bjnp_connection_t * net_mobilewebprint::bjnp_t::send_to_printer(uint32   connection_id, string const & ip, uint16 port)
 {
+  uint32 connection_id_orig = connection_id;
+
   bjnp_connection_t * connection = _connection(connection_id, ip, port);
   if (connection != NULL) {
     connection->send_to_printer();
   }
+
+  connection_ids.insert(make_pair(connection_id_orig, connection_id));
+  http_connection_ids.insert(make_pair(connection_id, connection_id_orig));
 
   return connection;
 }
@@ -143,16 +148,16 @@ e_handle_result net_mobilewebprint::bjnp_t::handle(string const & name, buffer_v
 
   if (name == "_on_http_payload" || name == "_on_bjnp_udp_packet" || name == "_on_txn_close") {
 
-    it = connections.find(txn_id);
+    it = connections.find(connection_id_for(txn_id));
     if (it != connections.end()) {
       connection = it->second;
+    }
 
-      if (connection != NULL) {
-        result = connection->handle(name, payload, data, extra);
+    if (connection != NULL) {
+      result = connection->handle(name, payload, data, extra);
 
-        if (connection_is_closed(it)) {
-          return result;
-        }
+      if (connection_is_closed(it)) {
+        return result;
       }
     }
   }
@@ -173,11 +178,31 @@ e_handle_result net_mobilewebprint::bjnp_t::handle(string const & name, buffer_v
   return result;
 }
 
+uint32 net_mobilewebprint::bjnp_t::connection_id_for(uint32 http_connection_id)
+{
+  if (connection_ids.find(http_connection_id) == connection_ids.end()) {
+    return http_connection_id;
+  }
+
+  return connection_ids[http_connection_id];
+}
+
+uint32 net_mobilewebprint::bjnp_t::http_connection_id_for(bjnp_connection_t const * connection)
+{
+  if (http_connection_ids.find(connection->connection_id) == http_connection_ids.end()) {
+    return connection->connection_id;
+  }
+
+  return http_connection_ids[connection->connection_id];
+}
+
 bool net_mobilewebprint::bjnp_t::connection_is_closed(connections_t::iterator & it)
 {
   bjnp_connection_t const * connection = it->second;
 
   if (connection != NULL && connection->is_done()) {
+
+    controller.job_stat(http_connection_id_for(connection), "byte_stream_done", true);
 
     // Dont take it out of the list, keep it there, but make it NULL
     connections[connection->connection_id] = NULL;
@@ -545,6 +570,11 @@ e_handle_result net_mobilewebprint::bjnp_connection_t::_mq_selected(string const
 
         log_v(4, TAG, "bjnp_connection::wrote %s: 0x%08x / 0x%08x(0x%08x) -- seq:0x%x(0x%x), %d chunks remaining; %d in buildout", name_for(chunk->type1), num_sent, chunk->data->dsize(), chunk->data->mem_length, (int)chunk->seq_num, (int)seq_num_of(resend_of(chunk)), (int)chunks.size(), (int)buildout_buffer.dsize());
 
+        // If this is not an extra request for status, log the number of bytes sent to the printer
+        if (special_tcp_chunk == NULL) {
+          controller.job_stat_incr(controller.bjnp.http_connection_id_for(this), "totalSent", num_sent);
+        }
+
         if (special_tcp_chunk != NULL) {
           special_tcp_chunk = NULL;
         }
@@ -649,6 +679,8 @@ e_handle_result net_mobilewebprint::bjnp_connection_t::_on_bjnp_udp_packet(strin
 
 e_handle_result net_mobilewebprint::bjnp_connection_t::_on_http_payload(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
 {
+  controller.job_stat_incr(controller.bjnp.http_connection_id_for(this), "numDownloaded", (int)payload.dsize());
+
   int input_size = (int)payload.dsize();
 
   buildout_buffer.append(payload);
@@ -842,6 +874,10 @@ net_mobilewebprint::bjnp_connection_t & net_mobilewebprint::bjnp_connection_t::r
         log_v(4, TAG, "bjnp re-queueing");
         relabel_chunk(chunk = new bjnp_chunk_t(*chunk), 0x9999);
         chunks.push_front(chunk);
+
+        if (chunk && chunk->data) {
+          controller.job_stat_incr(controller.bjnp.http_connection_id_for(this), "totalSent", -(chunk->data->dsize()));
+        }
       }
     }
 

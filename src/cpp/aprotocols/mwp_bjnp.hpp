@@ -21,10 +21,13 @@ namespace net_mobilewebprint {
     mq_t &                 mq;
     connections_t          connections;
 
+    map<uint32, uint32>    connection_ids;
+    map<uint32, uint32>    http_connection_ids;
+
     bjnp_t(controller_base_t &);
 
     bjnp_connection_t *                   discover(uint32 & id, string const & ip, uint16 port = 8611);
-    bjnp_connection_t *            send_to_printer(uint32 & id, string const & ip, uint16 port = 8611);
+    bjnp_connection_t *            send_to_printer(uint32   id, string const & ip, uint16 port = 8611);
     bool                       is_connection_alive(uint32 connection_id);
 
     virtual int                         pre_select(mq_pre_select_data_t * pre_select_data);
@@ -34,6 +37,9 @@ namespace net_mobilewebprint {
 
     bjnp_connection_t *                _connection(uint32 & id, string const & ip, uint16 port = 8611);
     bool                      connection_is_closed(connections_t::iterator & it);
+
+    uint32                       connection_id_for(uint32 http_connection_id);
+    uint32                       http_connection_id_for(bjnp_connection_t const * connection);
 
     virtual string  mod_name();
   };

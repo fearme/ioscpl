@@ -227,7 +227,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   }
 
   if (alloc_report.has_elapsed(loop_start_data.current_loop_start)) {
-    log_d(1, "controller_t", "MQ-length: %4d; Allocations: %d; Chunks: %d; Buffers: %d; buffer-mems: %d; buffer-mem: %d", mq.mq_normal.size(), num_allocations, num_chunk_allocations, num_buffer_allocations, num_buf_bytes_allocations, num_buf_bytes);
+    log_v(4, "controller_t", "MQ-length: %4d; Allocations: %d; Chunks: %d; Buffers: %d; buffer-mems: %d; buffer-mem: %d", mq.mq_normal.size(), num_allocations, num_chunk_allocations, num_buffer_allocations, num_buf_bytes_allocations, num_buf_bytes);
   }
 
   if (heartbeat_timer.has_elapsed(loop_start_data.current_loop_start)) {
@@ -890,6 +890,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       log_v(4, "", "_on_progress_response http_job_stats: |%s|", http_stats.debug_to_json().c_str());
     }
 
+    // Grab the job ID, and send the message to the app
+    job_id = http_stats.attrs["job_id"];
+
     // Lookup printer status ("state") and job status
     if ((printerState   = http_stats.attrs["status"]) == "") { printerState = ""; }
     if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus = "y"; }
@@ -899,12 +902,17 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       totalSent = _lookup(http_stats.int_attrs, "totalSent", 0);
     }
 
+    int num_downloaded = -1;
+    if (_has(http_stats.int_attrs, "numDownloaded")) {
+      num_downloaded = _lookup(http_stats.int_attrs, "numDownloaded", 0);
+    }
+
     bool is_done = false;
     if (_has(http_stats.bool_attrs, "byte_stream_done")) {
       is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
     }
 
-    log_v(5, "", "progress0: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
+    log_v(5, "", "progress0(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
 
     // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
     if (printerState.length() == 0) {
@@ -922,7 +930,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       }
 
     }
-    log_v(5, "", "progress:  printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false");
+    log_v(4, "", "progress1(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
 
     // ---------- Messaging
     // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
@@ -994,14 +1002,11 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     // As long as we are not done, send status
     if (!_lookup_job_stat(http_txn_id, "frozen", false)) {
 
-      // Grab the job ID, and send the message to the app
-      job_id = http_stats.attrs["job_id"];
-
-      log_v(4, "", "progress2: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s, state: |%s|", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false", state.c_str());
+      log_v(3, "", "progress(%04d):  |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
       send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
 
     } else {
-      log_v(5, "", "progress2: ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d, all-sent: %s, state: |%s|", printerState.c_str(), jobStatus.c_str(), totalSent, is_done ? "true" : "false", state.c_str());
+      log_v(3, "", "progress(%04d): |%s| ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
     }
 
     job_stat(http_txn_id, "getting_progress", false, true);
