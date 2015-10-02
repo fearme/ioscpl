@@ -178,6 +178,8 @@ namespace net_mobilewebprint {
     printer_t * has_unknown_is_supported();
     int         unknown_is_supported_count();
 
+    string      get_ip(string const & mac);
+
   };
 
 };

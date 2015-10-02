@@ -1256,6 +1256,26 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
   return count;
 }
 
+std::string net_mobilewebprint::printer_list_t::get_ip(string const & mac)
+{
+  printer_t * printer = NULL;
+
+  for (plist_t::const_iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
+    if ((printer = it->second) != NULL) {
+      if (printer->has_mac() && printer->mac == mac) {
+        if (printer->has_ip()) {
+          return printer->ip;
+        }
+
+        /* otherwise */
+        return "";
+      }
+    }
+  }
+
+  return "";
+}
+
 net_mobilewebprint::fixup_snapshot_t::fixup_snapshot_t(printer_t const & printer)
   : ip(printer.ip), port(printer.port)
 {

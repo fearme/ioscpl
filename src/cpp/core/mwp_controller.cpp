@@ -186,6 +186,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
 
   if (server_command_timer.has_elapsed(loop_start_data.current_loop_start)) {
     serialization_json_t json;
+    json.set("stackName", arg("stackName", ""));
     send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
   }
 
@@ -231,7 +232,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   }
 
   if (heartbeat_timer.has_elapsed(loop_start_data.current_loop_start)) {
-    log_v(1, "", "mwp is %s", "alive and well");
+    log_v(1, "", "mwp %s", "up");
   }
 
   if (telemetry_report.has_elapsed(loop_start_data.current_loop_start)) {
@@ -633,11 +634,18 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
     set_arg("fallbackServiceOne", curl.server_name);
     set_arg("fallbackServiceTwo", curl.server_name);
 
+    string stack_name = arg("serverName", "");
+    if (stack_name[0] == 'h' && stack_name[1] == 'q') {
+      stack_name = stack_name.substr(2);
+    }
+    set_arg("stackName", stack_name);
+
     show_options();
 
     client_start_in_flight_txn_id = -1;
 
     serialization_json_t json;
+    json.set("stackName", stack_name);
     send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
     return handled;
 
@@ -698,7 +706,12 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
       item->dump(true);
 
 
-      if (item->has("$print.ip") && item->has("$print.url")) {
+      if (item->has("$print.mac") && item->has("$print.url")) {
+        string const & mac      = item->lookup("$print.mac");
+        string const & url      = item->lookup("$print.url");
+
+        send_job(url, mac);
+      } else if (item->has("$print.ip") && item->has("$print.url")) {
         string const & ip       = item->lookup("$print.ip");
         string const & url      = item->lookup("$print.url");
 
@@ -782,9 +795,17 @@ bool net_mobilewebprint::controller_base_t::mq_is_done()
  *
  *  The message is to allocate a job id.
  */
-bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url, string const & printer_ip)
+bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url, string const & printer_ip_)
 {
+  string printer_ip = printer_ip_;
+
   log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
+
+  // Convert mac address into IP
+  if (printer_ip.length() >= 12) {
+    printer_ip = printers.get_ip(printer_ip);
+    log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
+  }
   uint32 txn_id = _unique();
 
   string device_id = replace_chars(printers.get_device_id(printer_ip), " ", "+");
@@ -1003,11 +1024,11 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     // As long as we are not done, send status
     if (!_lookup_job_stat(http_txn_id, "frozen", false)) {
 
-      log_v(3, "", "progress(%04d):  |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
+      log_v(4, "", "progress(%04d):  |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
       send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
 
     } else {
-      log_v(3, "", "progress(%04d): |%s| ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
+      log_v(4, "", "progress(%04d): |%s| ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
     }
 
     job_stat(http_txn_id, "getting_progress", false, true);

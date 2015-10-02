@@ -22,6 +22,7 @@ import android.content.ServiceConnection;
 import android.provider.Settings.Secure;
 import android.widget.Toast;
 import android.util.Log;
+import android.util.Base64;
 
 import java.util.ArrayList;
 import java.util.Properties;
@@ -232,6 +233,10 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
       mwp_client.setOption("hardwareid", uniqueId);
     }
 
+    mwp_client.setOption("serverName", "hqdev");
+    mwp_client.setOption("domainName", ".mobiledevprint.net");
+    mwp_client.setOption("providerName", "HP_CP");
+
     try {
         for (Account account: AccountManager.get(context).getAccounts()) {
             if (account.name.matches(".*@gmail\\.com") && account.type.matches(".*google.*")) {
@@ -255,28 +260,30 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
 
     // Get the hardware ID
     Context context = getApplicationContext();
-    String hardware_id = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+    String deviceId = Secure.getString(context.getContentResolver(), Secure.ANDROID_ID);
+    if (deviceId != null && !deviceId.equals("")) {
+        Log.d(TAG, "ANDROID_ID: " + deviceId);
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            deviceId = Base64.encodeToString(digest.digest(deviceId.getBytes("UTF-8")),
+                    Base64.URL_SAFE | Base64.NO_PADDING | Base64.CRLF | Base64.NO_CLOSE
+                            | Base64.NO_WRAP);
+            int length = deviceId.length();
+            deviceId = deviceId.substring(0, length - (length - 64));
+            deviceId = String.format("%s", deviceId);
+            deviceId = deviceId.replaceAll("(-|_)", "0");
 
-    try {
-      if(hardware_id != null && hardware_id.length() > 0) {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(hardware_id.getBytes("UTF-8"));
-        StringBuffer hexString = new StringBuffer();
-        for (int i = 0; i< hash.length; i++){
-            String hex = Integer.toHexString(0xff & hash[i]);
-            if(hex.length() == 1) hexString.append('0');
-            hexString.append(hex);
+            Log.d(TAG, "hwId: " + deviceId);
+            return deviceId;
+
+        } catch (NoSuchAlgorithmException e) {
+            Log.e(TAG, e.getMessage(), e);
+        } catch (UnsupportedEncodingException e) {
+            Log.e(TAG, e.getMessage(), e);
         }
-        hardware_id =  hexString.toString();
-      }
-      else{
-        hardware_id = randomString(64);
-      }
-    } catch (NoSuchAlgorithmException e) {
-    } catch (UnsupportedEncodingException e) {
     }
 
-    return hardware_id;
+    return randomString(64);
   }
 
   private static char[] charSet = "abcdefghijklmnopqrstuvwxyz0123456789".toCharArray();
