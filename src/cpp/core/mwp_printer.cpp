@@ -987,9 +987,9 @@ bool net_mobilewebprint::printer_list_t::from_1284_attrs(strmap const & attrs, s
   return false;
 }
 
-void net_mobilewebprint::printer_list_t::network_error(string const & ip, int errno)
+void net_mobilewebprint::printer_list_t::network_error(string const & ip, int error_number)
 {
-//  log_v(2, "", "Encountered network error (%d) for %s", errno, ip.c_str());
+//  log_v(2, "", "Encountered network error (%d) for %s", error_number, ip.c_str());
 //  return;
 
   printer_t * printer = NULL;
@@ -999,7 +999,7 @@ void net_mobilewebprint::printer_list_t::network_error(string const & ip, int er
     if ((printer = it->second)) {
 
       printer->num_network_errors += 1;
-      log_v(2, "", "Encountered network error (%d) for %s, count: %d", errno, ip.c_str(), printer->num_network_errors);
+      log_v(2, "", "Encountered network error (%d) for %s, count: %d", error_number, ip.c_str(), printer->num_network_errors);
 
       if (printer->num_network_errors >= 5) {
         remove_printer(printer);
