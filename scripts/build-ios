@@ -1,6 +1,7 @@
 #!/bin/bash -e
 
 test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
+test -n "$USER"         || export USER="none"
 
 START_DIR=$(pwd)
 

@@ -1016,6 +1016,26 @@ string net_mobilewebprint::ltrim(string const & str, char ch)
   return string(skip_char(str.c_str(), ch));
 }
 
+void net_mobilewebprint::make_upper(string & str)
+{
+  const int diff = 'A' - 'a';
+
+  size_t len = str.length();
+  for (size_t i = 0; i < len; ++i) {
+    char ch = str[i];
+    if (ch >= 'a' && ch <= 'z') {
+      str[i] = ch + diff;
+    }
+  }
+}
+
+string net_mobilewebprint::_upper(string const & str)
+{
+  string result(str);
+  make_upper(result);
+  return result;
+}
+
 void net_mobilewebprint::make_lower(string & str)
 {
   const int diff = 'A' - 'a';

@@ -200,6 +200,12 @@ e_handle_result net_mobilewebprint::snmp_t::_on_raw_packet(string const & name, 
     //log_d(1, "", "snmp status: %s %s", source_ip.c_str(), value.str().c_str());
     add_kv(attrs, "status", value.str());
     controller.from_attrs(attrs);
+  } else {
+
+    map<string, buffer_view_i const *> snmp_attrs;
+    snmp_attrs.insert(make_pair(key, &value));
+
+    controller.printers.from_snmp(source_ip, snmp_attrs);
   }
 
   return handled;

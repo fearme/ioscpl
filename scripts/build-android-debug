@@ -21,6 +21,7 @@ set $XTRACE     # Restart logging
 
 START_DIR=$(pwd)
 test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
+test -n "$USER"         || export USER="none"
 
 $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="armeabi-v7a" --shared
 

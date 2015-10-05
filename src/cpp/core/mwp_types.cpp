@@ -86,6 +86,11 @@ bool net_mobilewebprint::buffer_view_i::is_valid(const_iterator it) const
   return it < const_end();
 }
 
+bool net_mobilewebprint::buffer_view_i::is_valid(const_iterator it, size_t count) const
+{
+  return (it < const_end() && (it + count - 1) < const_end());
+}
+
 net_mobilewebprint::byte net_mobilewebprint::buffer_view_i::read_byte(const_iterator & it) const
 {
   mwp_assert(is_valid(it));
@@ -1520,6 +1525,23 @@ void net_mobilewebprint::log_v(int level, char const * tags, char const * format
   va_end(argList);
 
   log_v(buffer, (log_param_t)NULL);
+}
+
+void net_mobilewebprint::log_vt(int level, char const * tag, char const * format, ...)
+{
+  //return;
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+
+  va_list argList;
+
+  char buffer[2048];
+
+  va_start(argList, format);
+  vsprintf(buffer, format, argList);
+  va_end(argList);
+
+  log_v(buffer, tag, (log_param_t)NULL);
 }
 
 #if 0

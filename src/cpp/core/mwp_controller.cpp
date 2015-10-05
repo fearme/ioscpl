@@ -926,6 +926,10 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     if ((printerState   = http_stats.attrs["status"]) == "") { printerState = ""; }
     if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus = "y"; }
 
+    // Fixup status -- we might have gotten it from the "universal" SNMP status
+    bool is_universal_status = false;
+    printerState = printer_list_t::get_pml_status(printerState, is_universal_status);
+
     int totalSent = -1;
     if (_has(http_stats.int_attrs, "totalSent")) {
       totalSent = _lookup(http_stats.int_attrs, "totalSent", 0);
@@ -1348,7 +1352,7 @@ int net_mobilewebprint::controller_base_t::send_to_app(char const * message, int
   mwp_params local_params = {};
   mwp_params const * params = (params_ != NULL ? params_ : &local_params);
 
-  log_v(4, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
+  log_vt(2, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
 
   int result = 0;
   for (mwp_app_cb_list_t::const_iterator it = mwp_app_callbacks().begin(); it != mwp_app_callbacks().end(); ++it) {
@@ -1381,7 +1385,7 @@ int net_mobilewebprint::controller_base_t::send_to_app(char const * message, int
   sap_params local_params = {};
   sap_params const * params = (params_ != NULL ? params_ : &local_params);
 
-  log_v(4, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
+  log_vt(2, "MWP_Message", "msg-to-app: %25s (%3d,%3d) %12s -- %20s -- %20s  (%s|%s)", message, id, transaction_id, or_blank(p1), or_blank(params->p2), or_blank(params->p3), or_blank(params->p4), or_blank(params->p5));
 
   int result = 0;
   for (sap_app_cb_list_t::const_iterator it = sap_app_callbacks().begin(); it != sap_app_callbacks().end(); ++it) {

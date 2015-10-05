@@ -48,6 +48,7 @@ set $XTRACE     # Restart logging
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
 test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
+test -n "$USER"         || export USER="none"
 
 echo "Workspace dir: $WORKSPACE"
 echo "Packaging $DEBUG_RELEASE $PLATFORM $OS $BUILD_TOOL"

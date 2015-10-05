@@ -52,15 +52,18 @@ namespace net_mobilewebprint {
     string   name() const;            // Special -- the name
     string   status() const;          // Special -- the current status
 
-    strmap attrs, attrs_lc;
-    strlist tags;
-    strmap _1284_attrs, _1284_attrs_lc;
+    strmap   attrs, attrs_lc;
+    strlist  tags;
+    strmap   _1284_attrs, _1284_attrs_lc;
 
-    int     num_network_errors;
+    int      num_network_errors;
 
+    uint32   last_status_arrival;
+    bool     status_request_pending;
+    int      num_status_misses;
 
-    uint32 status_time;
-    uint32 status_interval;
+    uint32   status_time;
+    uint32   status_interval;
 
     printer_t(controller_base_t & controller);
     printer_t(controller_base_t & controller, string const & ip);
@@ -84,6 +87,7 @@ namespace net_mobilewebprint {
     bool from_1284_attrs(strmap const & attrs);
     bool from_1284_attrs(strmap const & attrs, strlist const & tags);
 
+    bool from_snmp(string ip, map<string, buffer_view_i const *> const & attrs);
     bool from_slp(slp_t & slp, buffer_view_i const & payload);
 
     void send_print_job(uint32 & connection_id);
@@ -100,6 +104,7 @@ namespace net_mobilewebprint {
     string to_json(bool for_debug);
     void   make_server_json(serialization_json_t & json);
     bool   is_unknown(char const * purpose) const;
+    bool   is_missing();
 
     /* private */
     network_node_t node;
@@ -136,11 +141,13 @@ namespace net_mobilewebprint {
     bool from_1284_attrs(strmap const & attrs);
     bool from_1284_attrs(strmap const & attrs, strlist const & tags);
 
+    bool from_snmp(string ip, map<string, buffer_view_i const *> const & attrs);
     bool from_slp(slp_t & slp, buffer_view_i const & payload);
     bool assimilate_printer_stats(printer_t * printer);
     int  send_list_to_app();
 
     void network_error(string const & ip, int errno);
+    void remove_printer(printer_t*&);
 
     void send_print_job(uint32 & connection_id, string const & ip);
 
@@ -183,6 +190,8 @@ namespace net_mobilewebprint {
     int         unknown_is_supported_count();
 
     string      get_ip(string const & mac);
+
+    static string get_pml_status(string const & status, bool & is_universal_status);
 
   };
 

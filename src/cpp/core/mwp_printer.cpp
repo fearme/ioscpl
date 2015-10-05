@@ -7,13 +7,20 @@
 
 using namespace net_mobilewebprint::msg;
 using net_mobilewebprint::strmap;
+using net_mobilewebprint::_upper;
 using std::make_pair;
 
 uint32 net_mobilewebprint::printer_t::status_interval_normal    = 1000;
 uint32 net_mobilewebprint::printer_t::status_interval_printing  = 200;
 
+static char           status_oid_num[] = "1.3.6.1.4.1.11.2.3.9.1.1.3.0";
+static char universal_status_oid_num[] = "1.3.6.1.2.1.25.3.5.1.1.1";
+
+static char const * universal_status(int n);
+
 static bool _is_hp(net_mobilewebprint::printer_t const &);
 static bool _is_epson(net_mobilewebprint::printer_t const &);
+static bool _is_brother(net_mobilewebprint::printer_t const &);
 static bool _is_canon(net_mobilewebprint::printer_t const &);
 //static bool _is_snmp(net_mobilewebprint::printer_t const &);
 
@@ -23,13 +30,17 @@ static char const * _snmp_status_oid(net_mobilewebprint::printer_t const &);
 static net_mobilewebprint::printer_list_t * g_printer_list = NULL;
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
-  : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), num_network_errors(0), status_interval(status_interval_normal), status_time(0),
+  : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
+    num_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
 }
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_, string const & ip_)
-  : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL), num_network_errors(0), status_interval(status_interval_normal), status_time(0),
+  : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
+    num_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
 }
@@ -157,7 +168,19 @@ net_mobilewebprint::printer_t const & net_mobilewebprint::printer_t::merge(print
     _extend(_1284_attrs, that._1284_attrs);
     _extend(_1284_attrs_lc, that._1284_attrs_lc);
 
-    status_interval = max(min(status_interval, that.status_interval), status_interval_printing);
+    status_interval         = max(min(status_interval, that.status_interval), status_interval_printing);
+    num_network_errors      = max(num_network_errors, that.num_network_errors);
+
+    last_status_arrival     = get_tick_count();
+    status_request_pending  = status_request_pending || that.status_request_pending;
+    num_status_misses      += that.num_status_misses;
+
+    // Fixup the status attributes -- if that has a status, this is a status arrival
+    if (_has(that.attrs_lc, "status")) {
+      last_status_arrival     = get_tick_count();
+      status_request_pending  = false;
+      num_status_misses       = 0;
+    }
 
     if (that.status_time != 0) {
       status_time     = min(status_time, that.status_time);
@@ -169,7 +192,6 @@ net_mobilewebprint::printer_t const & net_mobilewebprint::printer_t::merge(print
 
 void net_mobilewebprint::printer_t::set_attr(string const & key, string const & key_lc, string const & value)
 {
-
   // Is this a special name?
   if (key_lc == "ip") {
     ip = value;
@@ -182,13 +204,16 @@ void net_mobilewebprint::printer_t::set_attr(string const & key, string const & 
     attrs_lc[key_lc] = value;
   }
 
-  //if (ip == "10.7.5.35" && key_lc == "status") {
-  //  log_d(1, "", "set_attr status: %s", value.c_str());
-  //}
+  if (key_lc == "status") {
 
-  // Inform controller of status
-  if (key_lc == "status" && connection_id != 0) {
-    controller.job_stat(connection_id, "status", value);
+    last_status_arrival     = get_tick_count();
+    status_request_pending  = false;
+    num_status_misses       = 0;
+
+    // Inform controller of status
+    if (connection_id != 0) {
+      controller.job_stat(connection_id, "status", value);
+    }
   }
 
 }
@@ -214,6 +239,8 @@ bool net_mobilewebprint::printer_t::from_attrs(strmap const & attrs_, strlist co
 
     set_attr(key, key_lc, value);
   }
+
+  last_status_arrival     = get_tick_count();
 
   snapshot.fixup(*this);
   return true;
@@ -255,8 +282,33 @@ bool net_mobilewebprint::printer_t::from_1284_attrs(strmap const & attrs_, strli
     }
   }
 
+  last_status_arrival     = get_tick_count();
+
   snapshot.fixup(*this);
   return true;
+}
+
+bool net_mobilewebprint::printer_t::from_snmp(string ip_, map<string, buffer_view_i const *> const & snmp_attrs)
+{
+  strmap attrs;
+
+  ip = ip_;
+
+  for (map<string, buffer_view_i const *>::const_iterator it = snmp_attrs.begin(); it != snmp_attrs.end(); ++it) {
+    string const &                   key   = it->first;
+    buffer_view_i const * const &    value = it->second;
+
+    if (key == universal_status_oid_num) {
+      buffer_view_i::const_iterator p = value->const_begin();
+
+      if (value->is_valid(p, sizeof(byte))) {
+        add_kv(attrs, "status", universal_status((int)value->read_byte(p)));
+      }
+    }
+  }
+
+  //net_mobilewebprint::dump(attrs);
+  return from_attrs(attrs);
 }
 
 bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & payload)
@@ -325,6 +377,8 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
 
   controller.sendTelemetry("printerScan", "slpResponse", json);
 
+  last_status_arrival     = get_tick_count();
+
   snapshot.fixup(*this);
   return true;
 }
@@ -381,8 +435,6 @@ bool net_mobilewebprint::printer_t::request_updates()
 
   if (status().length() == 0) {
     if ((oid = _snmp_status_oid(*this)) != NULL) {
-      //log_d(1, "", "Asking for status for %s\n", ip.c_str());
-      controller.snmp.send_status_request(ip, oid);
     }
   }
 
@@ -483,8 +535,13 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_t::on_s
   //log_d(1, "", "printer loop start %d %d %d  %s", status_time, status_interval, data.current_loop_start, ip.c_str());
   if (_has_elapsed(status_time, status_interval, data.current_loop_start)) {
     if ((oid = _snmp_status_oid(*this)) != NULL) {
-      //log_d(1, "", "Asking for status2 for %s\n", ip.c_str());
+
+      if (status_request_pending) {
+        num_status_misses += 1;
+      }
+
       controller.snmp.send_status_request(ip, oid);
+      status_request_pending  = true;
     }
   }
 
@@ -540,6 +597,22 @@ bool net_mobilewebprint::printer_t::is_unknown(char const * purpose) const
   if (::strcmp(purpose, "status") == 0)          { return !_has(attrs_lc, purpose); }
 
   return !_has(attrs, purpose);
+}
+
+bool net_mobilewebprint::printer_t::is_missing()
+{
+  if (!_is_hp(*this) && !_is_epson(*this) && !_is_brother(*this)) { return false; }
+
+  if (_time_since(last_status_arrival) > 7500) {
+    log_v(2, "", "printer missing(%15s): %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    return true;
+  }
+
+  if (num_status_misses > 1) {
+    log_v(2, "", "printer going missing(%15s)? %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+  }
+
+  return false;
 }
 
 //---------------------------------------------------------------------------------------
@@ -924,21 +997,44 @@ void net_mobilewebprint::printer_list_t::network_error(string const & ip, int er
   plist_t::const_iterator it;
   if ((it = by_ip.find(ip)) != by_ip.end()) {
     if ((printer = it->second)) {
+
       printer->num_network_errors += 1;
       log_v(2, "", "Encountered network error (%d) for %s, count: %d", errno, ip.c_str(), printer->num_network_errors);
+
       if (printer->num_network_errors >= 5) {
-
-        printer_enum_id += 1;
-        controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
-        controller.send_to_app(HP_MWP_RM_PRINTER_MSG, -1, printer_enum_id, ip.c_str(), NULL, NULL);
-        controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
-
-        // TODO: Do not leak this
-        by_ip.erase(ip);
-        delete printer;
+        remove_printer(printer);
       }
     }
   }
+}
+
+void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
+{
+  if (printer && printer->has_ip()) {
+
+    string ip = printer->ip;
+    log_v(2, "", "-------------------------Removing printer %s", ip.c_str());
+
+    printer_enum_id += 1;
+    controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
+    controller.send_to_app(HP_MWP_RM_PRINTER_MSG, -1, printer_enum_id, ip.c_str(), NULL, NULL);
+    controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+
+    by_ip.erase(ip);
+    delete printer;
+
+    printer = NULL;
+  }
+}
+
+bool net_mobilewebprint::printer_list_t::from_snmp(string ip, map<string, buffer_view_i const *> const & attrs)
+{
+  printer_t * printer = new printer_t(controller);
+  if (printer->from_snmp(ip, attrs)) {
+    return assimilate_printer_stats(printer);
+  }
+
+  return false;
 }
 
 bool net_mobilewebprint::printer_list_t::from_slp(slp_t & slp, buffer_view_i const & payload)
@@ -1031,7 +1127,7 @@ bool net_mobilewebprint::printer_list_t::assimilate_printer_stats(printer_t * pr
 
         if (key == "status") {
           uint32 tick = get_tick_count();
-          log_v(1, "", "status change(%d/%3d): %3d.%2d %12s %s", printer->connection_id, by_ip.size(), tick/1000, tick % 1000, ip.c_str(), value.c_str());
+          //log_v(1, "", "status change(%d/%3d): %3d.%2d %12s %s", printer->connection_id, by_ip.size(), tick/1000, tick % 1000, ip.c_str(), value.c_str());
           if (printer->connection_id != 0) {
             controller.job_stat(printer->connection_id, "status", value);
           }
@@ -1065,7 +1161,7 @@ bool net_mobilewebprint::printer_list_t::assimilate_printer_stats(printer_t * pr
         if (key == "status") {
           uint32 tick = get_tick_count();
 
-          log_v(2, "", "new status(%d/%3d): %3d.%2d %12s %s", printer->connection_id, by_ip.size(), tick/1000, tick % 1000, ip.c_str(), value.c_str());
+          //log_v(2, "", "new status(%d/%3d): %3d.%2d %12s %s", printer->connection_id, by_ip.size(), tick/1000, tick % 1000, ip.c_str(), value.c_str());
           if (printer->connection_id != 0) {
             controller.job_stat(printer->connection_id, "status", value);
           }
@@ -1102,11 +1198,11 @@ bool net_mobilewebprint::printer_list_t::cleanup()
 {
   printer_t * printer = NULL;
 
-  plist_t::const_iterator it;
-  for (it = by_ip.begin(); it != by_ip.end(); ++it) {
+  for (plist_t::const_iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-//      printer->attrs.erase("status");
-//      printer->attrs_lc.erase("status");
+      if (printer->is_missing()) {
+        remove_printer(printer);
+      }
     }
   }
 
@@ -1303,6 +1399,16 @@ std::string net_mobilewebprint::printer_list_t::get_ip(string const & mac)
   return "";
 }
 
+std::string net_mobilewebprint::printer_list_t::get_pml_status(string const & status, bool & is_universal_status)
+{
+  is_universal_status = true;
+  if (status == universal_status(3))    { return _upper(status); }
+  if (status == universal_status(4))    { return _upper(status); }
+
+  is_universal_status = false;
+  return status;
+}
+
 net_mobilewebprint::fixup_snapshot_t::fixup_snapshot_t(printer_t const & printer)
   : ip(printer.ip), port(printer.port)
 {
@@ -1332,6 +1438,17 @@ static bool _is_epson(net_mobilewebprint::printer_t const & printer)
   return false;
 }
 
+static bool _is_brother(net_mobilewebprint::printer_t const & printer)
+{
+  if (_has(printer.attrs_lc, "mfg")) {
+    if (eq(_lookup(printer.attrs_lc, "mfg"), "brother")) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 static bool _is_canon(net_mobilewebprint::printer_t const & printer)
 {
   return (printer.port == 8611);
@@ -1346,7 +1463,8 @@ static bool _is_snmp(net_mobilewebprint::printer_t const & printer)
 
 static char       device_id_oid_num[] = "1.3.6.1.4.1.11.2.3.9.1.1.7.0";
 static char epson_device_id_oid_num[] = "1.3.6.1.4.1.11.2.3.9.1.1.7.0";
-static char          status_oid_num[] = "1.3.6.1.4.1.11.2.3.9.1.1.3.0";
+
+// another universal? device_id?         1.3.6.1.2.1.25.3.2.1.3.1
 
 static char const * _snmp_device_id_oid(net_mobilewebprint::printer_t const & printer)
 {
@@ -1361,8 +1479,44 @@ static char const * _snmp_device_id_oid(net_mobilewebprint::printer_t const & pr
 
 static char const * _snmp_status_oid(net_mobilewebprint::printer_t const & printer)
 {
-  if (_is_hp(printer))    { return status_oid_num; }
+  // TODO: If we do not know the MFG, return NULL
+  if (_is_hp(printer))      { return status_oid_num; }
+  if (_is_epson(printer))   { return universal_status_oid_num; }
+  if (_is_brother(printer)) { return universal_status_oid_num; }
 
+  if (_is_canon(printer))   { return NULL; }
+
+  //return universal_status_oid_num;
   return NULL;
 }
+
+static char const * universal_status_[] = {
+  "unk-unknown",
+  "other",
+  "unknown",
+  "idle",
+  "printing",
+  "warmup"
+};
+
+static char const * universal_status(int n)
+{
+  if (n < 0)                             { return universal_status_[0]; }
+  if (n >= sizeof(universal_status_))    { return universal_status_[0]; }
+
+  return universal_status_[n];
+}
+
+// See RFC 1514:
+//
+// hrPrinterStatus
+//
+// other(1)
+// unknown(2)
+// idle(3)
+// printing(4)
+// warmup(5)
+//
+//
+
 

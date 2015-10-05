@@ -4,7 +4,8 @@ cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 
 project("mario_client")
 
-set(BUILD_NUMBER $ENV{BUILD_NUMBER})
+set(BUILD_NUMBER  $ENV{BUILD_NUMBER})
+set(BUILD_USER    $ENV{USER})
 
 # TODO: move this to the right place (in an 'if' that knows we are building
 # for MacOSX)

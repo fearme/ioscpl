@@ -42,6 +42,8 @@ namespace net_mobilewebprint {
 
   extern void          make_lower(string & str);              // In place
   extern string        _lower(string const & str);            // Returns new lower-case'd string
+  extern void          make_upper(string & str);              // In place
+  extern string        _upper(string const & str);            // Returns new upper-case'd string
 
   extern string        replace_chars(char const * str, char const * find, const char * repl);
   extern string        replace_chars(string const & str, char const * find, const char * repl);
@@ -256,6 +258,13 @@ namespace net_mobilewebprint {
 
     /* otherwise */
     return it->second;
+  }
+
+  template <typename T>
+  T _or(T a, T b)
+  {
+    if (a) { return a; }
+    return b;
   }
 
 #if 0

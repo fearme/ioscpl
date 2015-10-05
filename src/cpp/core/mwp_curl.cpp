@@ -323,7 +323,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
     result  = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req_headers);
   }
 
-  result = curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mario 1.1." BUILD_NUMBER " libcurl");
+  result = curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mario-" BUILD_USER " 1.1." BUILD_NUMBER " libcurl");
 
   result = curl_multi_add_handle(mcurl, curl);
   return *this;
