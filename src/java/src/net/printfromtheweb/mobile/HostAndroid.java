@@ -26,9 +26,9 @@ package net.printfromtheweb.mobile;
 //
 //import android.os.*;
 //import android.net.*;
-//import android.net.wifi.*;
+import android.net.wifi.*;
 //import android.net.wifi.WifiManager.MulticastLock;
-//import android.content.Context;
+import android.content.Context;
 //import android.util.Log;
 //import android.accounts.*;
 //import android.support.v4.content.AsyncTaskLoader;
@@ -49,10 +49,11 @@ public class HostAndroid extends Host {
 //
 //  protected boolean                                 usingUploader;
 //  protected DefaultHttpClient                       client;
-//
-//  protected Context                                 context;
-//  protected WifiManager                             wifiManager;
+
+  protected Context                                 context;
+  protected WifiManager                             wifiManager;
   private   ExecutorService                         executor;
+
 ////  private   Host.PrinterListObserver                printerListChangedObserver;
 //
 //  private   JSONObject                              httpExtraInfo;
@@ -63,15 +64,15 @@ public class HostAndroid extends Host {
   /**
    *  Constructor.
    */
-  //public HostAndroid(Context context) {
-  public HostAndroid() {
+  public HostAndroid(Context context) {
+//  public HostAndroid(Context context) {
 //    Log.d(TAG, "HostAndroid ctor");
 
 //    this.client                     = new DefaultHttpClient();
 //    this.usingUploader              = false;
 //
-//    this.context                    = context;
-//    this.wifiManager                = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
+    this.context                    = context;
+    this.wifiManager                = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
     this.executor                   = Executors.newFixedThreadPool(8);
 ////    this.printerListChangedObserver = null;
 //    this.lock                       = null;

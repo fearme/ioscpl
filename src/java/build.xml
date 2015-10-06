@@ -3,6 +3,13 @@
     Build core JAR for MobileWebPrint.
   </description>
 
+  <!--
+  <property file="local.properties" />
+  -->
+
+  <property file="ant.properties" />
+  <loadproperties srcFile="project.properties" />
+
   <!-- global properties -->
   <property name="src"      location="src" />
   <property name="build"    location="build" />
@@ -27,20 +34,19 @@
           unless="sdk.dir"
   />
 
+  <import file="custom_rules.xml" optional="true" />
+  <import file="${sdk.dir}/tools/ant/build.xml" />
+
+  <!--
   <target name="init">
     <tstamp/>
 
-    <!-- Create the build and dist dirs -->
     <mkdir dir="${build}" />
     <mkdir dir="${dist}/lib" />
   </target>
 
   <target name="build" depends="init" description="compile the source">
     <javac srcdir="${src}" destdir="${build}" includeantruntime="false" />
-    <!--
-    <javac srcdir="${src}" destdir="${build}" classpathref="project.javac.classpath" includeantruntime="false" />
-    <javac srcdir="${src}" destdir="${build}" classpathref="classpath" includeantruntime="false" />
-    -->
   </target>
 
   <target name="dist" depends="build" description="generate the distribution" >
@@ -50,15 +56,9 @@
   </target>
 
   <target name="clean" description="clean intermediate files">
-    <!--
-    <chmod perm="777">
-      <fileset dir="build/net/mobilewebprint/client" perm="777">
-        <include name="*.*"/>
-      </fileset>
-    </chmod>
-    -->
     <delete dir="${build}" />
     <delete dir="${dist}" />
   </target>
+  -->
 
 </project>
