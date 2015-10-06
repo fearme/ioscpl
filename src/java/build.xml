@@ -12,8 +12,6 @@
 
   <!-- global properties -->
   <property name="src"      location="src" />
-  <property name="build"    location="build" />
-  <property name="dist"     location="dist" />
 
   <!--
   <property name="lib.dir"  value=" ../../../../common/" />

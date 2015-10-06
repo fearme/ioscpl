@@ -4,5 +4,7 @@ xcode-build/
 deliveries/
 src/java/dist/
 src/java/obj/
+src/java/bin/
+src/java/gen/
 src/target/
 

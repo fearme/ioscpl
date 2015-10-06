@@ -35,6 +35,11 @@ bool net_mobilewebprint::controlled_print_library_api_t::send_full_printer_list(
   return sap->send_full_printer_list();
 }
 
+bool net_mobilewebprint::controlled_print_library_api_t::send_immediately(string const & msg_name, string const & payload)
+{
+  return sap->send_immediately(msg_name, payload);
+}
+
 int net_mobilewebprint::controlled_print_library_api_t::app_set_timeout(char const * message_to_send, int msecs_to_wait)
 {
   return sap->app_set_timeout(message_to_send, msecs_to_wait);

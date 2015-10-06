@@ -85,6 +85,7 @@ e_handle_result net_mobilewebprint::mdns_t::handle(string const & name, buffer_v
   //printf("mdns handling: %s\n", name.c_str());
   if (name == scan_for_printers)        { return _scan_for_printers(name, payload, data, extra); }
   if (name == "_on_mdns_packet")        { return _on_mdns_packet(name, payload, data, extra); }
+  if (name == "re_scan_for_printers")   { _queue_up_main_requests(); return handled; }
 
   return not_impl;
 }

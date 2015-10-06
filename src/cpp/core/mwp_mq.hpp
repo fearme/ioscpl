@@ -224,6 +224,7 @@ namespace net_mobilewebprint {
     // Sending a message
     bool       send(string const & name);
     bool       send(string const & name, char const * payload);
+    bool       send_immediately(string const & name, string const & payload);
 
     buffer_t * message(char const * name);
     buffer_t * message(char const * name, int id, int txn_id);

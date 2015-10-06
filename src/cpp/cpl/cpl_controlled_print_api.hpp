@@ -29,6 +29,7 @@ namespace net_mobilewebprint {
     virtual int  app_set_timeout(char const * message_to_send, int msecs_to_wait);
 
     virtual bool send_full_printer_list();
+    virtual bool send_immediately(std::string const & msg_name, std::string const & payload);
 
     virtual string const &                    get_option          (char const *name, char const *def = "");
     virtual int                               get_int_option      (char const *name, int def = 0);

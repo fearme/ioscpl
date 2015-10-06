@@ -79,7 +79,7 @@ public class Host implements PrinterListChangesListener, PrintProgressChangesLis
 //
   public    PrintManager                     printManager;
   public    PrintManager                     internalPrintManager;
-  protected net.mobilewebprint.Application   mwp_app;
+  public    net.mobilewebprint.Application   mwp_app;
 
   /**
    *  Constructor.

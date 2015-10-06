@@ -38,6 +38,7 @@ public class Client {
   public native boolean reScan();
   public native boolean sendJob(String url, String printer_ip);
 
+  public native boolean sendImmediately(String msgName, String payload);
 
   public native void        setOption(String name, String value);
   public native void     setIntOption(String name, int value);

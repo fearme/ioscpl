@@ -1488,6 +1488,11 @@ bool net_mobilewebprint::controller_base_t::send_full_printer_list()
   return mq.send(HP_MWP_SEND_FULL_PRINTER_LIST);
 }
 
+bool net_mobilewebprint::controller_base_t::send_immediately(string const & msg_name, string const & payload)
+{
+  return mq.send_immediately(msg_name, payload);
+}
+
 std::string net_mobilewebprint::controller_base_t::job_stat(uint32 id, char const * stat_name, char const * value, bool silent)
 {
   string orig_value = _lookup_job_stat(id, stat_name, string());

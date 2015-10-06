@@ -29,6 +29,7 @@ package net.printfromtheweb.mobile;
 import android.net.wifi.*;
 //import android.net.wifi.WifiManager.MulticastLock;
 import android.content.Context;
+import android.net.ConnectivityManager.*;
 //import android.util.Log;
 //import android.accounts.*;
 //import android.support.v4.content.AsyncTaskLoader;

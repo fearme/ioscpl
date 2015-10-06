@@ -814,6 +814,39 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
 
     //log_d(1, "", "------------------------------ restarting timers at %d", start_time);
+
+  } else if (name == "WIFI_STATE_CHANGED") {
+
+    byte const * p = payload.const_begin();
+    string value = payload.read_string(p);
+    if (value != "WIFI_STATE_DISABLED") {
+      return handled;
+    }
+
+    /* otherwise */
+    log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
+
+    printer_t * printer = NULL;
+
+    printer_enum_id += 1;
+    controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
+
+    plist_t::const_iterator it;
+    while(by_ip.size() > 0) {
+      printer = by_ip.begin()->second;
+      remove_printer(printer);
+    }
+
+    controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+
+  } else if (name == "CONNECTIVITY_ENABLED") {
+
+    byte const * p = payload.const_begin();
+    string value = payload.read_string(p);
+    if (value == "true") {
+      log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
+      mq.send("re_scan_for_printers");
+    }
   }
 
   return handled;
@@ -1002,7 +1035,13 @@ void net_mobilewebprint::printer_list_t::network_error(string const & ip, int er
       log_v(2, "", "Encountered network error (%d) for %s, count: %d", error_number, ip.c_str(), printer->num_network_errors);
 
       if (printer->num_network_errors >= 5) {
+
+        printer_enum_id += 1;
+        controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
+
         remove_printer(printer);
+
+        controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
       }
     }
   }
@@ -1013,12 +1052,8 @@ void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
   if (printer && printer->has_ip()) {
 
     string ip = printer->ip;
-    log_v(2, "", "-------------------------Removing printer %s", ip.c_str());
 
-    printer_enum_id += 1;
-    controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
     controller.send_to_app(HP_MWP_RM_PRINTER_MSG, -1, printer_enum_id, ip.c_str(), NULL, NULL);
-    controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
 
     by_ip.erase(ip);
     delete printer;

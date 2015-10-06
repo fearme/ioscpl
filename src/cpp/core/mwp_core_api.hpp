@@ -51,6 +51,7 @@ namespace net_mobilewebprint {
 
     // ---------- Request that MWP send the printer list ----------
     virtual bool                 send_full_printer_list();
+    virtual bool                 send_immediately      (std::string const & msg_name, std::string const & payload);
   };
 
   core_api_t * core_api();

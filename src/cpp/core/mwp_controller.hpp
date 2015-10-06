@@ -204,6 +204,9 @@ namespace net_mobilewebprint {
     // Send the full printer list
     bool send_full_printer_list();
 
+    // Send a high-priority message
+    bool send_immediately(string const & msg_name, string const & payload);
+
     // ---------- Internal infrastructure for messaging with the app ----------
 
     // Our handler for any messages that are for the app that go through MQ

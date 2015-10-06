@@ -115,6 +115,14 @@ extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendJob(JNI
   return get_api()->send_job(to_string(env, url).c_str(), to_string(env, printer_ip).c_str());
 }
 
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendImmediately(JNIEnv *env, jobject self, jstring msg_name, jstring payload)
+{
+  return get_api()->send_immediately(to_string(env, msg_name).c_str(), to_string(env, payload).c_str());
+}
+
+
+
 extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setOption(JNIEnv *env, jobject self, jstring name, jstring value)
 {
   get_api()->set_option(to_string(env, name).c_str(), to_string(env, value).c_str());
@@ -209,9 +217,7 @@ int app_callback(void * app_data, char const * msg, int ident, int32 transaction
     }
 
   } else if (strcmp(msg, HP_MWP_RM_PRINTER_MSG) == 0) {
-    log_d("RM_PRINTER1");
     if (setDictionaryItemsId != NULL && sendMessageId != NULL) {
-      log_d("RM_PRINTER2");
       string diffs;
       int num_diffs = 0;
 
@@ -233,9 +239,7 @@ int app_callback(void * app_data, char const * msg, int ident, int32 transaction
         getEnv()->CallVoidMethod(jApplication, setDictionaryItemsId, jdiffs);
       }
 
-      log_d("RM_PRINTER3");
       getEnv()->CallBooleanMethod(jApplication, sendMessageId, n_msg, 1, n1, n2, n3, n4, n5, n6, n7, n8);
-      log_d("RM_PRINTER4");
 
       if (num_diffs > 0) {
         getEnv()->DeleteLocalRef(jdiffs);

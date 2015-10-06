@@ -272,6 +272,20 @@ bool net_mobilewebprint::mq_t::send(string const & name, char const * payload)
   return true;
 }
 
+bool net_mobilewebprint::mq_t::send_immediately(string const & name, string const & payload)
+{
+  if (host_lock("mq_normal", lock)) {
+    buffer_t * buffer = new buffer_t; /**/ num_buffer_allocations += 1;
+    buffer->appendT(&string_type, name, payload);
+
+    mq_normal.push_front(buffer);
+
+    host_unlock("mq_normal", lock);
+  }
+
+  return true;
+}
+
 bool net_mobilewebprint::mq_t::send(buffer_t * buffer)
 {
   if (host_lock("mq_normal", lock)) {

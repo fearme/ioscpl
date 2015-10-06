@@ -68,6 +68,7 @@ e_handle_result net_mobilewebprint::slp_t::handle(string const & name, buffer_vi
 {
   if (name == scan_for_printers)        { return _scan_for_printers(name, payload, data, extra); }
   if (name == "_on_slp_payload")        { return _on_slp_payload(name, payload, data, extra); }
+  if (name == "re_scan_for_printers")   { check_udp_writableness = true; return handled; }
 
   return not_impl;
 }

@@ -35,7 +35,7 @@ if [ -z "$DEVELOPMENT" ]; then
 fi
 
 # Build the JNI code and the JAR
-cd ${START_DIR}/src/java && ndk-build && ant dist
+cd ${START_DIR}/src/java && ndk-build && ant debug
 cd $START_DIR
 
 # Copy the JNI modules to the deliveries
@@ -44,7 +44,8 @@ find ../../../../src/java/libs -type f | egrep so$ | cut -d'/' -f7-8 | while rea
 find ../../../../src/java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f7-); done
 
 # Copy the JAR to the deliveries
-find ../../../../src/java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
+#find ../../../../src/java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/mobilewebprint.jar; done
+cp ../../../../src/java/bin/classes.jar libs/mobilewebprint.jar
 cd $START_DIR
 
 # package it
