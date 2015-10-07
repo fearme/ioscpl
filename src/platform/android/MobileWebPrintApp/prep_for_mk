@@ -31,9 +31,11 @@ if [ -n "$clean" ]; then
 
   ant clean
 
-  cd libs
-  rm -rf *
-  cd ..
+  if [ -d libs ]; then
+    cd libs
+    rm -rf *
+    cd ..
+  fi
 
 else
 

@@ -809,7 +809,7 @@ bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url, s
   log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
 
   // Convert mac address into IP
-  if (printer_ip.length() >= 12) {
+  if (printer_ip.length() == 17) {
     printer_ip = printers.get_ip(printer_ip);
     log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
   }
