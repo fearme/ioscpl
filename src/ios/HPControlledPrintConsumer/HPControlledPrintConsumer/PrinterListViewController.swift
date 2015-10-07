@@ -151,6 +151,20 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     
     // MARK: - Segue
     
+    override func shouldPerformSegueWithIdentifier(identifier: String?, sender: AnyObject?) -> Bool {
+        var doSegue = true
+        
+        if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow() {
+            let printerAttributes = self.printers[indexPath.row]
+            if printerAttributes.isSupported.value != PrinterSupportedYes.value {
+                let alert = UIAlertView(title: "Unsupported Printer", message: "Sorry, this printer is not supported.", delegate: self, cancelButtonTitle: "OK")
+                doSegue = false
+                alert.show()
+            }
+        }
+        return doSegue
+    }
+        
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         var printScene = segue.destinationViewController as! PrintViewController
         
@@ -158,12 +172,11 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
             if let cell = self.availablePrintersTableView.cellForRowAtIndexPath(indexPath) {
                 let selectedPrinterName = cell.textLabel?.text
                 let selectedPrinterIp = cell.detailTextLabel?.text
-                // http://welcome.hp-ww.com/country/us/en/home-b/system/i_stub/hpe_US_EN_HHO_PSG_Mod-1u_new-laptops_20150607.jpg
                 self.printJob = PrintJob(printerName: selectedPrinterName!, printerIp: selectedPrinterIp!, printSource: self.printSource!)
+                printScene.printJob = self.printJob
             }
-            
         }
-        printScene.printJob = self.printJob
     }
+    
 }
 
