@@ -18,7 +18,7 @@ $(dirname $0)/build-base --type=release --os=android --platform=device --build-t
 #$(dirname $0)/build-base --type=release --os=android --platform=device --build-tool=android-ndk --abi="mips" --shared
 
 # Build the JNI code and the JAR
-cd ${START_DIR}/src/java && ndk-build && ant dist
+cd ${START_DIR}/src/java && ndk-build && ant release
 cd $START_DIR
 
 # Copy the JNI modules to the deliveries
@@ -27,7 +27,8 @@ find ../../../../src/java/libs -type f | egrep so$ | cut -d'/' -f7-8 | while rea
 find ../../../../src/java/libs -type f | egrep so$ | while read f; do cp $f $(echo $f | cut -d'/' -f7-); done
 
 # Copy the JAR to the deliveries
-find ../../../../src/java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
+#find ../../../../src/java/dist/lib -type f | egrep jar$ | while read f; do cp $f libs/; done
+cp ../../../../src/java/bin/classes.jar libs/mobilewebprint.jar
 cd $START_DIR
 
 $(dirname $0)/package    --type=release --os=android --platform=device --build-tool=android-ndk --shared

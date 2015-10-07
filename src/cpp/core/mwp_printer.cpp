@@ -711,9 +711,13 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
       serialization_json_t & sub_json = json.getObject("printers");
       if ((count = make_server_json(sub_json, "is_supported")) > 0) {
         send_printer_list = true;
+        log_v(2, "", "------------- have %d unknown is_supported printers", count);
       }
     } else if (sending_printer_list.time_remaining() > 0x00ffffff) {
       send_printer_list = (has_unknown_is_supported() != NULL);
+      if (send_printer_list) {
+        log_v(2, "", "------------- have %s unknown is_supported printer", has_unknown_is_supported()->ip.c_str());
+      }
     }
 
     if (send_printer_list) {
@@ -863,7 +867,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
-    log_v(3, "", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
+    log_v(4, "", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
     if (sub_json && sub_json->has("ip")) {
 
       string const & ip             = sub_json->lookup("ip");
@@ -907,7 +911,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   printer_t const * printer = NULL;
   for (plist_t::const_iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown("is_supported")) {
+      if (printer->is_unknown("is_supported") && !printer->is_unknown("deviceId")) {
         sending_printer_list.trigger();
 
 //        // ------------------------------ TODO: remove brain damage --------------------------
@@ -922,7 +926,7 @@ net_mobilewebprint::printer_t * net_mobilewebprint::printer_list_t::has_unknown_
   printer_t * printer = NULL;
   for (plist_t::iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown("is_supported")) {
+      if (printer->is_unknown("is_supported") && !printer->is_unknown("deviceId")) {
         return printer;
       }
     }
@@ -938,7 +942,7 @@ int net_mobilewebprint::printer_list_t::unknown_is_supported_count()
   printer_t * printer = NULL;
   for (plist_t::iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown("is_supported")) {
+      if (printer->is_unknown("is_supported") && !printer->is_unknown("deviceId")) {
         count += 1;
       }
     }
@@ -1392,12 +1396,12 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
   plist_t::const_iterator it;
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown(purpose)) {
+      if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
 
-        // If the printer does not have a deviceId, it cannot play any reindeer games
-        if (printer->_1284_device_id.length() == 0) {
-          continue;
-        }
+//        // If the printer does not have a deviceId, it cannot play any reindeer games
+//        if (printer->_1284_device_id.length() == 0) {
+//          continue;
+//        }
 
         // Do not ask forever
         if (printer->num_is_supported_asks < 4) {
