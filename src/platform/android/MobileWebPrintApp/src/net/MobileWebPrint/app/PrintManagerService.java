@@ -62,6 +62,8 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
     mwp_application = new net.mobilewebprint.app.MwpApplication();
     mwp_client      = new net.mobilewebprint.Client(mwp_application);
 
+    mwp_client.context = getApplicationContext();
+
     getPrimaryAccount();
 
     mwp_client.RegisterPrinterListChangesListener(this);

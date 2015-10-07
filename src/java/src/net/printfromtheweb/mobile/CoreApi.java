@@ -47,7 +47,7 @@ public class CoreApi {
 //  protected Controller                    controller;
 //
   public  SecureAssetPrintingApp          app;
-  public  Host                            host;
+  public  HostAndroid                     host;
 
   public  long                            scanStartTime;
 
@@ -61,7 +61,7 @@ public class CoreApi {
   public static int                       num_objects = 0;
   public static int                       num_starts = 0;
 
-  protected CoreApi(SecureAssetPrintingApp app, Host host) {
+  protected CoreApi(SecureAssetPrintingApp app, HostAndroid host) {
 
     CoreApi.api = this;
     CoreApi.mwp = new Client(new net.mobilewebprint.MwpApplication());
@@ -69,6 +69,7 @@ public class CoreApi {
     num_objects += 1;
 
     mwp.logD(TAG, "-----------------------------CoreApi-ctor (count:" + num_objects + ")");
+    mwp.context = host.context;
 //    if (num_objects > 1) {
 //      throw new Exception("MWP (Mario) is a singleton!");
 //    }

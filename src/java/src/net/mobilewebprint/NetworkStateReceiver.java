@@ -1,5 +1,5 @@
 
-package net.printfromtheweb.mobile;
+package net.mobilewebprint;
 
 import net.mobilewebprint.Client;
 

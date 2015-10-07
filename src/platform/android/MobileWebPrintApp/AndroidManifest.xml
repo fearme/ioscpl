@@ -32,7 +32,8 @@
                android:enabled="true"
                android:label="@string/app_name" >
 
-    <receiver android:name="net.printfromtheweb.mobile.NetworkStateReceiver"
+    <!--
+    <receiver android:name="net.mobilewebprint.NetworkStateReceiver"
               android:label="NetworkStateReceiver"
               android:enabled="true"
               android:exported="true">
@@ -42,6 +43,7 @@
             <action android:name="android.net.wifi.WIFI_STATE_CHANGED" />
         </intent-filter>
     </receiver>
+    -->
 
     <!-- The print service -->
     <service android:name=".PrintManagerService" />

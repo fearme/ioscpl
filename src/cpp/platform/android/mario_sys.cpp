@@ -85,7 +85,7 @@ extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setSecureMode(J
   secure = true;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_start(JNIEnv *env, jobject self)
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_startUp(JNIEnv *env, jobject self)
 {
   log_d("Client::start");
   storeClient(env, self, NULL);

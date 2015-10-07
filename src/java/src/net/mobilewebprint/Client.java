@@ -3,14 +3,24 @@ package net.mobilewebprint;
 import java.util.Properties;
 import java.util.ArrayList;
 
+import android.content.Context;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.ConnectivityManager.*;
+
 public class Client {
 
-  private static final String TAG = "jMobileWebPrint.Client";
+  private static final String   TAG = "jMobileWebPrint.Client";
+  public               Context  context;
+  public  NetworkStateReceiver  networkStateReceiver;
 
   public Client(net.mobilewebprint.Application application_)
   {
-    this.application = application_;
+    this.application            = application_;
     this.application.mwp_client = this;
+    this.context                = null;
+    this.networkStateReceiver   = new NetworkStateReceiver();
+
     initJni(application);
   }
 
@@ -34,7 +44,16 @@ public class Client {
     return application.getSortedPrinterList(filterUnsupported);
   }
 
-  public native boolean start();
+  public boolean start()
+  {
+
+    context.registerReceiver(networkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+    context.registerReceiver(networkStateReceiver, new IntentFilter("android.net.wifi.WIFI_STATE_CHANGED"));
+
+    return startUp();
+  }
+
+  public native boolean startUp();
   public native boolean reScan();
   public native boolean sendJob(String url, String printer_ip);
 

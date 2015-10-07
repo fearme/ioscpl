@@ -8,6 +8,9 @@
  */
 
 package net.printfromtheweb.mobile;
+
+import net.mobilewebprint.Client;
+
 //import net.printfromtheweb.mobile.Util;
 //import net.printfromtheweb.mobile.Util.Js;
 //import net.printfromtheweb.mobile.Util.Js.*;

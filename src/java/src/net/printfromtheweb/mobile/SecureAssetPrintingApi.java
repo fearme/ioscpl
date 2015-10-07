@@ -13,7 +13,7 @@ public class SecureAssetPrintingApi extends CoreApi {
 
   protected static SecureAssetPrintingApi instance = null;
 
-  public static SecureAssetPrintingApi getInstance(SecureAssetPrintingApp app, Host host) {
+  public static SecureAssetPrintingApi getInstance(SecureAssetPrintingApp app, HostAndroid host) {
 //    if (instance != null) {
 //      host.log_d(TAG, "SAP-API getInstance2-1: " + instance);
 //    }
@@ -36,7 +36,7 @@ public class SecureAssetPrintingApi extends CoreApi {
     return (SecureAssetPrintingApi)instance;
   }
 
-  protected SecureAssetPrintingApi(SecureAssetPrintingApp app, Host host) {
+  protected SecureAssetPrintingApi(SecureAssetPrintingApp app, HostAndroid host) {
     super(app, host);
 //    this.controller = new Controller(this);
   }
