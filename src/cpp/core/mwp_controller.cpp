@@ -7,6 +7,7 @@
 #include "mwp_printer.hpp"
 #include "mwp_mq.hpp"
 
+#include <time.h>
 
 
 #define HP_MWP_SEND_FULL_PRINTER_LIST     "send_full_printer_list"
@@ -70,8 +71,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     telemetry_report(0, 2500),
     heartbeat_timer(0, 20000)
 {
-  srand(get_tick_count());
-
   mwp_app_callbacks_ = new mwp_app_cb_list_t();
   //sap_app_callbacks_ = new sap_app_cb_list_t();
 
@@ -81,7 +80,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
 
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
-  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
   set_flag("vvverbose", true);
 
   mq.on(this);
@@ -106,8 +104,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     telemetry_report(0, 2500),
     heartbeat_timer(0, 20000)
 {
-  srand(get_tick_count());
-
   //mwp_app_callbacks_ = new mwp_app_cb_list_t();
   sap_app_callbacks_ = new sap_app_cb_list_t();
 
@@ -117,7 +113,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
 
   get_tick_count();     // Starts the clock
   set_flag("log_api", true);
-  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
   set_flag("vvverbose", true);
 
   mq.on(this);
@@ -349,8 +344,20 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
  */
 bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool block)
 {
+  // Seed the PRNG
+  uint32 tm = 0;
+  uint32 hash = tm = (int)time(NULL);
+  char const * p = clientId().c_str();
+  for (;*p; ++p) {
+    hash = *p + ((hash << 9) | (hash >> (32 - 9)));
+  }
+  srandom(hash);
+
+  log_v(2, "", "Seeding: %d, %d", tm, hash);
+
   log_api("start(scan=%d, block=%d)", start_scanning, block);
   show_options();
+  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
 
   bool result = true;
   result = result && mq.run();

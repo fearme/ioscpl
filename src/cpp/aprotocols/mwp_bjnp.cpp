@@ -317,8 +317,7 @@ net_mobilewebprint::bjnp_connection_t::bjnp_connection_t(controller_base_t & con
     packet_num(-1), special_tcp_chunk(NULL), payload_type(bits_payload),
     closed(false), printer_ackd_end_job(false), txn_closed(false)
 {
-  srand(get_tick_count());
-  bjnp_job_num = 2000 + (rand() % 5000);
+  bjnp_job_num = 2000 + (random() % 5000);
 
   mq.check_udp_read(*udp_printer);
 

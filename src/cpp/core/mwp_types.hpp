@@ -1124,8 +1124,7 @@ namespace net_mobilewebprint {
         return false;
       }
 
-      srand(get_tick_count());
-      bool result = (rand() % 100) > 10;
+      bool result = (random() % 100) > 10;
 
       if (result) {
         printf("^o%co^", mod);
@@ -1241,8 +1240,7 @@ namespace net_mobilewebprint {
         return false;
       }
 
-      srand(get_tick_count());
-      bool result = (rand() % 100) > 10;
+      bool result = (random() % 100) > 10;
 
       if (result) {
         printf("^o%co^", mod);

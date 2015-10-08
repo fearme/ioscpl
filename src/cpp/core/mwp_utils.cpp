@@ -373,14 +373,24 @@ char const *  net_mobilewebprint::or_blank(uint8 const * p)
   return (char const *)p;
 }
 
-static char hex_digits[] = "0123456789abcdef";
+static uint32 random_seed = 1;
+void net_mobilewebprint::srandom(uint32 newseed)
+{
+  random_seed = newseed & 0x7fffffffU;
+}
+uint32 net_mobilewebprint::random(void)
+{
+  random_seed = (random_seed * 1103515245U + 12345U) & 0x7fffffffU;
+  return random_seed;
+}
+
+static char hex_digits[] = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 string net_mobilewebprint::random_string(size_t length)
 {
   string result = "";
-  srand(get_tick_count());
 
   while (result.length() < length) {
-    result += hex_digits[rand() % ::strlen(hex_digits)];
+    result += hex_digits[random() % ::strlen(hex_digits)];
   }
 
   return result;

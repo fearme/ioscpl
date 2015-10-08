@@ -968,7 +968,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
       }
 
 //      // ---------------------------- TODO: remove brain damage -----------------------------------
-//      if ((rand() % 10) > 8) {
+//      if ((random() % 10) > 8) {
 //        continue;
 //      }
 
@@ -1200,7 +1200,7 @@ bool net_mobilewebprint::printer_list_t::assimilate_printer_stats(printer_t * pr
   plist_t::const_iterator it;
 
   // For testing -- randomly remove MFG, so attr removal is sent
-  //if (rand() % 10 > 4) {
+  //if (random() % 10 > 4) {
   //  printer->_1284_attrs.erase("MFG");
   //}
 

@@ -207,6 +207,9 @@ namespace net_mobilewebprint {
   //  Misc
   //
   //-----------------------------------------------------------------------------
+  void    srandom(uint32 newseed);
+  uint32  random(void);
+
   extern void log_d(map<string, string> const &, string pre = "", string post = "");
   extern char const *  find(char const *p, char ch);
   extern char const *  find(char const *p, char const * sz);

@@ -204,7 +204,7 @@ net_mobilewebprint::slp_t const & net_mobilewebprint::slp_t::_init_attribute_req
   attribute_request.append(by = 0);                        // Dialect
   attribute_request.append_str_sans_null(lang);            // Language
   attribute_request.append(sh = SLP_US_ASCII);             // Encoding
-  attribute_request.append(sh = 27000 + (rand() % 1000));  // Packet ID (xid)
+  attribute_request.append(sh = 27000 + (random() % 1000));  // Packet ID (xid)
   attribute_request.append(sh = 0);                        // Number in prev response list
   attribute_request.append(sh = strlen(service));          // The service we want
   attribute_request.append_str_sans_null(service);         // The service we want
