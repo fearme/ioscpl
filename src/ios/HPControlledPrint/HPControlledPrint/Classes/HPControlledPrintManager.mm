@@ -315,41 +315,26 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSString *rootUrl;
     if (currentServerStack == ServerStackDevelopment) {
         rootUrl = kCaymanRootUrlDev;
+        NSLog(@"Server Stack: Dev ======================");
     } else if (currentServerStack == ServerStackQa) {
         rootUrl = kCaymanRootUrlQa;
+        NSLog(@"Server Stack: QA ======================");
     } else if (currentServerStack == ServerStackStaging) {
         rootUrl = kCaymanRootUrlStaging;
+        NSLog(@"Server Stack: Staging ======================");
     } else if (currentServerStack == ServerStackProduction) {
         rootUrl = kCaymanRootUrlProduction;
+        NSLog(@"Server Stack: Production ======================");
     }
     return rootUrl;
 }
 
-- (NSString *) discoveryUrl
-{
-    NSString *url;
-    if (currentServerStack == ServerStackDevelopment) {
-        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Dev", [self caymanRootUrl]];
-        NSLog(@"Server Stack: Dev ======================");
-        
-    } else if (currentServerStack == ServerStackQa) {
-        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=QA", [self caymanRootUrl]];
-        NSLog(@"Server Stack: QA ======================");
-        
-    } else if (currentServerStack == ServerStackStaging) {
-        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Stg", [self caymanRootUrl]];
-        NSLog(@"Server Stack: Staging ======================");
-        
-    } else if (currentServerStack == ServerStackProduction) {
-        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Prod", [self caymanRootUrl]];
-        NSLog(@"Server Stack: Production ======================");
-    }
-    return url;
-}
-
 - (void)setEnvironment: (void (^)(InitStatus status))completion
 {
-    [self fetchDiscoveredProperties:[self discoveryUrl] withCompletion:^(InitStatus status){
+    NSString *discoveryUrl = [NSString stringWithFormat:@"%@/coupons/discovery", [self caymanRootUrl]];
+    NSLog(@"Discovery URL: %@", discoveryUrl);
+    
+    [self fetchDiscoveredProperties:discoveryUrl withCompletion:^(InitStatus status){
         if (completion != nil) {
             completion(status);
         }
