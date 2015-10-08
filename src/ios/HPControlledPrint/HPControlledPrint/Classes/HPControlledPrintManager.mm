@@ -32,11 +32,18 @@ NSString *const kPrinterDone       = @"Done";
 
 NSString *const kProviderQples     = @"QPLES";
 
+NSString *const kCaymanRootUrlDev        = @"http://cayman-dev-02.cloudpublish.com";
+NSString *const kCaymanRootUrlQa         = @"http://cayman-qa.cloudpublish.com";
+NSString *const kCaymanRootUrlStaging    = @"http://cayman-stg.cloudpublish.com";
+NSString *const kCaymanRootUrlProduction = @"http://cayman-prod.cloudpublish.com";
+
+
 static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
 
 HPServices *services;
 HPPrinter *lastUsedPrinter;
 HPPrintJobRequest *currentPrintJobRequest;
+ServerStack currentServerStack;
 
 NSString *proxyHost;
 NSString *proxyPort;
@@ -279,8 +286,10 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withToken:(NSString *)token doValidation:(BOOL)validate withCompletion:(void (^)(InitStatus status))completion
 {
+    currentServerStack = stack;
+    
     __weak HPControlledPrintManager *weakSelf = self;
-    [self setEnvironment:stack withCompletion:^(InitStatus status){
+    [self setEnvironment: ^(InitStatus status){
         if (status == InitStatusServerStackAvailable) {
             if (token != nil && validate) {
                 [weakSelf validateToken:token withCompletion:^(InitStatus status){
@@ -301,27 +310,46 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     }];
 }
 
-- (void)setEnvironment: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
+- (NSString *) caymanRootUrl
 {
-    NSString *discoveryUrl;
-    if (stack == ServerStackDevelopment) {
-        discoveryUrl = [NSString stringWithFormat:@"http://cayman-dev-02.cloudpublish.com/coupons/discovery?env=Dev"];
+    NSString *rootUrl;
+    if (currentServerStack == ServerStackDevelopment) {
+        rootUrl = kCaymanRootUrlDev;
+    } else if (currentServerStack == ServerStackQa) {
+        rootUrl = kCaymanRootUrlQa;
+    } else if (currentServerStack == ServerStackStaging) {
+        rootUrl = kCaymanRootUrlStaging;
+    } else if (currentServerStack == ServerStackProduction) {
+        rootUrl = kCaymanRootUrlProduction;
+    }
+    return rootUrl;
+}
+
+- (NSString *) discoveryUrl
+{
+    NSString *url;
+    if (currentServerStack == ServerStackDevelopment) {
+        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Dev", [self caymanRootUrl]];
         NSLog(@"Server Stack: Dev ======================");
         
-    } else if (stack == ServerStackQa) {
-        discoveryUrl = [NSString stringWithFormat:@"http://cayman-qa.cloudpublish.com/coupons/discovery?env=QA"];
+    } else if (currentServerStack == ServerStackQa) {
+        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=QA", [self caymanRootUrl]];
         NSLog(@"Server Stack: QA ======================");
         
-    } else if (stack == ServerStackStaging) {
-        discoveryUrl = [NSString stringWithFormat:@"http://cayman-stg.cloudpublish.com/coupons/discovery?env=Stg"];
-        NSLog(@"Server Stack: Ext ======================");
+    } else if (currentServerStack == ServerStackStaging) {
+        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Stg", [self caymanRootUrl]];
+        NSLog(@"Server Stack: Staging ======================");
         
-    } else if (stack == ServerStackProduction) {
-        discoveryUrl = [NSString stringWithFormat:@"http://cayman-prod.cloudpublish.com/coupons/discovery?env=Prod"];
-        NSLog(@"Server Stack: Prod ======================");
+    } else if (currentServerStack == ServerStackProduction) {
+        url = [NSString stringWithFormat:@"%@/coupons/discovery?env=Prod", [self caymanRootUrl]];
+        NSLog(@"Server Stack: Production ======================");
     }
+    return url;
+}
 
-    [self fetchDiscoveredProperties:discoveryUrl withCompletion:^(InitStatus status){
+- (void)setEnvironment: (void (^)(InitStatus status))completion
+{
+    [self fetchDiscoveredProperties:[self discoveryUrl] withCompletion:^(InitStatus status){
         if (completion != nil) {
             completion(status);
         }
@@ -425,7 +453,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSLog(@"json: %@", dict);
     
     services = [[HPServices alloc] init];
-    NSString *caymanRootUrl = [dict objectForKey:@"caymanrooturl"];
+    NSString *caymanRootUrl = [self caymanRootUrl];
     
     // jobUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getCouponsJobAsyncUrl();
     services.couponsJobUrl = [NSString stringWithFormat:@"%@%@", caymanRootUrl, [dict objectForKey:@"couponsjobasyncurl"]];
