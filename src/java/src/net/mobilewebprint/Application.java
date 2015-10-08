@@ -22,6 +22,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
   public static final String      STATUS_CANCELLING            = "CANCELLING";
   public static final String      STATUS_SUCCESS               = "SUCCESS";
 
+  public static final String      STATUS_NETWORK_ERROR         = "NETWORK_ERROR";
+  public static final String      STATUS_UPSTREAM_ERROR        = "UPSTREAM_ERROR";
+
   public static final String      RAW_STATUS_CANCELLING        = "CANCELING";
   public static final String      RAW_STATUS_IDLE              = "IDLE";
   public static final String      RAW_STATUS_PRINTING          = "PRINTING";

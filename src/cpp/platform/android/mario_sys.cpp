@@ -133,8 +133,9 @@ extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setIntOption(JN
   get_api()->set_option(to_string(env, name).c_str(), value);
 }
 
-extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setFlag(JNIEnv *env, jobject self, jstring name, jboolean value)
+extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setFlag(JNIEnv *env, jobject self, jstring name, jboolean jvalue)
 {
+  bool value = (bool)jvalue;
   get_api()->set_option(to_string(env, name).c_str(), value);
 }
 

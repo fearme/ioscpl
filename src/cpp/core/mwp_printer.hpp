@@ -56,7 +56,7 @@ namespace net_mobilewebprint {
     strlist  tags;
     strmap   _1284_attrs, _1284_attrs_lc;
 
-    int      num_network_errors;
+    int      num_soft_network_errors;
 
     uint32   last_status_arrival;
     bool     status_request_pending;
@@ -135,6 +135,9 @@ namespace net_mobilewebprint {
 
     printer_list_t(controller_base_t &controller_);
 
+    // Get a printer from its IP (or mac)
+    printer_t * _get_printer(string const & ip_or_mac);
+
     bool from_attrs(strmap const & attrs);
     bool from_attrs(strmap const & attrs, strlist const & tags);
 
@@ -146,6 +149,7 @@ namespace net_mobilewebprint {
     bool assimilate_printer_stats(printer_t * printer);
     int  send_list_to_app();
 
+    void soft_network_error(string const & ip, int error_number);
     void network_error(string const & ip, int error_number);
     void remove_printer(printer_t*&);
 
@@ -183,8 +187,11 @@ namespace net_mobilewebprint {
     void handle_filter_printers(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
 
     mq_manual_timer_t *       send_scan_done;
+    mq_manual_timer_t *       send_scan_done_zero_printers;
     mq_manual_timer_t *       send_scan_done_last_resort;
+    void                      _start_timers();
     void                      scan_activity_happened(uint32 now = 0);
+    void                      re_scan();
 
     printer_t * has_unknown_is_supported();
     int         unknown_is_supported_count();

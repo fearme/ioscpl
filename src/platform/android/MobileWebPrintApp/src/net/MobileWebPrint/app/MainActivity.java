@@ -60,6 +60,9 @@ public class MainActivity extends Activity {
 
     // 104 days of summer -- Problem: colors -- -- 33 sec to rip
     assets[9] = "http://a.dilcdn.com/bl/wp-content/uploads/sites/9/2014/07/phineas-ferb-agent-p-3d-papercraft-0611_FDCOM.pdf";
+
+    EditText editText = (EditText)findViewById(R.id.url);
+    editText.setText(assets[count]);
   }
 
   @Override

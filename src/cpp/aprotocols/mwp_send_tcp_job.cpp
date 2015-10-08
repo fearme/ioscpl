@@ -31,7 +31,14 @@ std::string net_mobilewebprint::send_tcp_job_t::mod_name()
 net_mobilewebprint::tcp_job_connection_t * net_mobilewebprint::send_tcp_job_t::send_to_printer(uint32 connection_id, string const & ip, uint16 port)
 {
   network_node_t * printer = new network_node_t(ip.c_str(), port);
-  if (mwp_assert(printer) && mwp_assert(printer->connect() != 0)) {
+
+  if (mwp_assert(printer)) {
+    if (printer->connect() == 0) {
+      log_v(2, "", "!!!!!!!!!!!!!!!!!! Opening socket to printer %s:%d failed -- errno: %d", ip.c_str(), (int)port, (int)printer->last_error);
+      return NULL;
+    }
+
+    /* otherwise */
     tcp_job_connection_t * connection = new tcp_job_connection_t(controller, printer, connection_id);
     connections[connection_id] = connection;
     return connection;
@@ -181,16 +188,22 @@ e_handle_result net_mobilewebprint::tcp_job_connection_t::_mq_selected(string co
 
       int num_sent = 0, num_to_send = (int)chunk->view.dsize();
       num_sent = printer->send_tcp(chunk->view, 's');
-      controller.job_stat_incr(connection_id, "totalSent", num_sent);
 
-      log_v(4, TAG_DATA_FLOW, "send_job(%d)::write: %d / %d(%d), %d chunks remaining", printer->tcp_fd, num_sent, (int)chunk->view.dsize(), chunk->data->mem_length, (int)chunks.size());
-
-      if (num_sent < num_to_send) {
-        chunk->view._begin += num_sent;
-        chunks.push_front(chunk);
+      if (num_sent < 0) {
+        controller.printers.network_error(printer->ip, printer->last_error);
       } else {
-        delete chunk; /**/ num_chunk_allocations -= 1;
+        controller.job_stat_incr(connection_id, "totalSent", num_sent);
+
+        log_v(4, TAG_DATA_FLOW, "send_job(%d)::write: %d / %d(%d), %d chunks remaining", printer->tcp_fd, num_sent, (int)chunk->view.dsize(), chunk->data->mem_length, (int)chunks.size());
+
+        if (num_sent < num_to_send) {
+          chunk->view._begin += num_sent;
+          chunks.push_front(chunk);
+        } else {
+          delete chunk; /**/ num_chunk_allocations -= 1;
+        }
       }
+
       result = handled;
     }
   }

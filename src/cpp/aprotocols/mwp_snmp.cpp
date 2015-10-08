@@ -136,7 +136,7 @@ e_handle_result net_mobilewebprint::snmp_t::_mq_selected(string const & name, bu
       if ((packet = pull(requests)) != NULL) {
         if ((num_bytes = socket->send_udp_to(*packet->buffer, packet->ip, packet->port)) <= 0) {
           log_v(2, "", "Error: snmp-sending-to %s:%d result:%d, errno: %d\n", packet->ip.c_str(), packet->port, num_bytes, socket->last_error);
-          controller.printers.network_error(packet->ip, socket->last_error);
+          controller.printers.soft_network_error(packet->ip, socket->last_error);
         }
         delete packet;
         result = handled;

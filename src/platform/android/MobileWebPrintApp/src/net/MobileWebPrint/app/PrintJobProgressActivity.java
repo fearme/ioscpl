@@ -116,7 +116,10 @@ public class PrintJobProgressActivity extends Activity {
     label.setText(display);
 
     // If the job is done, send a finish
-    if (jobStatus.equals(net.mobilewebprint.Application.STATUS_SUCCESS)) {
+    if (jobStatus.equals(net.mobilewebprint.Application.STATUS_SUCCESS) ||
+        jobStatus.equals(net.mobilewebprint.Application.STATUS_NETWORK_ERROR) ||
+        jobStatus.equals(net.mobilewebprint.Application.STATUS_UPSTREAM_ERROR))
+    {
       setResult(Activity.RESULT_OK);
       finish();
       return;

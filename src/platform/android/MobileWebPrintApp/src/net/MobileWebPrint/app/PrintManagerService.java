@@ -66,6 +66,12 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
 
     getPrimaryAccount();
 
+    mwp_client.setOption("serverName", "hqdev");
+    mwp_client.setOption("domainName", ".mobiledevprint.net");
+    mwp_client.setOption("providerName", "HP_CP");
+
+    mwp_client.setFlag("featurePrinterMissing", true);
+
     mwp_client.RegisterPrinterListChangesListener(this);
     mwp_client.RegisterPrintProgressChangesListener(this);
     mwp_client.start();
@@ -234,10 +240,6 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
     if(uniqueId != null && uniqueId.length() > 0){
       mwp_client.setOption("hardwareid", uniqueId);
     }
-
-    mwp_client.setOption("serverName", "hqdev");
-    mwp_client.setOption("domainName", ".mobiledevprint.net");
-    mwp_client.setOption("providerName", "HP_CP");
 
     try {
         for (Account account: AccountManager.get(context).getAccounts()) {

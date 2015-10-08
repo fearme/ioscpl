@@ -49,7 +49,10 @@
     <service android:name=".PrintManagerService" />
 
     <!-- The main activity -->
-    <activity android:name="MainActivity" android:label="@string/main_activity">
+    <activity android:name="MainActivity"
+              android:screenOrientation="portrait"
+              android:configChanges="keyboardHidden|orientation|screenSize"
+              android:label="@string/main_activity">
 
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
@@ -61,7 +64,9 @@
     <!--
        - The printer-destination activity
        -->
-    <activity android:name="PrintActivity">
+    <activity android:name="PrintActivity"
+              android:screenOrientation="portrait"
+              android:configChanges="keyboardHidden|orientation|screenSize">
 
       <!-- Handle the "send" intent -->
       <intent-filter>
@@ -109,7 +114,10 @@
     </activity>
 
     <!-- The print progress activity -->
-    <activity android:name="PrintJobProgressActivity" android:label="@string/print_progress_activity_label">
+    <activity android:name="PrintJobProgressActivity"
+              android:screenOrientation="portrait"
+              android:configChanges="keyboardHidden|orientation|screenSize"
+              android:label="@string/print_progress_activity_label">
 
     </activity>
 

@@ -25,8 +25,7 @@ bool net_mobilewebprint::core_api_t::start(bool start_scanning, bool block)
 
 bool net_mobilewebprint::core_api_t::reScan()
 {
-  log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending PRINTER_SCAN_DONE");
-  controller->send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
+  controller->printers.re_scan();
   return true;
 }
 
