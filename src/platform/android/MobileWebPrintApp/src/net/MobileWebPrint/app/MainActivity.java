@@ -26,6 +26,7 @@ public class MainActivity extends Activity {
   private             String[]         assets;
 
   private             String           url;
+  private             boolean          firstStart;
 
   /** Called when the activity is first created. */
   @Override
@@ -36,7 +37,6 @@ public class MainActivity extends Activity {
     setContentView(R.layout.main);
 
     serviceBridge = new ServiceBridge(this, "MainActivity");
-    count = 0;
 
     assets = new String[20];
     assets[0] = "http://cayman-ext.cloudpublish.com/filestore/files/3/data";
@@ -62,7 +62,11 @@ public class MainActivity extends Activity {
     assets[9] = "http://a.dilcdn.com/bl/wp-content/uploads/sites/9/2014/07/phineas-ferb-agent-p-3d-papercraft-0611_FDCOM.pdf";
 
     EditText editText = (EditText)findViewById(R.id.url);
-    editText.setText(assets[count]);
+
+    count = 0;
+    editText.setText(assets[count++]);
+
+    this.firstStart = true;
   }
 
   @Override
@@ -71,6 +75,11 @@ public class MainActivity extends Activity {
     Log.v(TAG, "lifetime:- MainActivity.onStart");
 
     serviceBridge.onStart();
+
+    if (firstStart) {
+      launchSend("http://cayman-ext.cloudpublish.com/filestore/files/4/data");
+      firstStart = false;
+    }
   }
 
   /** Called when the user clicks the button */
@@ -79,12 +88,17 @@ public class MainActivity extends Activity {
   }
 
   private void launchSend() {
-    Intent intent = new Intent(this, PrintActivity.class);
 
     EditText editText = (EditText)findViewById(R.id.url);
-    url = editText.getText().toString();
-    intent.putExtra(PrintActivity.EXTRA_ASSET_URL, url);
-    Log.d(TAG, "Launching print " + url + "| " + intent);
+    launchSend(url = editText.getText().toString());
+  }
+
+  private void launchSend(String launchUrl) {
+    Intent intent = new Intent(this, PrintActivity.class);
+
+    url = launchUrl;
+    intent.putExtra(PrintActivity.EXTRA_ASSET_URL, launchUrl);
+    Log.d(TAG, "Launching print " + launchUrl + "| " + intent);
 
     startActivityForResult(intent, ACTIVITY_PICK_TO_PRINT);
   }

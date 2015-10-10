@@ -69,13 +69,14 @@
               android:configChanges="keyboardHidden|orientation|screenSize">
 
       <!-- Handle the "send" intent -->
+      <!-- TODO: put back when uploader works again
       <intent-filter>
         <action android:name="android.intent.action.SEND" />
         <category android:name="android.intent.category.DEFAULT" />
         <data android:mimeType="*/*" />
       </intent-filter>
+      -->
 
-      <!-- TODO: Either remove this, or make it work for the right URLs. This was just a test to see if PDFs print -->
       <!-- Handle the "view like a browser would" intent -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />
@@ -86,12 +87,17 @@
           android:scheme="http"
           android:host="clickit.cloudpublish.com"
           android:pathPrefix="/social/print/v2/" />
+
+        <!-- TODO: put this back to handle printit scheme urls
+                   It is tied into the above "data" tag.  It adds "printit://" scheme to clickit...
         <data android:scheme="printit" />
+        -->
 
         <!--
         <data android:host="urlprint.mobilewebprint.net" android:scheme="http" />
           -->
 
+        <!-- TODO: Either remove this, or make it work for the right URLs. This was just a test to see if PDFs print -->
         <!-- TODO: Should be hidden on production -->
         <!--
         <data android:host="*" android:scheme="http" />

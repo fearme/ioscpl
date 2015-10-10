@@ -206,6 +206,13 @@ public class PrintActivity extends Activity {
     String action = intent.getAction();
     String type   = intent.getType();
 
+    Log.v(TAG, "lifetime:- PrintActivity.onCreate action: " + action + ", type: " + type);
+    Log.v(TAG, "lifetime:- PrintActivity.onCreate EXTRA_ASSET_URL: " + intent.getStringExtra(EXTRA_ASSET_URL));
+    Log.v(TAG, "lifetime:- PrintActivity.onCreate EXTRA_PIN: " + intent.getStringExtra(EXTRA_PIN));
+    Log.v(TAG, "lifetime:- PrintActivity.onCreate EXTRA_PAIR_ID: " + intent.getStringExtra(EXTRA_PAIR_ID));
+    Log.v(TAG, "lifetime:- PrintActivity.onCreate EXTRA_PICKER: " + intent.getStringExtra(EXTRA_PICKER));
+
+
     DestinationJobStats newJob = null;
 
     String temp = "";

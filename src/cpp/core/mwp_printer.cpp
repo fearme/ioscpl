@@ -1348,7 +1348,7 @@ bool net_mobilewebprint::printer_list_t::cleanup()
           controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
         }
 
-        if (controller.flag("featurePrinterMissing")) {
+        if (controller.flag("featurePrinterMissing"), /* default= */ true) {
           printer_enum_id += 1;
           controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
 
