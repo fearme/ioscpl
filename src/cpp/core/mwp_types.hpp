@@ -1561,6 +1561,8 @@ namespace net_mobilewebprint {
       serialization_json_elt_t(char const *);
       serialization_json_elt_t(int);
       serialization_json_elt_t(unsigned int);
+      serialization_json_elt_t(long);
+      serialization_json_elt_t(unsigned long);
       serialization_json_elt_t(bool);
       serialization_json_elt_t(float);
       serialization_json_elt_t(double);

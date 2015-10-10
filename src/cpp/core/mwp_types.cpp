@@ -1262,6 +1262,18 @@ net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serializatio
   type  = int_type;
 }
 
+net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(long value_)
+{
+  value = mwp_itoa((int)value_);
+  type  = int_type;
+}
+
+net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(unsigned long value_)
+{
+  value = mwp_itoa((unsigned int)value_);
+  type  = int_type;
+}
+
 net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(bool value_)
 {
   value = (value_ ? "true" : "false");

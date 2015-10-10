@@ -26,8 +26,8 @@ test -n "$USER"         || export USER="none"
 $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="armeabi-v7a" --shared
 
 if [ -z "$DEVELOPMENT" ]; then
-  $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="armeabi" --shared
   $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="arm64-v8a" --shared
+  $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="armeabi" --shared
   $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="x86_64" --shared
   $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="x86" --shared
   $(dirname $0)/build-base --type=debug --os=android --platform=device --build-tool=android-ndk --abi="mips64" --shared
