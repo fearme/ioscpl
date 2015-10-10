@@ -493,9 +493,9 @@ public class PrintActivity extends Activity {
       Bundle p = ps.getBundle(key);
       Properties properties = new Properties();
 
-      properties.setProperty("ip", p.getString("ip"));
-      properties.setProperty("name",  p.getString("name"));
-      properties.setProperty("score", "" + p.getInt("score"));
+      if (p.containsKey("ip"))    { properties.setProperty("ip", p.getString("ip", "")); }
+      if (p.containsKey("name"))  { properties.setProperty("name",  p.getString("name", "")); }
+      if (p.containsKey("score")) { properties.setProperty("score", "" + p.getInt("score", 1)); }
 
       printerList.add(properties);
 

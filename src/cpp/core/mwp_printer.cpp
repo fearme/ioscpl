@@ -365,6 +365,7 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
     list2 = strlist();
     list = split(it->second, '.');
     for (lit = list.begin(); lit != list.end(); ++lit) {
+      // TODO: FIXME this will turn "010.000.005.049" into "10..5.49"
       list2.push_back(skip_char(*lit, '0'));
     }
 
@@ -645,6 +646,8 @@ net_mobilewebprint::printer_list_t::printer_list_t(controller_base_t &controller
     printer_list_in_flight(false),
     start_time(0),
     heartbeat(0, 100),
+    printer_list_histo_timer(NULL),
+    printer_list_histo_bucket(0),
     sending_printer_list(0, 2000, false),
     send_scan_done(NULL),
     send_scan_done_zero_printers(NULL),
@@ -712,11 +715,12 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
     silencer = NULL;
   }
 
+  int unk_is_supported_count = -1;
   if (heartbeat.has_elapsed(now)) {
     if (send_scan_done != NULL) {
-      int count = unknown_is_supported_count();
-      if (count > 0) {
-        //send_scan_done->delay(1000 + (25 * count));
+      unk_is_supported_count = unknown_is_supported_count();
+      if (unk_is_supported_count > 0) {
+        //send_scan_done->delay(1000 + (25 * unk_is_supported_count));
         scan_activity_happened(now);
       }
     }
@@ -726,6 +730,28 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
       printer->on_select_loop_start(loop_start_data);
+    }
+  }
+
+  // Collect histogram for printer discovery rate
+  if (printer_list_histo_timer != NULL && printer_list_histo_timer->has_elapsed(now)) {
+    printer_list_histo_bucket += 1;
+
+    if (unk_is_supported_count < 0) {
+      unk_is_supported_count = unknown_is_supported_count();
+    }
+    log_v(4, "", "printer_list-histo-timer %d %d", printer_list_histo_bucket, unk_is_supported_count);
+
+    controller.sendTelemetry("printerScan", "discoveryHistogram",
+        "count",                    by_ip.size(),
+        "unknownIsSupportedCount",  unk_is_supported_count,
+        "histoBucketTime",          printer_list_histo_timer->time_,
+        "histoBucket",              printer_list_histo_bucket);
+
+    // 35 seconds is enough
+    if (printer_list_histo_bucket >= 35) {
+      delete printer_list_histo_timer;
+      printer_list_histo_timer = NULL;
     }
   }
 
@@ -790,6 +816,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
       // Send the scan done message
       log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending PRINTER_SCAN_DONE");
       controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
+      controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "normal");
 
       delete send_scan_done;
       send_scan_done = NULL;
@@ -809,6 +836,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
   if (send_scan_done_last_resort != NULL && send_scan_done_last_resort->has_elapsed(now)) {
     log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
     controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
+    controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "lastResort");
 
     delete send_scan_done;
     send_scan_done = NULL;
@@ -828,6 +856,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
     if (by_ip.size() == 0) {
       log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending zero-printer PRINTER_SCAN_DONE");
       controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
+      controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "zeroPrintersTimeout");
 
       delete send_scan_done;
       send_scan_done = NULL;
@@ -852,12 +881,14 @@ void net_mobilewebprint::printer_list_t::re_scan()
     log_v(2, "", "!!!!!!!!!!!!!! %s", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     log_v(2, "", "!!!!!!!!!!!!!! %s", "Error -- reScan called during scan -- ignoring");
     log_v(2, "", "!!!!!!!!!!!!!! %s", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+    controller.sendTelemetry("printerScan", "invalidReScan");
     return;
   }
 
   /* otherwise */
   mq.send("re_scan_for_printers");
   _start_timers();
+  controller.sendTelemetry("printerScan", "reScan");
 }
 
 void net_mobilewebprint::printer_list_t::scan_activity_happened(uint32 now)
@@ -882,12 +913,14 @@ void net_mobilewebprint::printer_list_t::_start_timers()
   if (send_scan_done == NULL)                 { send_scan_done                = new mq_manual_timer_t(get_tick_count(), 4500, false); }
   if (send_scan_done_zero_printers == NULL)   { send_scan_done_zero_printers  = new mq_manual_timer_t(get_tick_count(), 15000, false); }
   if (send_scan_done_last_resort == NULL)     { send_scan_done_last_resort    = new mq_manual_timer_t(get_tick_count(), 27000, false); }
+  if (printer_list_histo_timer == NULL)       { printer_list_histo_timer      = new mq_manual_timer_t(get_tick_count(), 1000); }
 
   // Restart timeouts
   start_time =
     sending_printer_list.time =
     send_scan_done->time =
     send_scan_done_zero_printers->time =
+    printer_list_histo_timer->time =
     get_tick_count();
 
   //log_d(1, "", "------------------------------ (re)starting timers at %d", start_time);
@@ -899,20 +932,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
     // Start the timers
     _start_timers();
-//    if (watchdog == NULL)                       { watchdog                   = new mq_manual_timer_t(get_tick_count(), 100); }
-//    if (send_scan_done == NULL)                 { send_scan_done             = new mq_manual_timer_t(get_tick_count(), 4500, false); }
-//    if (send_scan_done_last_resort == NULL)     { send_scan_done_last_resort = new mq_manual_timer_t(get_tick_count(), 27000, false); }
-//
-//    // Restart timeouts
-//    start_time =
-//      sending_printer_list.time =
-//      send_scan_done->time =
-//      get_tick_count();
 
   } else if (name == "WIFI_STATE_CHANGED") {
 
     byte const * p = payload.const_begin();
     string value = payload.read_string(p);
+    controller.sendTelemetry("printerScan", "WIFI_STATE_CHANGED", "state", value);
     if (value != "WIFI_STATE_DISABLED") {
       return handled;
     }
@@ -937,6 +962,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
     byte const * p = payload.const_begin();
     string value = payload.read_string(p);
+    controller.sendTelemetry("printerScan", "CONNECTIVITY_ENABLED", "state", value);
     if (value == "true") {
       log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
       mq.send("re_scan_for_printers");
@@ -1119,6 +1145,8 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 //  log_v(2, "", "Encountered network error (%d) for %s", error_number, ip.c_str());
 //  return;
 
+  controller.sendTelemetry("printerScan", "softNetworkError", "ip", ip, "errno", error_number);
+
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
     return;
@@ -1140,6 +1168,8 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 
 void net_mobilewebprint::printer_list_t::network_error(string const & ip, int error_number)
 {
+  controller.sendTelemetry("printerScan", "networkError", "ip", ip, "errno", error_number);
+
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
     return;
@@ -1159,6 +1189,7 @@ void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
     string ip = printer->ip;
 
     controller.send_to_app(HP_MWP_RM_PRINTER_MSG, -1, printer_enum_id, ip.c_str(), NULL, NULL);
+    controller.sendTelemetry("printerScan", "removePrinter", "ip", ip);
 
     by_ip.erase(ip);
     delete printer;
@@ -1348,7 +1379,7 @@ bool net_mobilewebprint::printer_list_t::cleanup()
           controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
         }
 
-        if (controller.flag("featurePrinterMissing"), /* default= */ true) {
+        if (controller.flag("featurePrinterMissing", /* default= */ true)) {
           printer_enum_id += 1;
           controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
 

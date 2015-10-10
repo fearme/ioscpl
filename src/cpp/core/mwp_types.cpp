@@ -1197,10 +1197,13 @@ void net_mobilewebprint::serialization_json_t::sjson_log_v(int log_level, char c
   for (sub_list_t::const_iterator it = sub_list.begin(); it != sub_list.end(); ++it) {
     log_v(log_level, "", "%s%s[]", indent.c_str(), it->first.c_str());
     serialization_json_list_t const * list = it->second;
-    int index = 0;
+    int index = 0, log_adj = 0;
     for (jsonlist::const_iterator itItem = list->list.begin(); itItem != list->list.end(); ++itItem, ++index) {
-      log_v(log_level, "", "%s[%d]", indent.c_str(), index);
-      itItem->sjson_log_v(log_level, tags, disp_level+2);
+
+      log_adj = mwp_itoa(index).length();
+
+      log_v(log_level + log_adj, "", "%s[%d]", indent.c_str(), index);
+      itItem->sjson_log_v(log_level + log_adj, tags, disp_level+2);
     }
   }
 
@@ -1248,6 +1251,12 @@ net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serializatio
 }
 
 net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(int value_)
+{
+  value = mwp_itoa(value_);
+  type  = int_type;
+}
+
+net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(unsigned int value_)
 {
   value = mwp_itoa(value_);
   type  = int_type;

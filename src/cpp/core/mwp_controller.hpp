@@ -335,6 +335,7 @@ namespace net_mobilewebprint {
     map<string, jsonlist>     bucketData;   // Data items
     void                      startBucket(string bucket, uint32 start_time = 0);
     void                      sendTelemetry(string bucket, char const * eventType, serialization_json_t const &);
+    void                      sendTelemetry(string bucket, char const * eventType);
 
     template <typename T>
     void                      sendTelemetry(char const * bucketName,
@@ -343,6 +344,18 @@ namespace net_mobilewebprint {
     {
       serialization_json_t json;
       json.set(key, value);
+      sendTelemetry(bucketName, eventType, json);
+    }
+
+    template <typename T1, typename T2>
+    void                      sendTelemetry(char const * bucketName,
+                                            char const * eventType,
+                                            char const * key1, T1 const & value1,
+                                            char const * key2, T2 const & value2)
+    {
+      serialization_json_t json;
+      json.set(key1, value1);
+      json.set(key2, value2);
       sendTelemetry(bucketName, eventType, json);
     }
 

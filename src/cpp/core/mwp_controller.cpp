@@ -68,7 +68,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     network_ifaces_timer(0, 1000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
-    telemetry_report(0, 2500),
+    telemetry_report(0, 15000),
     heartbeat_timer(0, 20000)
 {
   mwp_app_callbacks_ = new mwp_app_cb_list_t();
@@ -101,7 +101,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     network_ifaces_timer(0, 1000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
-    telemetry_report(0, 2500),
+    telemetry_report(0, 15000),
     heartbeat_timer(0, 20000)
 {
   //mwp_app_callbacks_ = new mwp_app_cb_list_t();
@@ -268,7 +268,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
 
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
-      if (flag("telemetry", /* default= */false)) {
+      if (flag("telemetry", TELEMETRY_DEFAULT)) {
         string pathname = string("/telemetry?count=") + mwp_itoa(count);
         send_upstream("telemetry", pathname, json, new telemetry_response_t());
       }
@@ -648,18 +648,23 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
     set_arg("fallbackServiceOne", curl.server_name);
     set_arg("fallbackServiceTwo", curl.server_name);
 
-    string stack_name = arg("serverName", "");
-    if (stack_name[0] == 'h' && stack_name[1] == 'q') {
-      stack_name = stack_name.substr(2);
+    size_t end_of_stack_name = curl.server_name.find_first_of("-.");
+    if (end_of_stack_name != string::npos) {
+      ARGS.set_arg("stackName", curl.server_name.substr(0, end_of_stack_name));
     }
-    set_arg("stackName", stack_name);
+
+//    string stack_name = arg("stackName", "");
+//    if (stack_name[0] == 'h' && stack_name[1] == 'q') {
+//      stack_name = stack_name.substr(2);
+//    }
+//    set_arg("stackName", stack_name);
 
     show_options();
 
     client_start_in_flight_txn_id = -1;
 
     serialization_json_t json;
-    json.set("stackName", stack_name);
+    json.set("stackName", arg("stackName", ""));
     send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
     return handled;
 
@@ -757,10 +762,10 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
 // -----------------------------------------------------------------------------------------------------------------------------------------
 void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType, serialization_json_t const & data_)
 {
-  bool telemetry_preference = flag("telemetry", false);
+  bool telemetry_preference = flag("telemetry", TELEMETRY_DEFAULT);
 
   uint32 now = get_tick_count();
-  if (now - scan_start_time > 15000) {
+  if (now - scan_start_time > 5 * 60 * 1000) {
     if (bucketName == "printerScan") { return; }
   }
 
@@ -771,6 +776,12 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
   data.set("eventType", eventType);
   log_v(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
   bucketData[bucketName].push_back(data);
+}
+
+void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType)
+{
+  serialization_json_t json;
+  sendTelemetry(bucketName, eventType, json);
 }
 
 void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint32 start_time /* = 0 */)
@@ -1146,14 +1157,21 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
     msg->append_strs_sans_null("(x-hp-p1=MFG:HP;MDL:", device_id.c_str(), ";)");
     mq.send(msg);
     return *this;
-  } else if (::strcmp(name, "serverName") == 0) {
+  } else if (::strcmp(name, "serverName") == 0 || ::strcmp(name, "stackName") == 0) {
     string svalue(value);
+    string stack_name;
 
-    if (svalue.find("pub") != string::npos)           { curl.server_name = "hqpub.mobilewebprint.net"; }
-    else if (svalue.find("prod") != string::npos)     { curl.server_name = "hqpub.mobilewebprint.net"; }
-    else if (svalue.find("dev") != string::npos)      { curl.server_name = "hqdev.mobiledevprint.net"; }
-    else if (svalue.find("qa") != string::npos)       { curl.server_name =  "hqqa.mobiledevprint.net"; }
-    else                                              { curl.server_name = "hqext.mobiledevprint.net"; }
+    if (svalue.find("pub") != string::npos)           { stack_name = "pub"; curl.server_name = "hqpub.mobilewebprint.net"; }
+    else if (svalue.find("prod") != string::npos)     { stack_name = "pub"; curl.server_name = "hqpub.mobilewebprint.net"; }
+    else if (svalue.find("dev") != string::npos)      { stack_name = "dev"; curl.server_name = "hqdev.mobiledevprint.net"; }
+    else if (svalue.find("qa") != string::npos)       { stack_name =  "qa"; curl.server_name =  "hqqa.mobiledevprint.net"; }
+    else if (svalue.find("stg") != string::npos)      { stack_name = "ext"; curl.server_name = "hqext.mobiledevprint.net"; }
+    else if (svalue.find("ext") != string::npos)      { stack_name = "ext"; curl.server_name = "hqext.mobiledevprint.net"; }
+    else                                              { stack_name = "pub"; curl.server_name = "hqpub.mobilewebprint.net"; }
+
+    ARGS.set_arg("requestedStackName", value);
+    ARGS.set_arg("stackName", stack_name);
+    return *this;
   }
 
   /* otherwise */

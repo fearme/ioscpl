@@ -180,6 +180,8 @@ namespace net_mobilewebprint {
     uint32                    start_time;
 
     mq_manual_timer_t         heartbeat;
+    mq_manual_timer_t *       printer_list_histo_timer;
+    int                       printer_list_histo_bucket;
 
     mq_manual_timer_t         sending_printer_list;
     bool                      printer_list_in_flight;

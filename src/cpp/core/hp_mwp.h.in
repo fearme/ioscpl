@@ -29,6 +29,8 @@
 #define STATUS_CANCELLING                 "CANCELLING"
 #define STATUS_SUCCESS                    "SUCCESS"
 
+#define TELEMETRY_DEFAULT                 false
+
 /**
  *  Messages that the app can listen for.
  */
