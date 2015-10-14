@@ -68,7 +68,7 @@
             </objects>
             <point key="canvasLocation" x="878" y="-806"/>
         </scene>
-        <!--SquitchTink Setup-->
+        <!--SquitchyTink Setup-->
         <scene sceneID="d38-ha-XRX">
             <objects>
                 <tableViewController id="X3Y-H5-QXo" customClass="SetupTableViewController" customModule="HPControlledPrintConsumer" customModuleProvider="target" sceneMemberID="viewController">
@@ -154,7 +154,7 @@
                             <outlet property="delegate" destination="X3Y-H5-QXo" id="z9B-NT-LHO"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="SquitchTink Setup" id="JD3-IR-zTV"/>
+                    <navigationItem key="navigationItem" title="SquitchyTink Setup" id="JD3-IR-zTV"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="X3T-eB-shC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
