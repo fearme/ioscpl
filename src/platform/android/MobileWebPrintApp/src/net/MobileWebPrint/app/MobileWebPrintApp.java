@@ -10,7 +10,7 @@ import android.util.Log;
 // ** The application implements a SecureAssetPrintingApp
 public class MobileWebPrintApp extends /*android.app.*/ Application {
 
-  private static final String           TAG              = "jMobileWebPrint";
+  private static final String           TAG              = "MobileWebPrintApp";
 
   @Override
   public void onCreate() {

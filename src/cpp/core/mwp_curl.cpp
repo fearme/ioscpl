@@ -146,7 +146,9 @@ std::string net_mobilewebprint::curl_t::translate_path(string const & path)
 int net_mobilewebprint::curl_t::verbose_adj(string const & url)
 {
   if (_starts_with(url, "/poll"))      { return 3; }
-  if (_starts_with(url, "/telemetry")) { return 1; }
+  if (_starts_with(url, "/telemetry")) { return 2; }
+
+  if (_starts_with(url, "netapp::/command"))   { return 2; }
 
   return 0;
 }
@@ -289,7 +291,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
   _init_read_fn();
 
   if (do_logging) {
-    log_v(1 + verbose_adj(), "", "        body: %s", body.c_str());
+    log_v(2 + verbose_adj(), "", "        body: %s", body.c_str());
   }
 
   buffer_t * payload = new buffer_t(body.c_str()); /**/ num_buffer_allocations += 1;
@@ -302,7 +304,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
 {
   int result = 0;
 
-  body.sjson_log_v(1 + verbose_adj(), "");
+  body.sjson_log_v(2 + verbose_adj(), "");
 
   string json_str = body.stringify();
   _set_body(json_str, false);

@@ -43,7 +43,7 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
   public  static final int    MSG_PRINT_PROGRESS    = 4;
   public  static final int    MSG_SEND_JOB          = 5;
 
-  private static final String TAG                   = "jMobileWebPrint";
+  private static final String TAG                   = "MobileWebPrintService";
 
 
   public static net.mobilewebprint.Client               mwp_client;

@@ -280,6 +280,25 @@ int app_callback(void * app_data, char const * msg, int ident, int32 transaction
         getEnv()->DeleteLocalRef(jdiffs);
       }
     }
+  } else if (strcmp(msg, "Halt_Mario") == 0) {
+    string diffs;
+    int num_diffs = 0;
+
+    int n_msg = ensure_is_in(msg, diffs, num_diffs);
+    int n1    = ensure_is_in((char const *)p1, diffs, num_diffs);
+    int n6    = params->n1;
+
+    jstring jdiffs;
+    if (num_diffs > 0) {
+      jdiffs = to_jstring(diffs);
+      getEnv()->CallVoidMethod(jApplication, setDictionaryItemsId, jdiffs);
+    }
+
+    getEnv()->CallBooleanMethod(jApplication, sendMessageId, n_msg, 1, n1, 2, 3, 4, 5, n6, 7, 8);
+
+    if (num_diffs > 0) {
+      getEnv()->DeleteLocalRef(jdiffs);
+    }
   }
 }
 

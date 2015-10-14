@@ -290,6 +290,12 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       return true;
     }
 
+    if (fName.equals("Halt_Mario")) {
+      Client.logD("MobileWebPrint", "Sayonara " + s1);
+      System.exit(n6);
+      return true;
+    }
+
     // Log that we got a message we did not handle
     Client.logD("MobileWebPrint", "unknown message: " + fName + " -- " + numStrings);
     return false;

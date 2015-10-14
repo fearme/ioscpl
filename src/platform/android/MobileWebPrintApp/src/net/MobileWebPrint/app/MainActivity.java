@@ -14,7 +14,7 @@ import android.util.Log;
 
 public class MainActivity extends Activity {
 
-  private static final String TAG = "jMobileWebPrint";
+  private static final String TAG = "MobileWebPrintApp";
 
   private static final int    ACTIVITY_PICK_TO_PRINT = 88;
   private static final int    ACTIVITY_PICK_PRINTER  = 89;

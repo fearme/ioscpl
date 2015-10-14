@@ -13,7 +13,7 @@ import java.lang.RuntimeException;
 
 public class PrintJobProgressActivity extends Activity {
 
-  private static final String               TAG = "jMobileWebPrint";
+  private static final String               TAG = "MobileWebPrintApp";
 
 //  private              CoreApi              api;
 

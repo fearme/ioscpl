@@ -170,6 +170,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     if (client_start_in_flight_txn_id == -1) {
       // Flush all delayed jobs
       for (std::deque<controller_http_request_t>::const_iterator it = delayed_http_requests->begin(); it != delayed_http_requests->end(); ++it) {
+        log_v(2, "", "Finally sending %d - %s |%s|", it->txn_id, it->verb.c_str(), it->url.c_str());
         curl_http_post(*it);
       }
 
@@ -269,7 +270,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
       if (flag("telemetry", TELEMETRY_DEFAULT)) {
-        string pathname = string("/telemetry?count=") + mwp_itoa(count);
+        string pathname = string("/telemetry?count=") + mwp_itoa(count) + "&uptime=" + mwp_itoa(loop_start_data.current_loop_start) /* + "&clientId=" + clientId() */;
         send_upstream("telemetry", pathname, json, new telemetry_response_t());
       }
 
@@ -437,6 +438,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url,
   }
 
   /* otherwise */
+  log_v(2, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
   delayed_http_requests->push_back(controller_http_request_t(txn_id, "POST", url, json));
   return txn_id;
 }
@@ -458,6 +460,10 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
 
   if (arg("username", "").length() > 0) {
     json.set("meta.username", arg("username", "noname@example.com"));
+  }
+
+  if (flag("zdebug", false)) {
+    json.set("meta.zdebug", true);
   }
 
   // TODO: Remove this after netapp_command.js recognizes ".clientId" on stg/prod
@@ -730,14 +736,26 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
         string const & url      = item->lookup("$print.url");
 
         send_job(url, mac);
+
       } else if (item->has("$print.ip") && item->has("$print.url")) {
         string const & ip       = item->lookup("$print.ip");
         string const & url      = item->lookup("$print.url");
 
         send_job(url, ip);
+
       } else if (item->has_int("$retry.in")) {
         server_command_timer.time = get_tick_count() + item->lookup_int("$retry.in");
         next_has_been_scheduled = true;
+
+      } else if (item->has_int("$halt.in")) {
+        if (item->lookup_int("$halt.in") == 73) {
+          string halt_msg = item->lookup("$halt.msg");
+          if (halt_msg.length() == 0) {
+            halt_msg = "succa";
+          }
+
+          send_to_app("Halt_Mario", -1, 0, halt_msg.c_str(), NULL, NULL, NULL, NULL, item->lookup("$halt.exit", 0));
+        }
       }
     }
 
@@ -750,7 +768,7 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
   }
 
   /* otherwise - wait before the next one */
-  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ handle_server_command");
+  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ <400, handle_server_command");
   if (!next_has_been_scheduled) {
     server_command_timer.time = get_tick_count();
     next_has_been_scheduled = true;
@@ -808,6 +826,14 @@ void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint3
   common.set("startTime", (int)start_time);
   common.set("bucket", bucketName);
   common.set("bucketId", random_string(32));
+}
+
+void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+{
+  log_v(3, "", "telemetry response: %d", code);
+  if (g_controller) {
+    g_controller->sendTelemetry("telemetry", "serverResponse", "code", code);
+  }
 }
 
 bool net_mobilewebprint::controller_base_t::mq_is_done()
@@ -1780,10 +1806,5 @@ net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 
   if (search.length() > 0) {
     url = url + "?" + search;
   }
-}
-
-void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
-{
-  log_v(3, "", "telemetry response: %d", code);
 }
 

@@ -690,20 +690,19 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
   uint32 now = loop_start_data.current_loop_start;
   printer_t * printer = NULL;
 
-//  // BBB - Best breakpoint to watch the timing of the printer scan, and PRINTER_SCAN_DONE
-//  if (watchdog != NULL && watchdog->has_elapsed(now)) {
-////    if (send_scan_done != NULL) {
-//      log_v(2, "", "-------------- %8d: %8d %8d %8d until PRINTER_SCAN_DONE, printer_list in flight: %d time until send list: %d, unknowns %d/%d",
-//                    now - start_time,
-//                    send_scan_done == NULL ? -999 : send_scan_done->time_remaining(now),
-//                    send_scan_done_last_resort == NULL ? -999 : send_scan_done_last_resort->time_remaining(now),
-//                    silencer == NULL ? -999 : silencer->time_remaining(now),
-//                    (int)printer_list_in_flight,
-//                    sending_printer_list.time_remaining(),
-//                    unknown_is_supported_count(),
-//                    by_ip.size());
-////    }
-//  }
+  // BBB - Best breakpoint to watch the timing of the printer scan, and PRINTER_SCAN_DONE
+  if (controller.flag("scanWatchdog", true) && watchdog != NULL && watchdog->has_elapsed(now)) {
+    log_v(2, "", "-------------- %8d: %8d %8d _Z %8d _X %8d until PRINTER_SCAN_DONE, printer_list in flight: %d time until send list: %d, unknowns %d/%d",
+                  now - start_time,
+                  send_scan_done                == NULL ? -999 : send_scan_done->time_remaining(now),
+                  send_scan_done_zero_printers  == NULL ? -999 : send_scan_done_zero_printers->time_remaining(now),
+                  send_scan_done_last_resort    == NULL ? -999 : send_scan_done_last_resort->time_remaining(now),
+                  silencer                      == NULL ? -999 : silencer->time_remaining(now),
+                  (int)printer_list_in_flight,
+                  sending_printer_list.time_remaining(now),
+                  unknown_is_supported_count(),
+                  by_ip.size());
+  }
 
   if (silencer != NULL && silencer->has_elapsed(now)) {
     log_v(3, "", "-----------------------------------------------------------QUIET-------------------------------------");
@@ -765,15 +764,22 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
     if ((check_for_unknowns = sending_printer_list.has_elapsed(now))) {
 
-      serialization_json_t & sub_json = json.getObject("printers");
-      if ((count = make_server_json(sub_json, "is_supported")) > 0) {
-        send_printer_list = true;
-        log_v(2, "", "------------- have %d unknown is_supported printers", count);
-      }
+      // The action happens below
+
     } else if (sending_printer_list.time_remaining() > 0x00ffffff) {
       send_printer_list = (has_unknown_is_supported() != NULL);
       if (send_printer_list) {
         log_v(2, "", "------------- have %s unknown is_supported printer", has_unknown_is_supported()->ip.c_str());
+        check_for_unknowns = true;
+      }
+    }
+
+    if (check_for_unknowns) {
+
+      serialization_json_t & sub_json = json.getObject("printers");
+      if ((count = make_server_json(sub_json, "is_supported")) > 0) {
+        send_printer_list = true;
+        log_v(2, "", "------------- have %d unknown is_supported printers", count);
       }
     }
 
@@ -787,7 +793,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
         sending_printer_list.time = get_tick_count();
       } else {
         log_v(3, "", "-----------------------------------------------------------sending filterPrinters %d/%d: #%d", count, by_ip.size(), num_printer_list_sends);
-        string pathname = string("/filterPrinters?total=") + mwp_itoa(by_ip.size()) + "&count=" + mwp_itoa(count);
+        string pathname = string("/filterPrinters?count=") + mwp_itoa(count) + "&total=" + mwp_itoa(by_ip.size());
         string stream_name = controller.send_upstream("info_for_printers", pathname, json, new printer_list_response_t());
         if (send_scan_done != NULL) { send_scan_done->delay(250); }
         printer_list_in_flight = true;
@@ -804,13 +810,24 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
   }
 
   if (send_scan_done != NULL && send_scan_done->has_elapsed(now)) {
+
+    int sendScanDoneDelay = 0;
+
     if ((printer = has_unknown_is_supported()) != NULL) {
+
       // Try again next time
       int count = unknown_is_supported_count();
-      log_v(3, "", "--------------------- printer (of %d) with unknown is_supported |%s|", count, printer->ip.c_str());
+      sendScanDoneDelay = 2000 + (20 * count);
 
-      send_scan_done->revert();
-      send_scan_done->delay(2000 + (20 * count));
+      log_v(3, "", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer (of %d) with unknown is_supported |%s|", sendScanDoneDelay, count, printer->ip.c_str());
+
+    } else if (printer_list_in_flight) {
+
+      // Try again next time
+      sendScanDoneDelay = 500;
+
+      log_v(3, "", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer list is in fight", sendScanDoneDelay);
+
     } else {
 
       // Send the scan done message
@@ -831,25 +848,42 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
       silencer = new mq_manual_timer_t(get_tick_count(), 4500, false);
     }
+
+    if (sendScanDoneDelay > 0) {
+      send_scan_done->revert();
+      send_scan_done->delay(sendScanDoneDelay);
+    }
   }
 
-  if (send_scan_done_last_resort != NULL && send_scan_done_last_resort->has_elapsed(now)) {
-    log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
-    controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
-    controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "lastResort");
+  if (send_scan_done_last_resort != NULL) {
 
-    delete send_scan_done;
-    send_scan_done = NULL;
+    if (printer_list_in_flight) {
 
-    delete send_scan_done_last_resort;
-    send_scan_done_last_resort = NULL;
+      // Try again next time
+      send_scan_done_last_resort->revert();
+      send_scan_done_last_resort->delay(6500);
 
-    if (send_scan_done_zero_printers != NULL) {
-      delete send_scan_done_zero_printers;
-      send_scan_done_zero_printers = NULL;
+    } else {
+      if (send_scan_done_last_resort->has_elapsed(now)) {
+
+        log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
+        controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
+        controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "lastResort");
+
+        delete send_scan_done;
+        send_scan_done = NULL;
+
+        delete send_scan_done_last_resort;
+        send_scan_done_last_resort = NULL;
+
+        if (send_scan_done_zero_printers != NULL) {
+          delete send_scan_done_zero_printers;
+          send_scan_done_zero_printers = NULL;
+        }
+
+        silencer = new mq_manual_timer_t(get_tick_count(), 4500, false);
+      }
     }
-
-    silencer = new mq_manual_timer_t(get_tick_count(), 4500, false);
   }
 
   if (send_scan_done_zero_printers != NULL && send_scan_done_zero_printers->has_elapsed(now)) {
@@ -937,16 +971,17 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
     byte const * p = payload.const_begin();
     string value = payload.read_string(p);
-    controller.sendTelemetry("printerScan", "WIFI_STATE_CHANGED", "state", value);
+    controller.sendTelemetry("network", "WIFI_STATE_CHANGED", "state", value);
     if (value != "WIFI_STATE_DISABLED") {
       return handled;
     }
 
-    /* otherwise */
+    /* otherwise -- The WiFi has gone away!!! */
     log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
 
     printer_t * printer = NULL;
 
+    // Remove all the printers in the list
     printer_enum_id += 1;
     controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
 
@@ -958,11 +993,14 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
     controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
 
+    // Reset various things that rely on the wifi -- TODO: any PCL downloads
+    printer_list_in_flight = false;
+
   } else if (name == "CONNECTIVITY_ENABLED") {
 
     byte const * p = payload.const_begin();
     string value = payload.read_string(p);
-    controller.sendTelemetry("printerScan", "CONNECTIVITY_ENABLED", "state", value);
+    controller.sendTelemetry("network", "CONNECTIVITY_ENABLED", "state", value);
     if (value == "true") {
       log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
       mq.send("re_scan_for_printers");
@@ -1001,7 +1039,9 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
       if (by_ip.find(ip) != by_ip.end()) {
         printer_t * printer = (*by_ip.find(ip)).second;
         if (printer) {
+
           bool has_changed = false;
+
           if (printer->is_supported == NULL) {
             printer->is_supported = new bool(is_supported);
             has_changed = true;
@@ -1014,6 +1054,8 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
             send_begin_msg(have_sent_begin_msg);
             controller.send_to_app(HP_MWP_PRINTER_ATTRIBUTE_MSG, -1, printer_enum_id, ip.c_str(), "is_supported", is_supported ? "1" : "0");
           }
+
+          printer->num_is_supported_asks += 1;
         }
       }
     }
@@ -1145,7 +1187,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 //  log_v(2, "", "Encountered network error (%d) for %s", error_number, ip.c_str());
 //  return;
 
-  controller.sendTelemetry("printerScan", "softNetworkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("network", "softNetworkError", "ip", ip, "errno", error_number);
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
@@ -1168,7 +1210,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 
 void net_mobilewebprint::printer_list_t::network_error(string const & ip, int error_number)
 {
-  controller.sendTelemetry("printerScan", "networkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("network", "networkError", "ip", ip, "errno", error_number);
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
@@ -1192,8 +1234,9 @@ void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
     controller.sendTelemetry("printerScan", "removePrinter", "ip", ip);
 
     by_ip.erase(ip);
-    delete printer;
+    mac_addresses.erase(ip);
 
+    delete printer;
     printer = NULL;
   }
 }
@@ -1544,16 +1587,10 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
     if ((printer = it->second) != NULL) {
       if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
 
-//        // If the printer does not have a deviceId, it cannot play any reindeer games
-//        if (printer->_1284_device_id.length() == 0) {
-//          continue;
-//        }
-
         // Do not ask forever
         if (printer->num_is_supported_asks < 4) {
           printer->make_server_json(json.getObject(dashify_key(printer->ip)));
           count += 1;
-          printer->num_is_supported_asks += 1;
         } else {
           printer->is_supported = new bool(false);
         }
