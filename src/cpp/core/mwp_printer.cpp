@@ -857,13 +857,13 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
   if (send_scan_done_last_resort != NULL) {
 
-    if (printer_list_in_flight) {
-
-      // Try again next time
-      send_scan_done_last_resort->revert();
-      send_scan_done_last_resort->delay(6500);
-
-    } else {
+//    if (printer_list_in_flight) {
+//
+//      // Try again next time
+//      send_scan_done_last_resort->revert();
+//      send_scan_done_last_resort->delay(6500);
+//
+//    } else {
       if (send_scan_done_last_resort->has_elapsed(now)) {
 
         log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
@@ -883,7 +883,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
         silencer = new mq_manual_timer_t(get_tick_count(), 4500, false);
       }
-    }
+//    }
   }
 
   if (send_scan_done_zero_printers != NULL && send_scan_done_zero_printers->has_elapsed(now)) {
@@ -946,7 +946,7 @@ void net_mobilewebprint::printer_list_t::_start_timers()
   if (watchdog == NULL)                       { watchdog                      = new mq_manual_timer_t(get_tick_count(), 100); }
   if (send_scan_done == NULL)                 { send_scan_done                = new mq_manual_timer_t(get_tick_count(), 4500, false); }
   if (send_scan_done_zero_printers == NULL)   { send_scan_done_zero_printers  = new mq_manual_timer_t(get_tick_count(), 15000, false); }
-  if (send_scan_done_last_resort == NULL)     { send_scan_done_last_resort    = new mq_manual_timer_t(get_tick_count(), 27000, false); }
+  if (send_scan_done_last_resort == NULL)     { send_scan_done_last_resort    = new mq_manual_timer_t(get_tick_count(), 35000, false); }
   if (printer_list_histo_timer == NULL)       { printer_list_histo_timer      = new mq_manual_timer_t(get_tick_count(), 1000); }
 
   // Restart timeouts
