@@ -84,6 +84,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
     _initializeNewPrintersList();
     changedPrinterIps = new HashSet<String>();
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onNewPrinterList();
+      }
   }
 
   // ---------------------------------------------------------------------------------
@@ -98,6 +101,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
     try {
       changedPrinterIps = new HashSet<String>();
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onBeginPrinterChanges();
+      }
     } finally {
       //Client.logD("MobileWebPrint", "-------------------- release");
       printersMutex.release();
@@ -116,6 +122,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       Properties printer = _ensure(ip);
 
       printer.setProperty(name, value);
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onPrinterAttribute(ip, name, value);
+      }
     } finally {
       //Client.logD("MobileWebPrint", "-------------------- release");
       printersMutex.release();
@@ -136,6 +145,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
         Properties printer = printers.get(ip);
         printer.remove(name);
       }
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onRemovePrinterAttribute(ip, name);
+      }
     } finally {
       //Client.logD("MobileWebPrint", "-------------------- release");
       printersMutex.release();
@@ -152,6 +164,9 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
 
     try {
       printers.remove(ip);
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onRemovePrinter(ip);
+      }
     } finally {
       //Client.logD("MobileWebPrint", "-------------------- release onRemovePrinter");
       printersMutex.release();
@@ -168,6 +183,10 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
     }
 
     try {
+
+      for (PrinterAttributeChangesListener listener : printerAttributeChangesListeners) {
+        listener.onEndPrinterEnumeration();
+      }
       for (PrinterListChangesListener listener : printerListChangesListeners) {
         _onEndPrinterEnumeration(listener);
       }
