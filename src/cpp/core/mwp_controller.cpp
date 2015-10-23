@@ -247,12 +247,14 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     strset  sent;
     for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
       string const & bucketName = it->first;
-      log_v(4, "", "sending bucket %s", bucketName.c_str());
+      log_v(3, "", "----------------- sending bucket %s", bucketName.c_str());
       map<string, serialization_json_t>::const_iterator itMap;
       if ((itMap = buckets.find(bucketName)) != buckets.end()) {
 
         serialization_json_t const &     bucket = itMap->second;
         jsonlist const &                   data = it->second;
+
+        log_v(3, "", "----------------- sending bucket %s %d", bucketName.c_str(), data.size());
 
         serialization_json_t & subjson = json.getObject(bucketName);
         subjson << bucket;
@@ -780,6 +782,8 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
 // -----------------------------------------------------------------------------------------------------------------------------------------
 void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType, serialization_json_t const & data_)
 {
+  //log_v(2, "", "sendTelemetry(%s)", eventType);
+
   bool telemetry_preference = flag("telemetry", TELEMETRY_DEFAULT);
 
   uint32 now = get_tick_count();

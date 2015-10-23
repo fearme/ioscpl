@@ -1357,6 +1357,12 @@ static bool _should_log(char const * tags) {
 #endif
 }
 
+static bool _has_tag(char const * tags, char const * tag)
+{
+  // TODO: this function should treat tags as a strset, colon delimited
+  return strcmp(tags, tag) == 0;
+}
+
 void net_mobilewebprint::log_d(string const & msg)
 {
   if (get_flag("quiet")) { return; }
@@ -1546,6 +1552,11 @@ void net_mobilewebprint::log_v(int level, char const * tags, char const * format
   va_end(argList);
 
   log_v(buffer, (log_param_t)NULL);
+
+  if (_has_tag(tags, "ttt") && g_controller) {
+    //log_v("log_v done", (log_param_t)NULL);
+    g_controller->sendTelemetry("log_v", "log", "message", buffer);
+  }
 }
 
 void net_mobilewebprint::log_vt(int level, char const * tag, char const * format, ...)

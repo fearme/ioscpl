@@ -83,6 +83,8 @@ namespace net_mobilewebprint {
   struct mdns_t;
   struct mq_t;
 
+  extern controller_base_t * g_controller;
+
   extern mq_t & get_mq(controller_base_t &);
   extern int    num_allocations;
   extern int    num_buffer_allocations;
