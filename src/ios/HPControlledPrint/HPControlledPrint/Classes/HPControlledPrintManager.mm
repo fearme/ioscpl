@@ -32,10 +32,10 @@ NSString *const kPrinterDone       = @"Done";
 
 NSString *const kProviderQples     = @"QPLES";
 
-NSString *const kCaymanRootUrlDev        = @"http://cayman-dev-02.cloudpublish.com";
-NSString *const kCaymanRootUrlQa         = @"http://cayman-qa.cloudpublish.com";
-NSString *const kCaymanRootUrlStaging    = @"http://cayman-stg.cloudpublish.com";
-NSString *const kCaymanRootUrlProduction = @"http://cayman-prod.cloudpublish.com";
+NSString *const kCaymanRootUrlDev        = @"https://cayman-dev-02.cloudpublish.com";
+NSString *const kCaymanRootUrlQa         = @"https://cayman-qa.cloudpublish.com";
+NSString *const kCaymanRootUrlStaging    = @"https://cayman-stg.cloudpublish.com";
+NSString *const kCaymanRootUrlProduction = @"https://cayman-prod.cloudpublish.com";
 
 
 static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
@@ -169,10 +169,11 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             
         } else if ([property isEqualToString:@"is_supported"]) {
             if ([value isEqualToString:@"1"]) {
-                attributes.isSupported = PrinterSupportedYes;
+                attributes.isSupported = YES;
             } else {
-                attributes.isSupported = PrinterSupportedNo;
+                attributes.isSupported = NO;
             }
+            attributes._supportedFlagIsSet = YES;
         }
         
         [printers setObject:attributes forKey:printerIp];
@@ -243,7 +244,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         HPDiscoveredPrinters *printersToSend = [[HPDiscoveredPrinters alloc] init];
         for (NSString *ip in printers) {
             HPPrinterAttributes *printer = [printers objectForKey:ip];
-            if (printer.ip != nil && printer.name != nil && printer.isSupported != PrinterSupportedUnassigned) {
+            if (printer.ip != nil && printer.name != nil && printer._supportedFlagIsSet) {
                 [printersToSend.printers setObject:printer forKey:ip];
             }
         }

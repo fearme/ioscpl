@@ -112,7 +112,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
             cell.textLabel?.text = printerAttributes.name
             cell.detailTextLabel?.text = printerAttributes.ip
             
-            if printerAttributes.isSupported.value == PrinterSupportedYes.value {
+            if printerAttributes.isSupported {
                 cell.imageView?.image = UIImage(named: "PrinterSupported")
             } else {
                 cell.imageView?.image = UIImage(named: "PrinterNotSupported")
@@ -156,7 +156,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         
         if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow() {
             let printerAttributes = self.printers[indexPath.row]
-            if printerAttributes.isSupported.value != PrinterSupportedYes.value {
+            if !printerAttributes.isSupported {
                 let alert = UIAlertView(title: "Unsupported Printer", message: "Sorry, this printer is not supported.", delegate: self, cancelButtonTitle: "OK")
                 doSegue = false
                 alert.show()

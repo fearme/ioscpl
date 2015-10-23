@@ -8,7 +8,8 @@
 {
     self = [super init];
     if (self){
-        self.isSupported = PrinterSupportedUnassigned;
+        self.isSupported = NO;
+        self._supportedFlagIsSet = NO;
     }
     
     return self;

@@ -129,6 +129,7 @@
 		3704FFAB1BC7092300DB581F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				3704FFA71BC6F9C700DB581F /* HPControlledPrint.framework */,
 				284865160736011911c6b816 /* CFNetwork.framework */,
 				a0be7cfb04b652e2f8bf395c /* calabash.framework */,
 			);
@@ -139,7 +140,6 @@
 			isa = PBXGroup;
 			children = (
 				3704FFAB1BC7092300DB581F /* Frameworks */,
-				3704FFA71BC6F9C700DB581F /* HPControlledPrint.framework */,
 				375530C41B3A19BD00659D37 /* HPControlledPrintConsumer */,
 				375530DA1B3A19BD00659D37 /* HPControlledPrintConsumerTests */,
 				375530C31B3A19BD00659D37 /* Products */,
