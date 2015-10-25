@@ -83,6 +83,8 @@ namespace net_mobilewebprint {
   struct mdns_t;
   struct mq_t;
 
+  extern controller_base_t * g_controller;
+
   extern mq_t & get_mq(controller_base_t &);
   extern int    num_allocations;
   extern int    num_buffer_allocations;
@@ -217,6 +219,8 @@ namespace net_mobilewebprint {
   void log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2);
   void log_vs(int level, char const * tags, char const * format, string const & s1, string const & s2, string const & s3);
   void log_e(char const * tag, char const * format, ...);
+
+  void log_vs(int level, char const * tag, char const * format, int, string const & big_str);
 
   typedef unsigned char byte;
 

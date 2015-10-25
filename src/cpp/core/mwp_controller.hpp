@@ -337,6 +337,9 @@ namespace net_mobilewebprint {
     void                      sendTelemetry(string bucket, char const * eventType, serialization_json_t const &);
     void                      sendTelemetry(string bucket, char const * eventType);
 
+    // When the caller has already JSON-ified the data
+    void                      sendTelemetryJson(string bucket, string eventType, string const & json);
+
     template <typename T>
     void                      sendTelemetry(char const * bucketName,
                                             char const * eventType,

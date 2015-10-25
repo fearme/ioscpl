@@ -59,8 +59,10 @@ namespace net_mobilewebprint {
     int      num_soft_network_errors;
 
     uint32   last_status_arrival;
+    uint32   max_status_arrival_delay;
     bool     status_request_pending;
     int      num_status_misses;
+    int      max_num_status_misses;
 
     uint32   status_time;
     uint32   status_interval;
@@ -102,7 +104,7 @@ namespace net_mobilewebprint {
     void set_attr(string const & key, string const & key_lc, string const & value);
 
     string to_json(bool for_debug);
-    void   make_server_json(serialization_json_t & json);
+    void   make_server_json(serialization_json_t & json, bool forFilterPrinters = true);
     bool   is_unknown(char const * purpose) const;
     bool   is_missing();
 
@@ -182,6 +184,7 @@ namespace net_mobilewebprint {
     mq_manual_timer_t         heartbeat;
     mq_manual_timer_t *       printer_list_histo_timer;
     int                       printer_list_histo_bucket;
+    mq_manual_timer_t         printer_list_telemetry_timer;
 
     mq_manual_timer_t         sending_printer_list;
     bool                      printer_list_in_flight;

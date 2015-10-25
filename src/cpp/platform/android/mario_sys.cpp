@@ -100,7 +100,7 @@ extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_startUp(JNI
     sap_api()->register_handler("printer_list", NULL, sap_app_callback);
   }
 
-  return get_api()->start(true, false);
+  return get_api()->start(/* start_scanning= */ true, /* block= */ false);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_reScan(JNIEnv *env, jobject self)

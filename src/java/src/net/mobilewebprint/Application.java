@@ -74,6 +74,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
   }
 
   public void onBootstrap() {
+    // TODO: Only set these when they have some value
     mwp_client.setOption("http_proxy_name", System.getProperty("http.proxyHost"));
     mwp_client.setOption("http_proxy_port", System.getProperty("http.proxyPort"));
   }
@@ -231,6 +232,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       //Client.logD("MobileWebPrint", "88888888888888888888 gspl");
     }
 
+    mwp_client.sendImmediately("getSortedPrinterList_notification", "true");
     return result;
   }
 
@@ -333,6 +335,8 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       printer = printers.get(ip);
     } else {
       printer = new Properties();
+      printer.setProperty("is_supported", "0");
+
       printers.put(ip, printer);
     }
 

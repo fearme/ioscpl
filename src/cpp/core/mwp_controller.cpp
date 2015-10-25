@@ -247,12 +247,13 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     strset  sent;
     for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
       string const & bucketName = it->first;
-      log_v(4, "", "sending bucket %s", bucketName.c_str());
       map<string, serialization_json_t>::const_iterator itMap;
       if ((itMap = buckets.find(bucketName)) != buckets.end()) {
 
         serialization_json_t const &     bucket = itMap->second;
         jsonlist const &                   data = it->second;
+
+        log_v(4, "", "----------------- sending bucket %s %d", bucketName.c_str(), data.size());
 
         serialization_json_t & subjson = json.getObject(bucketName);
         subjson << bucket;
@@ -320,6 +321,22 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
   if (name == "_on_txn_close")                { return _on_txn_close(name, payload, data, extra); }
 
   if (name == "_upstream_response")           { return process_upstream_response(name, payload, data, extra); }
+
+  if (_starts_with(name, "telemetry/")) {
+
+    string bucket   = "jBucket";
+    string event    = "jEvent";
+    strvlist parts  = splitv(name, '/');
+
+    if (parts.size() >= 2) { bucket   = parts[1]; }
+    if (parts.size() >= 3) { event    = parts[2]; }
+
+    byte const * p = payload.const_begin();
+    string value = payload.read_string(p);
+    sendTelemetryJson(bucket, event, value);
+
+    return handled;
+  }
 
   return not_impl;
 }
@@ -434,11 +451,12 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url,
 
   // If we are still resolving /clientStart, then just remember this request
   if (delayed_http_requests == NULL) {
+    log_v(4, "", "Not Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
     return curl_http_post(controller_http_request_t(txn_id, "POST", url, json));
   }
 
   /* otherwise */
-  log_v(2, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
+  log_v(4, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
   delayed_http_requests->push_back(controller_http_request_t(txn_id, "POST", url, json));
   return txn_id;
 }
@@ -471,7 +489,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
     json.set("meta.deviceid", clientId());
   }
 
-  //log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
+  log_vs(5, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
 
   if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
     mini_curl.post_mwp_server(json, request.url, request.txn_id);
@@ -780,6 +798,8 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
 // -----------------------------------------------------------------------------------------------------------------------------------------
 void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, char const * eventType, serialization_json_t const & data_)
 {
+  //log_v(2, "", "sendTelemetry(%s)", eventType);
+
   bool telemetry_preference = flag("telemetry", TELEMETRY_DEFAULT);
 
   uint32 now = get_tick_count();
@@ -787,12 +807,12 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
     if (bucketName == "printerScan") { return; }
   }
 
-  startBucket(bucketName);
+  startBucket(bucketName, now);
 
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
   data.set("eventType", eventType);
-  log_v(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
+  log_vs(5 + (telemetry_preference ? 0 : -1), "", "accumulating telemetry to send: %s: %s", bucketName, data.stringify());
   bucketData[bucketName].push_back(data);
 }
 
@@ -800,6 +820,12 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
 {
   serialization_json_t json;
   sendTelemetry(bucketName, eventType, json);
+}
+
+void net_mobilewebprint::controller_base_t::sendTelemetryJson(string bucketName, string eventType, string const & json_str)
+{
+  // TODO: Be able to send pre-json to the server as JSON
+  sendTelemetry(bucketName.c_str(), eventType.c_str(), "preJson", json_str);
 }
 
 void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint32 start_time /* = 0 */)

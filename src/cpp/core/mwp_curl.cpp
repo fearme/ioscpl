@@ -392,7 +392,7 @@ size_t net_mobilewebprint::curl_connection_t::conn_read_data(void * buffer, size
   size_t num_to_send = min(size*nmemb, request_payload->view.dsize() - 1);    // Dont include terminating NULL
   if (num_to_send == 0) { return 0; }
 
-  log_v(4, "curl_t", "Sending %d\n%s", (int)num_to_send, string((char*)request_payload->view.begin(), request_payload->view.dsize()).c_str());
+  log_vs(4, "curl_t", "Sending %d\n%s", (int)num_to_send, string((char*)request_payload->view.begin(), request_payload->view.dsize()));
   ::memcpy(buffer, request_payload->view.begin(), num_to_send);
   request_payload->view._begin += num_to_send;
   return num_to_send;

@@ -31,7 +31,7 @@ static net_mobilewebprint::printer_list_t * g_printer_list = NULL;
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
   : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
-    num_soft_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    num_soft_network_errors(0), max_status_arrival_delay(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0), max_num_status_misses(0),
     status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
@@ -39,7 +39,7 @@ net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_, string const & ip_)
   : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
-    num_soft_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    num_soft_network_errors(0), max_status_arrival_delay(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0), max_num_status_misses(0),
     status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
@@ -547,6 +547,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_t::on_s
 
       if (status_request_pending) {
         num_status_misses += 1;
+        max_num_status_misses = max(max_num_status_misses, num_status_misses);
       }
 
       controller.snmp.send_status_request(ip, oid);
@@ -582,7 +583,7 @@ std::string net_mobilewebprint::printer_t::to_json(bool for_debug)
   return result;
 }
 
-void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json)
+void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json, bool forFilterPrinters)
 {
   json.set("ip", ip);
 
@@ -590,6 +591,19 @@ void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json
   if (_1284_device_id.length() > 0)   { json.set("deviceId", _1284_device_id); }
 
   json.set(attrs);
+
+  if (!forFilterPrinters) {
+    if (is_supported != NULL)         { json.set("is_supported", *is_supported); }
+
+    json.set("num_is_supported_asks", num_is_supported_asks);
+    json.set("score", score());
+
+    json.set("num_soft_network_errors", num_soft_network_errors);
+    json.set("num_status_misses", num_status_misses);
+    json.set("max_num_status_misses", max_num_status_misses);
+    json.set("last_status_arrival_ago", _time_since(last_status_arrival));
+    json.set("max_status_arrival_delay", max_status_arrival_delay);
+  }
 }
 
 bool net_mobilewebprint::printer_t::is_unknown(char const * purpose) const
@@ -617,12 +631,14 @@ bool net_mobilewebprint::printer_t::is_missing()
 
   // Log when the printer is "almost" missing
   if (num_status_misses > 2 && _time_since(last_status_arrival) < missing_threshold + 5000) {
-    log_v(2, "", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    log_v(2, "ttt", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
   }
+
+  max_status_arrival_delay= max(max_status_arrival_delay, _time_since(last_status_arrival));
 
   // Default 10.5 seconds of no status messages == the-printer-is-missing
   if (_time_since(last_status_arrival) > missing_threshold) {
-    //log_v(2, "", "printer missing(%15s): %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    //log_v(2, "ttt", "printer missing(%15s): %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
     return true;
   }
 
@@ -648,6 +664,7 @@ net_mobilewebprint::printer_list_t::printer_list_t(controller_base_t &controller
     heartbeat(0, 100),
     printer_list_histo_timer(NULL),
     printer_list_histo_bucket(0),
+    printer_list_telemetry_timer(0, 5000),
     sending_printer_list(0, 2000, false),
     send_scan_done(NULL),
     send_scan_done_zero_printers(NULL),
@@ -692,7 +709,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
   // BBB - Best breakpoint to watch the timing of the printer scan, and PRINTER_SCAN_DONE
   if (controller.flag("scanWatchdog", true) && watchdog != NULL && watchdog->has_elapsed(now)) {
-    log_v(2, "", "-------------- %8d: %8d %8d _Z %8d _X %8d until PRINTER_SCAN_DONE, printer_list in flight: %d time until send list: %d, unknowns %d/%d",
+    log_v(2, "ttt", "-------------- %8d: %8d %8d _Z %8d _X %8d until PRINTER_SCAN_DONE, printer_list in flight: %d time until send list: %d, unknowns %d/%d",
                   now - start_time,
                   send_scan_done                == NULL ? -999 : send_scan_done->time_remaining(now),
                   send_scan_done_zero_printers  == NULL ? -999 : send_scan_done_zero_printers->time_remaining(now),
@@ -705,7 +722,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
   }
 
   if (silencer != NULL && silencer->has_elapsed(now)) {
-    log_v(3, "", "-----------------------------------------------------------QUIET-------------------------------------");
+    log_v(3, "ttt", "-----------------------------------------------------------QUIET-------------------------------------");
 
     delete watchdog;
     watchdog = NULL;
@@ -754,6 +771,14 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
     }
   }
 
+  if (printer_list_telemetry_timer.has_elapsed(now)) {
+    serialization_json_t json;
+    serialization_json_t & sub_json = json.getObject("printers");
+
+    int count = make_server_json(sub_json);
+    controller.sendTelemetry("printers", "printerReport", json);
+  }
+
   //log_d(1, "", "--------**********-----------------------------------------just checking %d", num_printer_list_sends);
   if (num_printer_list_sends < 100) {
 
@@ -769,7 +794,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
     } else if (sending_printer_list.time_remaining() > 0x00ffffff) {
       send_printer_list = (has_unknown_is_supported() != NULL);
       if (send_printer_list) {
-        log_v(2, "", "------------- have %s unknown is_supported printer", has_unknown_is_supported()->ip.c_str());
+        log_v(2, "ttt", "------------- have %s unknown is_supported printer", has_unknown_is_supported()->ip.c_str());
         check_for_unknowns = true;
       }
     }
@@ -779,7 +804,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
       serialization_json_t & sub_json = json.getObject("printers");
       if ((count = make_server_json(sub_json, "is_supported")) > 0) {
         send_printer_list = true;
-        log_v(2, "", "------------- have %d unknown is_supported printers", count);
+        log_v(2, "ttt", "------------- have %d unknown is_supported printers", count);
       }
     }
 
@@ -789,12 +814,14 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
       if (printer_list_in_flight) {
         // Was supposed to send the list, but couldn't... Try again in a few.
-        log_v(4, "", "-----------------------------------------------------------Delay -- check send filtered printers later #%d", num_printer_list_sends);
+        log_v(4, "ttt", "-----------------------------------------------------------Delay -- check send filtered printers later #%d", num_printer_list_sends);
         sending_printer_list.time = get_tick_count();
       } else {
-        log_v(3, "", "-----------------------------------------------------------sending filterPrinters %d/%d: #%d", count, by_ip.size(), num_printer_list_sends);
+        log_v(3, "ttt", "-----------------------------------------------------------sending filterPrinters %d/%d: #%d", count, by_ip.size(), num_printer_list_sends);
+
         string pathname = string("/filterPrinters?count=") + mwp_itoa(count) + "&total=" + mwp_itoa(by_ip.size());
         string stream_name = controller.send_upstream("info_for_printers", pathname, json, new printer_list_response_t());
+
         if (send_scan_done != NULL) { send_scan_done->delay(250); }
         printer_list_in_flight = true;
         num_printer_list_sends += 1;
@@ -819,19 +846,19 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
       int count = unknown_is_supported_count();
       sendScanDoneDelay = 2000 + (20 * count);
 
-      log_v(3, "", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer (of %d) with unknown is_supported |%s|", sendScanDoneDelay, count, printer->ip.c_str());
+      log_v(3, "ttt", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer (of %d) with unknown is_supported |%s|", sendScanDoneDelay, count, printer->ip.c_str());
 
     } else if (printer_list_in_flight) {
 
       // Try again next time
       sendScanDoneDelay = 500;
 
-      log_v(3, "", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer list is in fight", sendScanDoneDelay);
+      log_v(3, "ttt", "--------------------- delaying PRINTER_SCAN_DONE(%d): printer list is in fight", sendScanDoneDelay);
 
     } else {
 
       // Send the scan done message
-      log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending PRINTER_SCAN_DONE");
+      log_v(2, "ttt", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending PRINTER_SCAN_DONE");
       controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
       controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "normal");
 
@@ -866,7 +893,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 //    } else {
       if (send_scan_done_last_resort->has_elapsed(now)) {
 
-        log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
+        log_v(2, "ttt", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending last resort PRINTER_SCAN_DONE");
         controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
         controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "lastResort");
 
@@ -888,7 +915,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
 
   if (send_scan_done_zero_printers != NULL && send_scan_done_zero_printers->has_elapsed(now)) {
     if (by_ip.size() == 0) {
-      log_v(2, "", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending zero-printer PRINTER_SCAN_DONE");
+      log_v(2, "ttt", "-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++----------------------------- sending zero-printer PRINTER_SCAN_DONE");
       controller.send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, "", "", "", "", "PRINTER_SCAN_DONE", (int)100, (int)1);
       controller.sendTelemetry("printerScan", "PRINTER_SCAN_DONE", "type", "zeroPrintersTimeout");
 
@@ -977,7 +1004,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
     }
 
     /* otherwise -- The WiFi has gone away!!! */
-    log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
+    log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
 
     printer_t * printer = NULL;
 
@@ -1002,8 +1029,23 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
     string value = payload.read_string(p);
     controller.sendTelemetry("network", "CONNECTIVITY_ENABLED", "state", value);
     if (value == "true") {
-      log_v(2, "", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
+      log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
       mq.send("re_scan_for_printers");
+    }
+
+  } else if (name == "getSortedPrinterList_notification") {
+
+    if (controller.flag("telemetryGSPL", /* default= */ true)) {
+      // The app is asking for the printer list
+      int count = 0;
+
+      serialization_json_t json;
+      serialization_json_t & sub_json = json.getObject("printers");
+
+      count = make_server_json(sub_json);
+      json.set("count", count);
+
+      controller.sendTelemetry("app", "getSortedPrinterList", json);
     }
   }
 
@@ -1021,7 +1063,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
-    log_v(4, "", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
+    log_v(4, "ttt", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
     if (sub_json && sub_json->has("ip")) {
 
       string const & ip             = sub_json->lookup("ip");
@@ -1416,13 +1458,13 @@ bool net_mobilewebprint::printer_list_t::cleanup()
     if ((printer = it->second) != NULL) {
       if (printer->is_missing()) {
 
-        if (printer->connection_id != 0) {
-          printer->attrs_lc.insert(make_pair("status", "NETWORK_ERROR"));
-          controller.job_stat(printer->connection_id, "status", "NETWORK_ERROR");
-          controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
-        }
+        if (controller.flag("featurePrinterMissing", /* default= */ false)) {
+          if (printer->connection_id != 0) {
+            printer->attrs_lc.insert(make_pair("status", "NETWORK_ERROR"));
+            controller.job_stat(printer->connection_id, "status", "NETWORK_ERROR");
+            controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
+          }
 
-        if (controller.flag("featurePrinterMissing", /* default= */ true)) {
           printer_enum_id += 1;
           controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
 
@@ -1585,15 +1627,20 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
   plist_t::const_iterator it;
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
+      if (purpose != NULL) {
+        if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
 
-        // Do not ask forever
-        if (printer->num_is_supported_asks < 4) {
-          printer->make_server_json(json.getObject(dashify_key(printer->ip)));
-          count += 1;
-        } else {
-          printer->is_supported = new bool(false);
+          // Do not ask forever
+          if (printer->num_is_supported_asks < 4) {
+            printer->make_server_json(json.getObject(dashify_key(printer->ip)));
+            count += 1;
+          } else {
+            printer->is_supported = new bool(false);
+          }
         }
+      } else {
+        printer->make_server_json(json.getObject(dashify_key(printer->ip)), false);
+        count += 1;
       }
     }
   }
