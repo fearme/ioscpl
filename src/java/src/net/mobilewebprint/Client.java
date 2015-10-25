@@ -89,9 +89,7 @@ public class Client {
           _setItemProperty(item, "available",      nis[i].isAvailable() ? "true" : "false");
           _setItemProperty(item, "connected",      nis[i].isConnected() ? "true" : "false");
 
-          logD(TAG, new JSONObject(item).toString());
           sendImmediately("telemetry/network/wifiState", new JSONObject(item).toString().replace("\"", "'"));
-
         }
 
         WifiManager  wifiManager = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);

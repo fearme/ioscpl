@@ -31,7 +31,7 @@ static net_mobilewebprint::printer_list_t * g_printer_list = NULL;
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
   : controller(controller_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
-    num_soft_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    num_soft_network_errors(0), max_status_arrival_delay(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0), max_num_status_misses(0),
     status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
@@ -39,7 +39,7 @@ net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_)
 
 net_mobilewebprint::printer_t::printer_t(controller_base_t & controller_, string const & ip_)
   : controller(controller_), ip(ip_), port(-1), connection(NULL), connection_id(0), bjnp_connection(NULL),
-    num_soft_network_errors(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0),
+    num_soft_network_errors(0), max_status_arrival_delay(0), last_status_arrival(0), status_request_pending(false), num_status_misses(0), max_num_status_misses(0),
     status_interval(status_interval_normal), status_time(0),
     is_supported(NULL), num_is_supported_asks(0)
 {
@@ -547,6 +547,7 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_t::on_s
 
       if (status_request_pending) {
         num_status_misses += 1;
+        max_num_status_misses = max(max_num_status_misses, num_status_misses);
       }
 
       controller.snmp.send_status_request(ip, oid);
@@ -596,6 +597,12 @@ void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json
 
     json.set("num_is_supported_asks", num_is_supported_asks);
     json.set("score", score());
+
+    json.set("num_soft_network_errors", num_soft_network_errors);
+    json.set("num_status_misses", num_status_misses);
+    json.set("max_num_status_misses", max_num_status_misses);
+    json.set("last_status_arrival_ago", _time_since(last_status_arrival));
+    json.set("max_status_arrival_delay", max_status_arrival_delay);
   }
 }
 
@@ -624,12 +631,14 @@ bool net_mobilewebprint::printer_t::is_missing()
 
   // Log when the printer is "almost" missing
   if (num_status_misses > 2 && _time_since(last_status_arrival) < missing_threshold + 5000) {
-    log_v(2, "", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    log_v(2, "ttt", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
   }
+
+  max_status_arrival_delay= max(max_status_arrival_delay, _time_since(last_status_arrival));
 
   // Default 10.5 seconds of no status messages == the-printer-is-missing
   if (_time_since(last_status_arrival) > missing_threshold) {
-    //log_v(2, "", "printer missing(%15s): %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    //log_v(2, "ttt", "printer missing(%15s): %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
     return true;
   }
 
@@ -655,6 +664,7 @@ net_mobilewebprint::printer_list_t::printer_list_t(controller_base_t &controller
     heartbeat(0, 100),
     printer_list_histo_timer(NULL),
     printer_list_histo_bucket(0),
+    printer_list_telemetry_timer(0, 5000),
     sending_printer_list(0, 2000, false),
     send_scan_done(NULL),
     send_scan_done_zero_printers(NULL),
@@ -759,6 +769,14 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
       delete printer_list_histo_timer;
       printer_list_histo_timer = NULL;
     }
+  }
+
+  if (printer_list_telemetry_timer.has_elapsed(now)) {
+    serialization_json_t json;
+    serialization_json_t & sub_json = json.getObject("printers");
+
+    int count = make_server_json(sub_json);
+    controller.sendTelemetry("printers", "printerReport", json);
   }
 
   //log_d(1, "", "--------**********-----------------------------------------just checking %d", num_printer_list_sends);
@@ -1045,7 +1063,7 @@ void net_mobilewebprint::printer_list_t::handle_filter_printers(int code, std::s
   bool have_sent_begin_msg = false;
   for (int i = 0; json.has(i); ++i) {
     json_t const * sub_json = json.get(i);
-    log_v(3, "ttt", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
+    log_v(4, "ttt", "----> /filterPrinter %s", sub_json->debug_string(A(string("MFG"), string("name")), A(string("mac"), string("is_supported"), string("ip"), string("status"))).c_str());
     if (sub_json && sub_json->has("ip")) {
 
       string const & ip             = sub_json->lookup("ip");
@@ -1440,13 +1458,13 @@ bool net_mobilewebprint::printer_list_t::cleanup()
     if ((printer = it->second) != NULL) {
       if (printer->is_missing()) {
 
-        if (printer->connection_id != 0) {
-          printer->attrs_lc.insert(make_pair("status", "NETWORK_ERROR"));
-          controller.job_stat(printer->connection_id, "status", "NETWORK_ERROR");
-          controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
-        }
+        if (controller.flag("featurePrinterMissing", /* default= */ false)) {
+          if (printer->connection_id != 0) {
+            printer->attrs_lc.insert(make_pair("status", "NETWORK_ERROR"));
+            controller.job_stat(printer->connection_id, "status", "NETWORK_ERROR");
+            controller.job_stat(printer->connection_id, "jobStatus", "NETWORK_ERROR");
+          }
 
-        if (controller.flag("featurePrinterMissing", /* default= */ true)) {
           printer_enum_id += 1;
           controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
 
