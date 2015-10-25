@@ -247,14 +247,13 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     strset  sent;
     for (map<string, jsonlist>::const_iterator it = bucketData.begin(); it != bucketData.end(); ++it) {
       string const & bucketName = it->first;
-      log_v(3, "", "----------------- sending bucket %s", bucketName.c_str());
       map<string, serialization_json_t>::const_iterator itMap;
       if ((itMap = buckets.find(bucketName)) != buckets.end()) {
 
         serialization_json_t const &     bucket = itMap->second;
         jsonlist const &                   data = it->second;
 
-        log_v(3, "", "----------------- sending bucket %s %d", bucketName.c_str(), data.size());
+        log_v(4, "", "----------------- sending bucket %s %d", bucketName.c_str(), data.size());
 
         serialization_json_t & subjson = json.getObject(bucketName);
         subjson << bucket;
@@ -436,11 +435,12 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url,
 
   // If we are still resolving /clientStart, then just remember this request
   if (delayed_http_requests == NULL) {
+    log_v(4, "", "Not Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
     return curl_http_post(controller_http_request_t(txn_id, "POST", url, json));
   }
 
   /* otherwise */
-  log_v(2, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
+  log_v(4, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
   delayed_http_requests->push_back(controller_http_request_t(txn_id, "POST", url, json));
   return txn_id;
 }
@@ -473,7 +473,7 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
     json.set("meta.deviceid", clientId());
   }
 
-  //log_vs(3, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
+  log_vs(5, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
 
   if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
     mini_curl.post_mwp_server(json, request.url, request.txn_id);

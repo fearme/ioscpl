@@ -1240,14 +1240,26 @@ bool net_mobilewebprint::serialization_json_t::_normalize_keys(string & parent, 
 
 net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(string const & value_)
 {
-  value = value_;
   type  = string_type;
+
+  value = value_;
+  for (char * p = (char*)value.c_str(); *p != 0; ++p) {
+    if (*p == '"') {
+      *p = '\'';
+    }
+  }
 }
 
 net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(char const * value_)
 {
-  value = value_;
   type  = string_type;
+
+  value = value_;
+  for (char * p = (char*)value.c_str(); *p != 0; ++p) {
+    if (*p == '"') {
+      *p = '\'';
+    }
+  }
 }
 
 net_mobilewebprint::serialization_json_t::serialization_json_elt_t::serialization_json_elt_t(int value_)
@@ -1538,24 +1550,33 @@ void net_mobilewebprint::log_w(char const * tags, char const * format, ...)
 
 void net_mobilewebprint::log_v(int level, char const * tags, char const * format, ...)
 {
-  //return;
-  if (!get_flag("verbose"))                   { return; }
-  if (level > get_option("v_log_level", 0))   { return; }
-  if (!_should_log(tags))                     { return; }
+  bool logit = true;
 
-  va_list argList;
+  if (!get_flag("verbose"))                   { logit = false; }
+  if (level > get_option("v_log_level", 0))   { logit = false; }
+  if (!_should_log(tags))                     { logit = false; }
+
+//  // Sometimes, you cannot track where a log entry came from
+//  char b2[1000];
+//  sprintf(b2, "log_v(%d, %s, %s)", level, tags, format);
+//  log_v(b2, (log_param_t)NULL);
 
   char buffer[2048];
+
+  va_list argList;
 
   va_start(argList, format);
   vsprintf(buffer, format, argList);
   va_end(argList);
 
-  log_v(buffer, (log_param_t)NULL);
+  // Maybe log it
+  if (logit) {
+    log_v(buffer, (log_param_t)NULL);
+  }
 
+  // Always send telemetry
   if (_has_tag(tags, "ttt") && g_controller) {
-    //log_v("log_v done", (log_param_t)NULL);
-    g_controller->sendTelemetry("log_v", "log", "message", buffer);
+    g_controller->sendTelemetry("log_v", "log", "logMessage", buffer);
   }
 }
 
@@ -1630,7 +1651,7 @@ void net_mobilewebprint::log_vs(int level, char const * tags, char const * forma
   char * buffer = new char[len];
   ::memset(buffer, 0, len);
   sprintf(buffer, format, s1.c_str());
-  log_v("%s", buffer);
+  log_v(buffer, (log_param_t)NULL);
   delete[] buffer;
 }
 
@@ -1653,7 +1674,7 @@ void net_mobilewebprint::log_vs(int level, char const * tags, char const * forma
   char * buffer = new char[len];
   ::memset(buffer, 0, len);
   sprintf(buffer, format, s1.c_str(), s2.c_str());
-  log_v("%s", buffer);
+  log_v(buffer, (log_param_t)NULL);
   delete[] buffer;
 }
 
@@ -1676,7 +1697,30 @@ void net_mobilewebprint::log_vs(int level, char const * tags, char const * forma
   char * buffer = new char[len];
   ::memset(buffer, 0, len);
   sprintf(buffer, format, s1.c_str(), s2.c_str(), s3.c_str());
-  log_v("%s", buffer);
+  log_v(buffer, (log_param_t)NULL);
+  delete[] buffer;
+}
+
+void net_mobilewebprint::log_vs(int level, char const * tags, char const * format, int n, string const & s1)
+{
+  //return;
+  if (!get_flag("verbose"))                   { return; }
+  if (level > get_option("v_log_level", 0))   { return; }
+  if (!_should_log(tags))                     { return; }
+
+  int len = ::strlen(format) + 100 + s1.length();
+
+  // If the log entry will be small enough, just use the normal
+  if (len < 1800) {
+    log_v(level, tags, format, n, s1.c_str());
+    return;
+  }
+
+  /* otherwise -- allocate a buffer and use that */
+  char * buffer = new char[len];
+  ::memset(buffer, 0, len);
+  sprintf(buffer, format, n, s1.c_str());
+  log_v(buffer, (log_param_t)NULL);
   delete[] buffer;
 }
 
