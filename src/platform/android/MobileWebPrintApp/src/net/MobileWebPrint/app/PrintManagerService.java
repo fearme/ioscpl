@@ -72,6 +72,8 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
 
     mwp_client.setFlag("featurePrinterMissing", true);
 
+    mwp_client.setFlag("telemetryGSPL", false);
+
     mwp_client.RegisterPrinterListChangesListener(this);
     mwp_client.RegisterPrintProgressChangesListener(this);
     mwp_client.start();

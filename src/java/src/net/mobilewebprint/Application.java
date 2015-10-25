@@ -74,6 +74,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
   }
 
   public void onBootstrap() {
+    // TODO: Only set these when they have some value
     mwp_client.setOption("http_proxy_name", System.getProperty("http.proxyHost"));
     mwp_client.setOption("http_proxy_port", System.getProperty("http.proxyPort"));
   }

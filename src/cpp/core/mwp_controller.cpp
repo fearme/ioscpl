@@ -322,6 +322,22 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
 
   if (name == "_upstream_response")           { return process_upstream_response(name, payload, data, extra); }
 
+  if (_starts_with(name, "telemetry/")) {
+
+    string bucket   = "jBucket";
+    string event    = "jEvent";
+    strvlist parts  = splitv(name, '/');
+
+    if (parts.size() >= 2) { bucket   = parts[1]; }
+    if (parts.size() >= 3) { event    = parts[2]; }
+
+    byte const * p = payload.const_begin();
+    string value = payload.read_string(p);
+    sendTelemetryJson(bucket, event, value);
+
+    return handled;
+  }
+
   return not_impl;
 }
 
@@ -796,7 +812,7 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
   data.set("eventType", eventType);
-  log_vs(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName, data.stringify());
+  log_vs(5 + (telemetry_preference ? 0 : -1), "", "accumulating telemetry to send: %s: %s", bucketName, data.stringify());
   bucketData[bucketName].push_back(data);
 }
 
@@ -804,6 +820,12 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
 {
   serialization_json_t json;
   sendTelemetry(bucketName, eventType, json);
+}
+
+void net_mobilewebprint::controller_base_t::sendTelemetryJson(string bucketName, string eventType, string const & json_str)
+{
+  // TODO: Be able to send pre-json to the server as JSON
+  sendTelemetry(bucketName.c_str(), eventType.c_str(), "preJson", json_str);
 }
 
 void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint32 start_time /* = 0 */)

@@ -1017,16 +1017,18 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
   } else if (name == "getSortedPrinterList_notification") {
 
-    // The app is asking for the printer list
-    int count = 0;
+    if (controller.flag("telemetryGSPL", /* default= */ true)) {
+      // The app is asking for the printer list
+      int count = 0;
 
-    serialization_json_t json;
-    serialization_json_t & sub_json = json.getObject("printers");
+      serialization_json_t json;
+      serialization_json_t & sub_json = json.getObject("printers");
 
-    count = make_server_json(sub_json);
-    json.set("count", count);
+      count = make_server_json(sub_json);
+      json.set("count", count);
 
-    controller.sendTelemetry("app", "getSortedPrinterList", json);
+      controller.sendTelemetry("app", "getSortedPrinterList", json);
+    }
   }
 
   return handled;
