@@ -212,6 +212,7 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       //Client.logD("MobileWebPrint", "88888888888888888888 gspl");
     }
 
+    mwp_client.sendImmediately("getSortedPrinterList_notification", "true");
     return result;
   }
 

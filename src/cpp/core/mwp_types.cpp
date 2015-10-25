@@ -1556,6 +1556,9 @@ void net_mobilewebprint::log_v(int level, char const * tags, char const * format
   if (level > get_option("v_log_level", 0))   { logit = false; }
   if (!_should_log(tags))                     { logit = false; }
 
+  // Do not bother if no one will see
+  if (!logit && !(_has_tag(tags, "ttt") && g_controller)) { return; }
+
 //  // Sometimes, you cannot track where a log entry came from
 //  char b2[1000];
 //  sprintf(b2, "log_v(%d, %s, %s)", level, tags, format);

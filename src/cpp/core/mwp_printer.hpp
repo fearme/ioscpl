@@ -102,7 +102,7 @@ namespace net_mobilewebprint {
     void set_attr(string const & key, string const & key_lc, string const & value);
 
     string to_json(bool for_debug);
-    void   make_server_json(serialization_json_t & json);
+    void   make_server_json(serialization_json_t & json, bool forFilterPrinters = true);
     bool   is_unknown(char const * purpose) const;
     bool   is_missing();
 

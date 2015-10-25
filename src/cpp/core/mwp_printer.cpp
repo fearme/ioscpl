@@ -582,7 +582,7 @@ std::string net_mobilewebprint::printer_t::to_json(bool for_debug)
   return result;
 }
 
-void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json)
+void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json, bool forFilterPrinters)
 {
   json.set("ip", ip);
 
@@ -590,6 +590,13 @@ void net_mobilewebprint::printer_t::make_server_json(serialization_json_t & json
   if (_1284_device_id.length() > 0)   { json.set("deviceId", _1284_device_id); }
 
   json.set(attrs);
+
+  if (!forFilterPrinters) {
+    if (is_supported != NULL)         { json.set("is_supported", *is_supported); }
+
+    json.set("num_is_supported_asks", num_is_supported_asks);
+    json.set("score", score());
+  }
 }
 
 bool net_mobilewebprint::printer_t::is_unknown(char const * purpose) const
@@ -793,8 +800,10 @@ net_mobilewebprint::mq_enum::e_handle_result net_mobilewebprint::printer_list_t:
         sending_printer_list.time = get_tick_count();
       } else {
         log_v(3, "ttt", "-----------------------------------------------------------sending filterPrinters %d/%d: #%d", count, by_ip.size(), num_printer_list_sends);
+
         string pathname = string("/filterPrinters?count=") + mwp_itoa(count) + "&total=" + mwp_itoa(by_ip.size());
         string stream_name = controller.send_upstream("info_for_printers", pathname, json, new printer_list_response_t());
+
         if (send_scan_done != NULL) { send_scan_done->delay(250); }
         printer_list_in_flight = true;
         num_printer_list_sends += 1;
@@ -1005,6 +1014,19 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
       log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
       mq.send("re_scan_for_printers");
     }
+
+  } else if (name == "getSortedPrinterList_notification") {
+
+    // The app is asking for the printer list
+    int count = 0;
+
+    serialization_json_t json;
+    serialization_json_t & sub_json = json.getObject("printers");
+
+    count = make_server_json(sub_json);
+    json.set("count", count);
+
+    controller.sendTelemetry("app", "getSortedPrinterList", json);
   }
 
   return handled;
@@ -1585,15 +1607,20 @@ int net_mobilewebprint::printer_list_t::make_server_json(serialization_json_t & 
   plist_t::const_iterator it;
   for (it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
+      if (purpose != NULL) {
+        if (printer->is_unknown(purpose) && !printer->is_unknown("deviceId")) {
 
-        // Do not ask forever
-        if (printer->num_is_supported_asks < 4) {
-          printer->make_server_json(json.getObject(dashify_key(printer->ip)));
-          count += 1;
-        } else {
-          printer->is_supported = new bool(false);
+          // Do not ask forever
+          if (printer->num_is_supported_asks < 4) {
+            printer->make_server_json(json.getObject(dashify_key(printer->ip)));
+            count += 1;
+          } else {
+            printer->is_supported = new bool(false);
+          }
         }
+      } else {
+        printer->make_server_json(json.getObject(dashify_key(printer->ip)), false);
+        count += 1;
       }
     }
   }

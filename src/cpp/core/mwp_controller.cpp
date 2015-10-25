@@ -791,12 +791,12 @@ void net_mobilewebprint::controller_base_t::sendTelemetry(string bucketName, cha
     if (bucketName == "printerScan") { return; }
   }
 
-  startBucket(bucketName);
+  startBucket(bucketName, now);
 
   serialization_json_t data(data_);
   data.set("eventTime", (int)now);
   data.set("eventType", eventType);
-  log_v(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName.c_str(), data.stringify().c_str());
+  log_vs(4 + (telemetry_preference ? 0 : 2), "", "accumulating telemetry to send: %s: %s", bucketName, data.stringify());
   bucketData[bucketName].push_back(data);
 }
 
