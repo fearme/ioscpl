@@ -4,6 +4,7 @@
 #import "HPAsyncHttpGet.h"
 #import "HPServices.h"
 #import "HPMetricsSender.h"
+#import "HPProviderNotifier.h"
 #import "HPTokenValidator.h"
 
 
@@ -25,17 +26,23 @@ NSString *const kStatusCouponPrintFailed    = @"FAILED_PRINT_COUPON_DOCUMENT";
 NSString *const kStatusCouponPrintCanceled  = @"CANCELED_PRINT_COUPON_DOCUMENT";
 NSString *const kStatusCouponPrintDeferred  = @"COUPON_DOCUMENT_DEFERRED";
 
-NSString *const kPrinterPrinting   = @"PRINTING";
-NSString *const kPrinterIdle       = @"IDLE";
-NSString *const kPrinterCanceling  = @"CANCELING PRINTING";
-NSString *const kPrinterDone       = @"Done";
+NSString *const kPrinterStatusPrinting      = @"PRINTING";
+NSString *const kPrinterStatusIdle          = @"IDLE";
+NSString *const kPrinterStatusCanceling     = @"CANCELING PRINTING";
+NSString *const kPrinterStatusDone          = @"Done";
+NSString *const kPrinterStatusUnknown       = @"UNKNOWN";
+NSString *const kPrinterStatusNetworkError  = @"NETWORK_ERROR";
+NSString *const kPrinterStatusUpstreamError = @"UPSTREAM_ERROR";
 
-NSString *const kProviderQples     = @"QPLES";
+NSString *const kMetricTypeUserData         = @"USER_DATA";
+NSString *const kMetricTypeErrorMessage     = @"ERROR_MESSAGE";
 
-NSString *const kCaymanRootUrlDev        = @"https://cayman-dev-02.cloudpublish.com";
-NSString *const kCaymanRootUrlQa         = @"https://cayman-qa.cloudpublish.com";
-NSString *const kCaymanRootUrlStaging    = @"https://cayman-stg.cloudpublish.com";
-NSString *const kCaymanRootUrlProduction = @"https://cayman-prod.cloudpublish.com";
+NSString *const kProviderQples              = @"QPLES";
+
+NSString *const kCaymanRootUrlDev           = @"https://cayman-dev-02.cloudpublish.com";
+NSString *const kCaymanRootUrlQa            = @"https://cayman-qa.cloudpublish.com";
+NSString *const kCaymanRootUrlStaging       = @"https://cayman-stg.cloudpublish.com";
+NSString *const kCaymanRootUrlProduction    = @"https://cayman-prod.cloudpublish.com";
 
 
 static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
@@ -119,6 +126,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     char const * p1 = (p1_ != NULL ? (char const *)p1_ : "");
     char const * p2 = (params != NULL ? params->p2 != NULL ? (char const *)params->p2 : "" : "");
     char const * p3 = (params != NULL ? params->p3 != NULL ? (char const *)params->p3 : "" : "");
+    
     //char const * p4 = (params != NULL ? params->p4 != NULL ? (char const *)params->p4 : "" : "");
     //char const * p5 = (params != NULL ? params->p5 != NULL ? (char const *)params->p5 : "" : "");
     
@@ -195,13 +203,15 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         //NSString *_p5 = [NSString stringWithCString:p5 encoding:NSASCIIStringEncoding];
         //NSString *_p2 = [NSString stringWithUTF8String:p2];
         
-        if (!([_p3 isEqualToString:kPrinterPrinting] || [_p3 isEqualToString:kPrinterIdle] || [_p3 isEqualToString:kPrinterCanceling])) {
+        if (!([_p3 isEqualToString:kPrinterStatusPrinting] || [_p3 isEqualToString:kPrinterStatusIdle] || [_p3 isEqualToString:kPrinterStatusCanceling])) {
             _p2 = [NSString stringWithFormat:@"%@ %@", _p2, _p3];// [_p2 stringByAppendingString:_p3];
         }
         
         [self sendPrinterStatus:_p2];
        
         [self sendFinalPrintJobMetrics:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
+        
+        [self notifyProviderOfPrintStatus:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
         
         //printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message, ident, (int)transactionId, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
@@ -212,33 +222,61 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     
 }
 
+- (void)notifyProviderOfPrintStatus:(HPPrintJobRequest *)printJob withUserVisibleStatus:(NSString *)userVisibleStatus withPrinterStatus:(NSString *)printerStatus
+{
+    NSLog(@"userVisibleStatus: %@", userVisibleStatus);
+    NSLog(@"printerStatus: %@", printerStatus);
+    
+    //IMPORTANT: The order of the if conditions matters. Do not change.
+    //  The reason is that when a print job is cancelled, Mario sends a canceling status followed by a
+    //  "success" status (which is "Done" + "Idle"). During a print cancel, if we check for
+    //  "success" first, we never process the cancel status.
+    if (!printJob.providerNotificationSent) {
+        // if canceling, unknown, or network error
+        if ([printerStatus isEqualToString:kPrinterStatusCanceling] || [printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
+            HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
+            [notifier sendPrintStatus:@"error" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
+            printJob.providerNotificationSent = YES;
+            
+        // if success or upstream error
+        } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
+            HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
+            [notifier sendPrintStatus:@"success" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
+            printJob.providerNotificationSent = YES;
+        }
+    }
+}
+
 - (void)sendFinalPrintJobMetrics:(HPPrintJobRequest *)printJob withUserVisibleStatus:(NSString *)userVisibleStatus withPrinterStatus:(NSString *)printerStatus
 {
-    
-    //we'll only send these particular print metrics once
-    if (currentPrintJobRequest.finalStatus == nil) {
+    // We'll only send these particular print metrics once.
+    if (!printJob.finalPrintStatusMetricSent) {
+        
         HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-        if ([printerStatus isEqualToString:kPrinterCanceling]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:currentPrintJobRequest forOperation:kStatusCouponPrintCanceled];
-            currentPrintJobRequest.finalStatus = kStatusCouponPrintCanceled;
-            NSLog(@"CANCEL metric sent");
+        
+        // if canceling
+        if ([printerStatus isEqualToString:kPrinterStatusCanceling]) {
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintCanceled metricsType:kMetricTypeUserData];
+            printJob.finalPrintStatusMetricSent = YES;
+            NSLog(@"%@ metric sent", printerStatus);
             
-        } else if ([userVisibleStatus isEqualToString:kPrinterDone] && [printerStatus isEqualToString:kPrinterIdle]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:currentPrintJobRequest forOperation:kStatusCouponPrintSuccess];
-            currentPrintJobRequest.finalStatus = kStatusCouponPrintSuccess;
+        // if unknown or netork error
+        } else if ([printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintFailed metricsType:kMetricTypeErrorMessage];
+            printJob.finalPrintStatusMetricSent = YES;
+            NSLog(@"%@ metric sent", printerStatus);
+            
+        // if success or upstream error
+        } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintSuccess metricsType:kMetricTypeUserData];
+            printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"SUCCESS metric sent");
-            
-        } else if ([printerStatus isEqualToString:@"Failed"]) { //TODO, need to see a fail condition. Currently, mario crashes when network is disconnected or the printer is taken off the network.
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:currentPrintJobRequest forOperation:kStatusCouponPrintFailed];
-            currentPrintJobRequest.finalStatus = kStatusCouponPrintFailed;
-            NSLog(@"FAIL metric sent");
         }
     }
 }
 
 - (void)sendFoundPrinters
 {
-    
     if ([[self printerAttributesDelegate] respondsToSelector:@selector(didReceivePrinters:)]) {
         //make sure we only send printers with IPs, names, and isSupported set
         HPDiscoveredPrinters *printersToSend = [[HPDiscoveredPrinters alloc] init];
@@ -257,6 +295,22 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     if ([[self printerAttributesDelegate] respondsToSelector:@selector(didReceivePrintJobStatus:)]) {
         [self.printerAttributesDelegate didReceivePrintJobStatus:status];
     }
+}
+
+- (NSString *)serverStackAsString
+{
+    NSString *stack;
+    if (currentServerStack == ServerStackDevelopment) {
+        stack = @"DEV";
+    } else if (currentServerStack == ServerStackQa) {
+        stack = @"QA";
+    } else if (currentServerStack == ServerStackStaging) {
+        stack = @"STG";
+    } else {
+        stack = @"PROD";
+    }
+    
+    return stack;
 }
 
 - (void)proxy:(NSString *)host onPort:(NSString *)port
@@ -404,7 +458,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     [self sendPrintJob:tokenId toPrinterIp:selectedPrinter.ipAddress];
     
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forOperation:kStatusCouponPrintRequested];
+    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forOperation:kStatusCouponPrintRequested metricsType:kMetricTypeUserData];
     
     return YES;
 }

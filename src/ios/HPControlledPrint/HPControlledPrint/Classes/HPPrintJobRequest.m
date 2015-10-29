@@ -9,6 +9,7 @@
     self = [super init];
     if (self){
         self.applyExclusion = NO;
+        self.providerNotificationSent = NO;
     }
     return self;
 }

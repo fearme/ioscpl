@@ -17,10 +17,10 @@
 
 @implementation HPMetricsSender
 
-- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation
+- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation metricsType:(NSString *)metricsType
 {
     NSString *blob = @"Print Request Initiated";
-    NSString *blobType = @"USER_DATA";
+    NSString *blobType = metricsType;
     NSString *application = @"CP_SDK";
     NSString *origin = @"IOS";
     NSString *hardwareId = printJobRequest.hardwareId == nil ? @"" : printJobRequest.hardwareId; //used as the UserID
@@ -40,12 +40,12 @@
             [offerIdStr appendString:@"</met:items>"];
         }
     } else {
-        offerIdStr = [[NSMutableString alloc] initWithString:@"<met:items></met:items>"];
+        offerIdStr = [[NSMutableString alloc] initWithString:@""]; //If we don't have any items, we can't send the element
     }
-//    NSLog(@"offerIdStr: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", offerIdStr);
+    //NSLog(@"offerIdStr: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", offerIdStr);
     
     NSString *metricsXml = [NSString stringWithFormat:@"<xml-fragment xmlns:met=\"http://hp.com/sips/services/xml/metrics\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><met:userId>%@</met:userId><met:application>%@</met:application><met:operation>%@</met:operation><met:timestamp>%@</met:timestamp><met:url>%@</met:url><met:vendorId>%@</met:vendorId><met:blobType>%@</met:blobType><met:blob>%@</met:blob>%@<met:origin>%@</met:origin></xml-fragment>", hardwareId, application, operation, metricsTimestamp, printJobRequest.tokenId, [printJobRequest providerAsString], blobType, blob, offerIdStr, origin];
-//    NSLog(@"metricsXml: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", metricsXml);
+    NSLog(@"metricsXml: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", metricsXml);
 
     // Create the request.
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
@@ -61,21 +61,23 @@
         
         if (connectionError == nil) {
             if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
-//                NSLog(@"Response description: %@", [(NSHTTPURLResponse *)response description]);
+                //NSLog(@"Response description: %@", [(NSHTTPURLResponse *)response description]);
                 NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
                 if (statusCode != 200) {
-                    NSLog(@"HPPhotoPrint METRICS:  Response code = %ld", (long)statusCode);
+                    NSLog(@"HPMetricsSender METRICS:  Response code = %ld", (long)statusCode);
                     return;
+                } else {
+                    NSLog(@"HPMetricsSender: The metric was successfully sent.");
                 }
-            }            
+            }
         } else {
-            NSLog(@"HPPhotoPrint METRICS:  Connection error = %@", connectionError);
+            NSLog(@"HPMetricsSender METRICS:  Connection error = %@", connectionError);
         }
     });
     
-//    HPAsyncHttpPost *httpPost = [[HPAsyncHttpPost alloc] init];
-//    httpPost.delegate = self;
-//    [httpPost execute:url withData:metricsXml withContentType:@"application/xml; charset=utf-8"];
+    //HPAsyncHttpPost *httpPost = [[HPAsyncHttpPost alloc] init];
+    //httpPost.delegate = self;
+    //[httpPost execute:url withData:metricsXml withContentType:@"application/xml; charset=utf-8"];
 }
 
 #pragma mark - HPAsyncHttpDelegate
