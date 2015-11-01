@@ -1126,7 +1126,7 @@ net_mobilewebprint::printer_t * net_mobilewebprint::printer_list_t::has_unknown_
   printer_t * printer = NULL;
   for (plist_t::iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown("is_supported") && !printer->is_unknown("deviceId")) {
+      if (printer->is_unknown("is_supported")) {
         return printer;
       }
     }
@@ -1142,7 +1142,7 @@ int net_mobilewebprint::printer_list_t::unknown_is_supported_count()
   printer_t * printer = NULL;
   for (plist_t::iterator it = by_ip.begin(); it != by_ip.end(); ++it) {
     if ((printer = it->second) != NULL) {
-      if (printer->is_unknown("is_supported") && !printer->is_unknown("deviceId")) {
+      if (printer->is_unknown("is_supported")) {
         count += 1;
       }
     }
