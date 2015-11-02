@@ -12,17 +12,13 @@
 
 @interface HPPrinterAttributes : NSObject
 
-typedef enum {
-    PrinterSupportedNo,
-    PrinterSupportedYes,
-    PrinterSupportedUnassigned
-} PrinterSupported;
 
 @property (strong, nonatomic) NSString *ip; //printer IP
 @property (strong, nonatomic) NSString *name;
 @property (strong, nonatomic) NSString *macAddress;
 @property (strong, nonatomic) NSString *status;
 @property (strong, nonatomic) NSString *manufacturer;
-@property (assign) PrinterSupported isSupported;
+@property (assign) BOOL isSupported;
+@property (assign) BOOL _supportedFlagIsSet; //internal flag to determine if mario sent the isSupported value.
 
 @end

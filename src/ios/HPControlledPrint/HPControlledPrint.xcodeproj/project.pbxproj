@@ -48,6 +48,8 @@
 		37C23FBA1B98D918009F0065 /* hp_sap.h in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB31B98D918009F0065 /* hp_sap.h */; };
 		37C23FBB1B98D918009F0065 /* mwp_core_api.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB41B98D918009F0065 /* mwp_core_api.hpp */; };
 		37C23FBD1B98D918009F0065 /* mwp_secure_asset_printing_api.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB61B98D918009F0065 /* mwp_secure_asset_printing_api.hpp */; };
+		37DF03D31BE00EF400883A88 /* HPProviderNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 37DF03D11BE00EF400883A88 /* HPProviderNotifier.h */; };
+		37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D21BE00EF400883A88 /* HPProviderNotifier.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -114,6 +116,8 @@
 		37C23FB31B98D918009F0065 /* hp_sap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hp_sap.h; sourceTree = "<group>"; };
 		37C23FB41B98D918009F0065 /* mwp_core_api.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mwp_core_api.hpp; sourceTree = "<group>"; };
 		37C23FB61B98D918009F0065 /* mwp_secure_asset_printing_api.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mwp_secure_asset_printing_api.hpp; sourceTree = "<group>"; };
+		37DF03D11BE00EF400883A88 /* HPProviderNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPProviderNotifier.h; sourceTree = "<group>"; };
+		37DF03D21BE00EF400883A88 /* HPProviderNotifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPProviderNotifier.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -261,6 +265,8 @@
 				377D08591B4B614F00D8AEB6 /* HPPrinter.m */,
 				37B8D9421B4DE38F00CCA7DD /* HPMetricsSender.h */,
 				37B8D9431B4DE38F00CCA7DD /* HPMetricsSender.m */,
+				37DF03D11BE00EF400883A88 /* HPProviderNotifier.h */,
+				37DF03D21BE00EF400883A88 /* HPProviderNotifier.m */,
 				374268A81B8BCB31004D0DD1 /* HPTokenValidator.h */,
 				374268A91B8BCB31004D0DD1 /* HPTokenValidator.m */,
 			);
@@ -313,6 +319,7 @@
 				377D08561B4B541B00D8AEB6 /* HPPrintJobRequest.h in Headers */,
 				37C23FB91B98D918009F0065 /* hp_mwp.h in Headers */,
 				37C23FBB1B98D918009F0065 /* mwp_core_api.hpp in Headers */,
+				37DF03D31BE00EF400883A88 /* HPProviderNotifier.h in Headers */,
 				3755309D1B39D4CC00659D37 /* HPControlledPrintManager.h in Headers */,
 				37B8D9441B4DE38F00CCA7DD /* HPMetricsSender.h in Headers */,
 				375530A11B39D4CC00659D37 /* HPPrinterAttributes.h in Headers */,
@@ -426,6 +433,7 @@
 				37633B641B71768A000BF381 /* HPControlledPrintManager.mm in Sources */,
 				37633B6A1B7176B6000BF381 /* HPServices.m in Sources */,
 				37633B6C1B7176C1000BF381 /* HPPrinter.m in Sources */,
+				37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */,
 				37633B6B1B7176BB000BF381 /* HPPrintJobRequest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -561,7 +569,7 @@
 				);
 				INFOPLIST_FILE = HPControlledPrint/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
@@ -598,7 +606,7 @@
 				);
 				INFOPLIST_FILE = HPControlledPrint/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",

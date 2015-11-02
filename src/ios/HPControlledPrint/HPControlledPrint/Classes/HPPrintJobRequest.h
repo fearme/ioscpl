@@ -15,8 +15,10 @@ typedef enum {
 @property (assign) Provider providerId; //The identifier for the asset provider
 @property (strong, nonatomic) NSString *hardwareId; //The identifier for the client hardware
 
-// Store the final status of print job
-@property (strong, nonatomic) NSString *finalStatus;
+// Flag for whether the final print status metric of print job was sent
+@property (assign, nonatomic) BOOL finalPrintStatusMetricSent;
+// Flag for whether the print status notification was sent
+@property (assign, nonatomic) BOOL providerNotificationSent;
 
 
 // These properties are to support HPCP, such as, for creating asset page(s) -------------------
