@@ -62,6 +62,7 @@ namespace net_mobilewebprint {
             e_handle_result       _on_txn_close(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
     virtual string          mod_name();
+    virtual uint32          get_curl_status(buffer_view_i const & payload);
   };
 
 };

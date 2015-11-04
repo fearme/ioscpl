@@ -391,7 +391,13 @@ e_handle_result net_mobilewebprint::mini_curl_connection_t::_mq_selected(string 
       closed = true;
 
       log_v(4, "", "mini-curl::close %d", (int)txn_id);
-      mq.send(mq.message("_on_txn_close", 0, txn_id));
+
+      buffer_t * packet = mq.message("_on_txn_close", 0, txn_id);
+
+      //TODO: if mini_curl is used more, we need to not append 0 here.
+      // it needs to be a curl error code. 0 == CURLE_OK.
+      packet->append((uint32)0);
+      mq.send(packet);
 
     } else {
       log_e(0, "socket", "Error: recv returned < 0: %d", recv_result);
