@@ -252,6 +252,7 @@ namespace net_mobilewebprint {
     virtual byte            read_byte(const_iterator & it) const;
     virtual uint16          read_uint16(const_iterator & it) const;
     virtual uint32          read_uint32(const_iterator & it) const;
+    virtual long            read_long(const_iterator & it) const;
     virtual string          read_string(const_iterator & it) const;
     virtual string          read_string_nz(const_iterator & it, size_t count) const;
     virtual string          read_ip(const_iterator & it) const;
@@ -651,6 +652,14 @@ namespace net_mobilewebprint {
 
     int append(uint32 x) {
       uint32 y = htonl(x);
+      int result = append((byte const *)&y, sizeof(y));
+
+      _debug();
+      return result;
+    }
+
+    int append(long x) {
+      long y = htonl(x);
       int result = append((byte const *)&y, sizeof(y));
 
       _debug();

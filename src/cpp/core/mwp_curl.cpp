@@ -104,8 +104,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::curl_t::_mq_selected(str
           if (it != connections.end()) {
             curl_connection_t * connection = it->second;
 
-            // long http_code;
-            // curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &http_code);
+            curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &connection->http_code);
 
             connection->curl_code = (uint32)result;
             delete connection;
@@ -235,6 +234,7 @@ net_mobilewebprint::curl_connection_t::~curl_connection_t()
   // log_d(1, "curl_t", "curl connection closed %lu, Error? %d", connection_id,  curl_code);
   buffer_t * packet = mq.message("_on_txn_close", 0, connection_id);
   packet->append(curl_code);
+  packet->append(http_code);
 
   mq.send(packet);
   if (req_headers != NULL) {

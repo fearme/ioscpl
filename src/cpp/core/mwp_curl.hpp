@@ -65,6 +65,7 @@ namespace net_mobilewebprint {
     string              full_url;
 
     uint32              curl_code;
+    long                http_code;
 
     CURLM *             mcurl;       // Owned by curl_t
     CURL *              curl;

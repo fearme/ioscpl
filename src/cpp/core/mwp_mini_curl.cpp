@@ -397,6 +397,7 @@ e_handle_result net_mobilewebprint::mini_curl_connection_t::_mq_selected(string 
       //TODO: if mini_curl is used more, we need to not append 0 here.
       // it needs to be a curl error code. 0 == CURLE_OK.
       packet->append((uint32)0);
+      packet->append((long)0);
       mq.send(packet);
 
     } else {
