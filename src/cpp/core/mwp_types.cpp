@@ -1442,7 +1442,7 @@ void net_mobilewebprint::log_d(char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_d(buffer, (log_param_t)NULL);
@@ -1458,7 +1458,7 @@ void net_mobilewebprint::log_w(char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_w(buffer, (log_param_t)NULL);
@@ -1476,7 +1476,7 @@ void net_mobilewebprint::log_v(char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_v(buffer, (log_param_t)NULL);
@@ -1490,7 +1490,7 @@ void net_mobilewebprint::log_e(char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_e(buffer, (log_param_t)NULL);
@@ -1508,7 +1508,7 @@ void net_mobilewebprint::log_d(int level, char const * tags, char const * format
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_d(buffer, (log_param_t)NULL);
@@ -1525,7 +1525,7 @@ void net_mobilewebprint::log_d(char level, char const * tag, char const * format
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_d(buffer, tag, (log_param_t)NULL);
@@ -1542,7 +1542,7 @@ void net_mobilewebprint::log_w(char const * tags, char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_w(buffer, (log_param_t)NULL);
@@ -1569,7 +1569,7 @@ void net_mobilewebprint::log_v(int level, char const * tags, char const * format
   va_list argList;
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   // Maybe log it
@@ -1594,7 +1594,7 @@ void net_mobilewebprint::log_vt(int level, char const * tag, char const * format
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_v(buffer, tag, (log_param_t)NULL);
@@ -1737,7 +1737,7 @@ void net_mobilewebprint::log_e(char const * tags, char const * format, ...)
   char buffer[2048];
 
   va_start(argList, format);
-  vsprintf(buffer, format, argList);
+  vsnprintf(buffer, sizeof(buffer), format, argList);
   va_end(argList);
 
   log_e(buffer, (log_param_t)NULL);
