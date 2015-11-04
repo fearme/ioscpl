@@ -16,6 +16,7 @@ import android.net.ConnectivityManager;
 import android.net.ConnectivityManager.*;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
+import android.net.wifi.WifiManager.MulticastLock;
 import android.net.wifi.WifiInfo;
 
 import org.json.JSONObject;
@@ -29,6 +30,8 @@ public class Client {
   public               Context  context;
   public  NetworkStateReceiver  networkStateReceiver;
   public       ExecutorService  threadPool;
+  public           WifiManager  wifiManager;
+  public         MulticastLock  lock;
 
   public Client(net.mobilewebprint.Application application_)
   {
@@ -37,6 +40,8 @@ public class Client {
     this.context                = null;
     this.networkStateReceiver   = new NetworkStateReceiver();
     this.threadPool             = Executors.newFixedThreadPool(2);
+    this.wifiManager            = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
+    this.lock                   = null;
 
     initJni(application);
   }
@@ -66,6 +71,17 @@ public class Client {
 
     context.registerReceiver(networkStateReceiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     context.registerReceiver(networkStateReceiver, new IntentFilter("android.net.wifi.WIFI_STATE_CHANGED"));
+
+    // Then, lock us into multicast mode
+    lock = wifiManager.createMulticastLock("mwp_multicast_lock");
+    lock.setReferenceCounted(true);
+    lock.acquire();
+
+    // This is what to do if you ever stop scanning
+    //if (lock != null && lock.isHeld()) {
+    //  lock.release();
+    //  lock = null;
+    //}
 
     boolean result = startUp();
 
