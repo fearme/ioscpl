@@ -964,171 +964,191 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
   int http_resp_code = 0;
   json_t json;
   stats_t stats, http_stats;
-  uint32 http_txn_id = 0;
+  uint32 pcl_txn_id = 0;
 
-  if (upstream.parse_response(payload, http_resp_code, json, stats)) {
-    string json_str = json.stringify();
-    log_v(4, "", "_on_progress_response resp: |%s|", json_str.c_str());
+  bool parse_response_success = upstream.parse_response(payload, http_resp_code, json, stats);
 
-    // Note: we are dealing with legacy code, and the names aren't that great -- there is
-    // confusion between the "status" of the job, and the "current" "state" of the printer.
-    // Ideally, those are the names: "jobStatus" and "printerState";  however, a ton of code
-    // and mind-share wants the the printerState to be called "status".
-    string state          = json.lookup("current");
-    uint32 numerator      = json.lookup("numerator", 25);
-    uint32 denominator    = json.lookup("denominator", 200);
-    string message        = "x";
-    string printerState   = "x";
-    string job_id         = "x";
-    string jobStatus      = "x";
+  string json_str = json.stringify();
+  log_v(4, "", "_on_progress_response resp: |%s|", json_str.c_str());
 
-    // Get the id of the "real" transaction -- the HTTP transaction
-    if (_has(stats.int_attrs, "txn_id")) {
-      http_txn_id = _lookup(stats.int_attrs, "txn_id", (int)http_txn_id);
-      http_stats = job_stats[http_txn_id];
-      log_v(4, "", "_on_progress_response http_job_stats: |%s|", http_stats.debug_to_json().c_str());
-    }
+  // Note: we are dealing with legacy code, and the names aren't that great -- there is
+  // confusion between the "status" of the job, and the "current" "state" of the printer.
+  // Ideally, those are the names: "jobStatus" and "printerState";  however, a ton of code
+  // and mind-share wants the the printerState to be called "status".
 
-    // Grab the job ID, and send the message to the app
-    job_id = http_stats.attrs["job_id"];
+  //set defaults
+  string state          = "x";
+  uint32 numerator      = 25;
+  uint32 denominator    = 200;
+  string message        = "x";
+  string printerState   = "x";
+  string job_id         = "x";
+  string jobStatus      = "x";
 
-    // Lookup printer status ("state") and job status
-    if ((printerState   = http_stats.attrs["status"]) == "")    { printerState = ""; }
-    if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus    = "y"; }
+  // Get the id of the "real" transaction -- the PCL transaction
+  if (_has(stats.int_attrs, "txn_id")) {
+    pcl_txn_id = _lookup(stats.int_attrs, "txn_id", (int)pcl_txn_id);
 
-    // Fixup status -- we might have gotten it from the "universal" SNMP status
-    bool is_universal_status = false;
-    printerState = printer_list_t::get_pml_status(printerState, is_universal_status);
+    http_stats = job_stats[pcl_txn_id];
+    log_v(4, "", "_on_progress_response http_job_stats: |%s|", http_stats.debug_to_json().c_str());
+  }
 
-    int totalSent = -1;
-    if (_has(http_stats.int_attrs, "totalSent")) {
-      totalSent = _lookup(http_stats.int_attrs, "totalSent", 0);
-    }
+  if(parse_response_success){
+    //do json lookup...
+    state = json.lookup("current");
+    numerator = json.lookup("numerator", 25);
+    denominator = json.lookup("denominator", 200);
 
-    int num_downloaded = -1;
-    if (_has(http_stats.int_attrs, "numDownloaded")) {
-      num_downloaded = _lookup(http_stats.int_attrs, "numDownloaded", 0);
-    }
+    //save into job_stats
+    job_stat(pcl_txn_id, "state", state.c_str());
+    job_stat(pcl_txn_id, "numerator", (int)numerator);
+    job_stat(pcl_txn_id, "denominator", (int)denominator);
+  } else{
+    state = _lookup(http_stats.attrs, "state", state);
+    numerator    = _lookup(http_stats.int_attrs, "numerator", (int)numerator);
+    denominator  = _lookup(http_stats.int_attrs, "denominator", (int)denominator);
+  }
 
-    bool is_done = false;
-    if (_has(http_stats.bool_attrs, "byte_stream_done")) {
-      is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
-    }
+  // Grab the job ID, and send the message to the app
+  job_id = http_stats.attrs["job_id"];
 
-    bool is_finishing = false;
-    if (state == "NETWORK_ERROR" || printerState == "NETWORK_ERROR" || jobStatus == "NETWORK_ERROR") {
-      printerState = job_stat(http_txn_id, "status", "NETWORK_ERROR");
-      jobStatus = job_stat(http_txn_id, "jobStatus", "NETWORK_ERROR");
-      state = "NETWORK_ERROR";
-      message = "Network error.";
-      is_finishing = true;
-    } else {
+  // Lookup printer status ("state") and job status
+  if ((printerState   = http_stats.attrs["status"]) == "")    { printerState = ""; }
+  if ((jobStatus      = http_stats.attrs["jobStatus"]) == "") { jobStatus    = "y"; }
 
-      log_v(5, "", "progress0(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
+  // Fixup status -- we might have gotten it from the "universal" SNMP status
+  bool is_universal_status = false;
+  printerState = printer_list_t::get_pml_status(printerState, is_universal_status);
 
-      // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
-      if (printerState.length() == 0) {
+  int totalSent = -1;
+  if (_has(http_stats.int_attrs, "totalSent")) {
+    totalSent = _lookup(http_stats.int_attrs, "totalSent", 0);
+  }
 
-        // First, assume IDLE -- this is the 'safe' choice.
+  int num_downloaded = -1;
+  if (_has(http_stats.int_attrs, "numDownloaded")) {
+    num_downloaded = _lookup(http_stats.int_attrs, "numDownloaded", 0);
+  }
+
+  bool is_done = false;
+  if (_has(http_stats.bool_attrs, "byte_stream_done")) {
+    is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
+  }
+
+  bool is_finishing = false;
+  if (state == "NETWORK_ERROR" || printerState == "NETWORK_ERROR" || jobStatus == "NETWORK_ERROR") {
+    printerState = job_stat(pcl_txn_id, "status", "NETWORK_ERROR");
+    jobStatus = job_stat(pcl_txn_id, "jobStatus", "NETWORK_ERROR");
+    state = "NETWORK_ERROR";
+    message = "Network error.";
+    is_finishing = true;
+  } else {
+
+    log_v(5, "", "progress0(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
+
+    // If the printer does not support getting its status, simulate it (IDLE -> PRINTING -> IDLE)
+    if (printerState.length() == 0) {
+
+      // First, assume IDLE -- this is the 'safe' choice.
+      printerState = PML_STATUS_IDLE;
+
+      // Then, see if the connection to the printer is closed
+      if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) == true) {
         printerState = PML_STATUS_IDLE;
 
-        // Then, see if the connection to the printer is closed
-        if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) == true) {
-          printerState = PML_STATUS_IDLE;
-
-        // Then, see if we have sent any bytes to the printer
-        } else if (_has(http_stats.int_attrs, "totalSent") && _lookup(http_stats.int_attrs, "totalSent", 0) > 0) {
-          printerState = PML_STATUS_PRINTING;
-        }
-
-      }
-      log_v(4, "", "progress1(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
-
-      // ---------- Messaging
-      // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
-      // the printer status is something obvious, like "printing", just show that to the user (making it more
-      // pretty), however, that is lower in the code.
-      //
-      // However, the various states must be tracked, to determine the "real" job status as the print progresses,
-      // so that is done first.
-
-
-
-      // Track the complex state of the print -- This also sets a message, that might be clobbered below.
-      if (jobStatus == STATUS_WAITING0) {
-        message = "Formatting print job";
-        if (_has(http_stats.int_attrs, "numDownloaded") && _lookup(http_stats.int_attrs, "numDownloaded", 0) > 0) {
-          jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_WAITING1);
-        }
+      // Then, see if we have sent any bytes to the printer
+      } else if (_has(http_stats.int_attrs, "totalSent") && _lookup(http_stats.int_attrs, "totalSent", 0) > 0) {
+        printerState = PML_STATUS_PRINTING;
       }
 
-      if (jobStatus == STATUS_WAITING1) {
-        message = "Waiting for print to start";
-      }
+    }
+    log_v(4, "", "progress1(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
 
-      if (jobStatus == STATUS_PRINTING) {
-        if (printerState != PML_STATUS_PRINTING && printerState != PML_STATUS_IDLE) {
-          message = "Waiting for print to resume";
-          jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_WAITING2);
-        }
-      }
+    // ---------- Messaging
+    // Determine the message to show to the user.  There are two phases to this.  The simpler statuses (while
+    // the printer status is something obvious, like "printing", just show that to the user (making it more
+    // pretty), however, that is lower in the code.
+    //
+    // However, the various states must be tracked, to determine the "real" job status as the print progresses,
+    // so that is done first.
 
-      if (jobStatus == STATUS_WAITING2) {
+
+
+    // Track the complex state of the print -- This also sets a message, that might be clobbered below.
+    if (jobStatus == STATUS_WAITING0) {
+      message = "Formatting print job";
+      if (_has(http_stats.int_attrs, "numDownloaded") && _lookup(http_stats.int_attrs, "numDownloaded", 0) > 0) {
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_WAITING1);
+      }
+    }
+
+    if (jobStatus == STATUS_WAITING1) {
+      message = "Waiting for print to start";
+    }
+
+    if (jobStatus == STATUS_PRINTING) {
+      if (printerState != PML_STATUS_PRINTING && printerState != PML_STATUS_IDLE) {
         message = "Waiting for print to resume";
-        if (printerState == PML_STATUS_PRINTING) {
-          jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_PRINTING);
-        }
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_WAITING2);
       }
+    }
 
-
-      // Track the simpler states -- maybe overriding the "message" from above
+    if (jobStatus == STATUS_WAITING2) {
+      message = "Waiting for print to resume";
       if (printerState == PML_STATUS_PRINTING) {
-        jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_PRINTING);
-        message = "Printing...";
-
-        // If the entire byte stream has been sent, tell the user we are waiting for finish
-        if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) != false) {
-          message = "Finishing...";
-        }
-      } else if (_starts_with(printerState, PML_STATUS_CANCELLING)) {
-        jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_CANCELLING);
-        message = "Cancelling...";
-      }
-
-      if (printerState != PML_STATUS_IDLE) {
-        job_stat(http_txn_id, "has_started", true);
-
-      } else if (http_stats.bool_attrs["has_started"]) {
-
-        // Back to idle... We are done
-        message = "Done";
-        if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
-          jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_CANCELLED);
-        } else {
-          jobStatus = job_stat(http_txn_id, "jobStatus", STATUS_SUCCESS);
-        }
-        is_finishing = true;
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_PRINTING);
       }
     }
 
-    // As long as we are not done, send status
-    state = jobStatus;
-    if (!_lookup_job_stat(http_txn_id, "frozen", false)) {
 
-      log_v(4, "", "progress(%04d):  |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
-      send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
+    // Track the simpler states -- maybe overriding the "message" from above
+    if (printerState == PML_STATUS_PRINTING) {
+      jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_PRINTING);
+      message = "Printing...";
 
-    } else {
-      log_v(4, "", "progress(%04d): |%s| ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", http_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
+      // If the entire byte stream has been sent, tell the user we are waiting for finish
+      if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) != false) {
+        message = "Finishing...";
+      }
+    } else if (_starts_with(printerState, PML_STATUS_CANCELLING)) {
+      jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLING);
+      message = "Cancelling...";
     }
 
-    job_stat(http_txn_id, "getting_progress", false, true);
+    if (printerState != PML_STATUS_IDLE) {
+      job_stat(pcl_txn_id, "has_started", true);
 
-    if (is_finishing) {
-      job_stat(http_txn_id, "done", true);
-      job_stat(http_txn_id, "frozen", true);
+    } else if (http_stats.bool_attrs["has_started"]) {
+
+      // Back to idle... We are done
+      message = "Done";
+      if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
+      } else {
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
+      }
+      is_finishing = true;
     }
   }
+
+  // As long as we are not done, send status
+  state = jobStatus;
+  if (!_lookup_job_stat(pcl_txn_id, "frozen", false)) {
+
+    log_v(4, "", "progress(%04d):  |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
+    send_to_app(HP_MWP_PRINT_PROGRESS_MSG, -1, 0, state.c_str(), message.c_str(), printerState.c_str(), job_id.c_str(), jobStatus.c_str(), (int)numerator, (int)denominator);
+
+  } else {
+    log_v(4, "", "progress(%04d): |%s| ------------- frozen; not sending: printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s, state: |%s|, message: |%s|", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false", state.c_str(), message.c_str());
+  }
+
+  job_stat(pcl_txn_id, "getting_progress", false, true);
+
+  if (is_finishing) {
+    job_stat(pcl_txn_id, "done", true);
+    job_stat(pcl_txn_id, "frozen", true);
+  }
+
   return handled;
 }
 

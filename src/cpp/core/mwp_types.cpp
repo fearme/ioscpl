@@ -116,6 +116,15 @@ uint32 net_mobilewebprint::buffer_view_i::read_uint32(const_iterator & it) const
   return result;
 }
 
+long net_mobilewebprint::buffer_view_i::read_long(const_iterator & it) const
+{
+  mwp_assert(is_valid(it));
+
+  long result = ntohl(*(long*)it);
+  it += sizeof(long);
+  return result;
+}
+
 std::string net_mobilewebprint::buffer_view_i::read_string_nz(const_iterator & it, size_t count) const
 {
   mwp_assert(is_valid(it + count - 1));

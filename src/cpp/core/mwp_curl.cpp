@@ -99,9 +99,14 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::curl_t::_mq_selected(str
       int msgs_in_queue = 0;
       while ((msg = curl_multi_info_read(mcurl, &msgs_in_queue)) != NULL) {
         if(msg->msg == CURLMSG_DONE) {
+          CURLcode result = msg->data.result;
           connections_t::iterator it = _find_by_curl_handle(msg->easy_handle);
           if (it != connections.end()) {
             curl_connection_t * connection = it->second;
+
+            curl_easy_getinfo(msg->easy_handle, CURLINFO_RESPONSE_CODE, &connection->http_code);
+
+            connection->curl_code = (uint32)result;
             delete connection;
             connections.erase(it);
           }
@@ -226,7 +231,12 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
 
 net_mobilewebprint::curl_connection_t::~curl_connection_t()
 {
-  mq.send(mq.message("_on_txn_close", 0, connection_id));
+  // log_d(1, "curl_t", "curl connection closed %lu, Error? %d", connection_id,  curl_code);
+  buffer_t * packet = mq.message("_on_txn_close", 0, connection_id);
+  packet->append(curl_code);
+  packet->append(http_code);
+
+  mq.send(packet);
   if (req_headers != NULL) {
     curl_slist_free_all(req_headers);
   }
