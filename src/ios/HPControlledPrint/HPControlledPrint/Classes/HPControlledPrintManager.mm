@@ -1,5 +1,6 @@
 
 #import "HPControlledPrintManager.h"
+#import "HPControlledPrintManagerUtil.h"
 #import "HPPrinterAttributes.h"
 #import "HPAsyncHttpGet.h"
 #import "HPServices.h"
@@ -156,12 +157,12 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         HPPrinterAttributes *attributes = [printers objectForKey:printerIp];
         if (attributes == nil) {
             attributes = [[HPPrinterAttributes alloc] init];
+            attributes.ip = printerIp;
         }
-        attributes.ip = printerIp;
         
         NSString *property = [NSString stringWithUTF8String:p2];
         NSString *value = [NSString stringWithUTF8String:p3];
-        NSLog(@"property: %@ --- value: %@", property, value);
+        NSLog(@"%@ - %@: %@", printerIp, property, value);
         
         if ([property isEqualToString:@"name"]) {
             attributes.name = value;
@@ -227,21 +228,23 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSLog(@"userVisibleStatus: %@", userVisibleStatus);
     NSLog(@"printerStatus: %@", printerStatus);
     
+    
     //IMPORTANT: The order of the if conditions matters. Do not change.
     //  The reason is that when a print job is cancelled, Mario sends a canceling status followed by a
     //  "success" status (which is "Done" + "Idle"). During a print cancel, if we check for
     //  "success" first, we never process the cancel status.
+    NSString *preparedToken = [HPControlledPrintManagerUtil prepareToken:printJob.tokenId];
     if (!printJob.providerNotificationSent) {
         // if canceling, unknown, or network error
         if ([printerStatus isEqualToString:kPrinterStatusCanceling] || [printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
             HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
-            [notifier sendPrintStatus:@"error" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
+            [notifier sendPrintStatus:@"error" notifyUrl:services.notifyQples  tokenId:preparedToken serverStack:[self serverStackAsString]];
             printJob.providerNotificationSent = YES;
             
         // if success or upstream error
         } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
             HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
-            [notifier sendPrintStatus:@"success" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
+            [notifier sendPrintStatus:@"success" notifyUrl:services.notifyQples  tokenId:preparedToken serverStack:[self serverStackAsString]];
             printJob.providerNotificationSent = YES;
         }
     }
@@ -322,9 +325,12 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 - (void)validateToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion
 {
     HPTokenValidator *validator = [[HPTokenValidator alloc] init];
-    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", services.validateQplesToken, token];
+    NSLog(@"Token: %@", token);
+    NSString *preparedToken = [HPControlledPrintManagerUtil prepareToken:token];
+    NSLog(@"PreparedToken: %@", preparedToken);
+    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", services.validateQplesToken, preparedToken];
     
-    [validator validate:token withServiceUrl:validationCall withCompletion:^(BOOL success) {
+    [validator validate:preparedToken withServiceUrl:validationCall withCompletion:^(BOOL success) {
         if (success) {
             completion(InitStatusTokenValid);
         } else {
@@ -488,62 +494,22 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
     if (error != nil) {
         NSLog(@"ERROR in JSON Object containing Cayman services information !!!  - %@", error);
-        return;
-    }    
-    NSLog(@"json: %@", dict);
-    
-    services = [[HPServices alloc] init];
-    NSString *caymanRootUrl = [self caymanRootUrl];
-    
-    // jobUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getCouponsJobAsyncUrl();
-    services.couponsJobUrl = [NSString stringWithFormat:@"%@%@", caymanRootUrl, [dict objectForKey:@"couponsjobasyncurl"]];
-    NSLog(@"couponsJob: %@", services.couponsJobUrl);
-    
-    // metricsPostURL = discoverProperties.getCaymanRootUrl() + discoverProperties.getMetricsUrl();
-    services.postMetricsUrl = [NSString stringWithFormat:@"%@%@", caymanRootUrl, [dict objectForKey:@"metricsurl"]];
-    NSLog(@"postsMetrics: %@", services.postMetricsUrl);
-    
-    // getDeviceUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getDeferedPrint() + "/getDevice" + "?deviceID=";
-    services.getDeferredPrintForDevice = [NSString stringWithFormat:@"%@%@/getDevice?deviceID=", caymanRootUrl, [dict objectForKey:@"deferedprint"]];
-    NSLog(@"getDeferredPrintForDevice: %@", services.getDeferredPrintForDevice);
-    
-    // createJobUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getDeferedPrint() + discoverProperties.getCreateJob();
-    services.createDeferredPrintJob = [NSString stringWithFormat:@"%@%@%@", caymanRootUrl, [dict objectForKey:@"deferedprint"], [dict objectForKey:@"createjob"]];
-    NSLog(@"createDeferredPrintJob: %@", services.createDeferredPrintJob);
-    
-    // getDeferedJobsUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getDeferedPrint() + discoverProperties.getGetJobsDevice() + "?deviceID=";
-    services.getDeferredPrintJobsForDevice = [NSString stringWithFormat:@"%@%@%@?deviceID=", caymanRootUrl, [dict objectForKey:@"deferedprint"], [dict objectForKey:@"getjobsdevice"]];
-    NSLog(@"getDeferredPrintJobsForDevice: %@", services.getDeferredPrintJobsForDevice);
-    
-    // saveDeviceUrl = discoverProperties.getCaymanRootUrl() + discoverProperties.getDeferedPrint() + "/saveDevice";
-    services.setDeferredPrintDevice = [NSString stringWithFormat:@"%@%@/saveDevice", caymanRootUrl, [dict objectForKey:@"deferedprint"]];
-    NSLog(@"setDeferredPrintDevice: %@", services.setDeferredPrintDevice);
-    
-    // notifyQplesUrl = discoverProperties.getCaymanRootUrl() + "/coupons/qples/notify";
-    services.notifyQples = [NSString stringWithFormat:@"%@/coupons/qples/notify", caymanRootUrl];
-    NSLog(@"notifyQples: %@", services.notifyQples);
-
-    // validateTokenUrl = discoverProperties.getCaymanRootUrl() + "/coupons/qples/validate";
-    services.validateQplesToken = [NSString stringWithFormat:@"%@/coupons/qples/validate", caymanRootUrl];
-    NSLog(@"validateQplesToken: %@", services.validateQplesToken);
-    
-    NSArray *printServerHosts = [dict objectForKey:@"printserverhosts"];
-    NSString *printServerDomain = [dict objectForKey:@"printserverdomain"];
-    secureAssetPrinter->set_option("serverName", printServerHosts[0]);
-    secureAssetPrinter->set_option("fallbackServiceOne", printServerHosts[1]);
-    secureAssetPrinter->set_option("fallbackServiceTwo", printServerHosts[2]);
-    secureAssetPrinter->set_option("domainName", printServerDomain);
-    
-    NSLog(@"serverName: %@", printServerHosts[0]);
-    NSLog(@"fallbackServiceOne: %@", printServerHosts[1]);
-    NSLog(@"fallbackServiceTwo: %@", printServerHosts[2]);
-    NSLog(@"domainName: %@", printServerDomain);
-    
-    if (self.httpGetCompletion != nil) {
-        self.httpGetCompletion(InitStatusServerStackAvailable);
-        self.httpGetCompletion = nil; //clear it after using it
+        services = nil;
+    } else {
+        services = [HPControlledPrintManagerUtil parseDiscoveryData:dict secureAssetPrint:secureAssetPrinter caymanRootUrl:[self caymanRootUrl]];
     }
     
+
+    
+    if (self.httpGetCompletion != nil) {
+        if (services == nil) {
+            self.httpGetCompletion(InitStatusServerStackNotAvailable);
+
+        } else {
+            self.httpGetCompletion(InitStatusServerStackAvailable);
+        }
+        self.httpGetCompletion = nil; //clear it after using it
+    }    
 }
 
 - (void)asyncHttpErrored:(NSError *)error
