@@ -40,7 +40,7 @@ public class Client {
     this.context                = null;
     this.networkStateReceiver   = new NetworkStateReceiver();
     this.threadPool             = Executors.newFixedThreadPool(2);
-    this.wifiManager            = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
+    this.wifiManager            = null;
     this.lock                   = null;
 
     initJni(application);
@@ -73,7 +73,9 @@ public class Client {
     context.registerReceiver(networkStateReceiver, new IntentFilter("android.net.wifi.WIFI_STATE_CHANGED"));
 
     // Then, lock us into multicast mode
-    lock = wifiManager.createMulticastLock("mwp_multicast_lock");
+    wifiManager = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
+    lock        = wifiManager.createMulticastLock("mwp_multicast_lock");
+
     lock.setReferenceCounted(true);
     lock.acquire();
 
