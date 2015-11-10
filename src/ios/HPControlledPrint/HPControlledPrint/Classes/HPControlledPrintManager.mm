@@ -21,29 +21,38 @@
 int const kSendPrintersIntervalSeconds = 3;
 
 int timerInterval = 0;
-NSString *const kStatusCouponPrintRequested = @"COUPON_DOCUMENT_PRINT_REQUESTED";
-NSString *const kStatusCouponPrintSuccess   = @"COUPON_DOCUMENT_PRINT_SUCCESS";
-NSString *const kStatusCouponPrintFailed    = @"FAILED_PRINT_COUPON_DOCUMENT";
-NSString *const kStatusCouponPrintCanceled  = @"CANCELED_PRINT_COUPON_DOCUMENT";
-NSString *const kStatusCouponPrintDeferred  = @"COUPON_DOCUMENT_DEFERRED";
 
-NSString *const kPrinterStatusPrinting      = @"PRINTING";
-NSString *const kPrinterStatusIdle          = @"IDLE";
-NSString *const kPrinterStatusCanceling     = @"CANCELING PRINTING";
-NSString *const kPrinterStatusDone          = @"Done";
-NSString *const kPrinterStatusUnknown       = @"UNKNOWN";
-NSString *const kPrinterStatusNetworkError  = @"NETWORK_ERROR";
-NSString *const kPrinterStatusUpstreamError = @"UPSTREAM_ERROR";
+NSString *const kStatusCouponAppLaunched     = @"COUPON_DOCUMENT_APP_LAUNCHED";
+NSString *const kStatusCouponPrintRequested  = @"COUPON_DOCUMENT_PRINT_REQUESTED";
+NSString *const kStatusCouponPrintSuccess    = @"COUPON_DOCUMENT_PRINT_SUCCESS";
+NSString *const kStatusCouponPrintFailed     = @"FAILED_PRINT_COUPON_DOCUMENT";
+NSString *const kStatusCouponPrintCanceled   = @"CANCELED_PRINT_COUPON_DOCUMENT";
+NSString *const kStatusCouponPrintDeferred   = @"COUPON_DOCUMENT_DEFERRED";
 
-NSString *const kMetricTypeUserData         = @"USER_DATA";
-NSString *const kMetricTypeErrorMessage     = @"ERROR_MESSAGE";
+NSString *const kStatePrintRequestInitiated = @"Print Request Initiated";
+NSString *const kStatePrintSuccess          = @"Print Success";
+NSString *const kStatePrintCancelled        = @"Print Cancelled";
+NSString *const kStatePrintError            = @"Print Error";
 
-NSString *const kProviderQples              = @"QPLES";
+NSString *const kStateAppLaunched            = @"LAUNCHED";
 
-NSString *const kCaymanRootUrlDev           = @"https://cayman-dev-02.cloudpublish.com";
-NSString *const kCaymanRootUrlQa            = @"https://cayman-qa.cloudpublish.com";
-NSString *const kCaymanRootUrlStaging       = @"https://cayman-stg.cloudpublish.com";
-NSString *const kCaymanRootUrlProduction    = @"https://cayman-prod.cloudpublish.com";
+NSString *const kPrinterStatusPrinting       = @"PRINTING";
+NSString *const kPrinterStatusIdle           = @"IDLE";
+NSString *const kPrinterStatusCanceling      = @"CANCELING PRINTING";
+NSString *const kPrinterStatusDone           = @"Done";
+NSString *const kPrinterStatusUnknown        = @"UNKNOWN";
+NSString *const kPrinterStatusNetworkError   = @"NETWORK_ERROR";
+NSString *const kPrinterStatusUpstreamError  = @"UPSTREAM_ERROR";
+
+NSString *const kMetricTypeUserData          = @"USER_DATA";
+NSString *const kMetricTypeErrorMessage      = @"ERROR_MESSAGE";
+
+NSString *const kProviderQples               = @"QPLES";
+
+NSString *const kCaymanRootUrlDev            = @"https://cayman-dev-02.cloudpublish.com";
+NSString *const kCaymanRootUrlQa             = @"https://cayman-qa.cloudpublish.com";
+NSString *const kCaymanRootUrlStaging        = @"https://cayman-stg.cloudpublish.com";
+NSString *const kCaymanRootUrlProduction     = @"https://cayman-prod.cloudpublish.com";
 
 
 static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
@@ -233,18 +242,17 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     //  The reason is that when a print job is cancelled, Mario sends a canceling status followed by a
     //  "success" status (which is "Done" + "Idle"). During a print cancel, if we check for
     //  "success" first, we never process the cancel status.
-    NSString *preparedToken = [HPControlledPrintManagerUtil prepareToken:printJob.tokenId];
     if (!printJob.providerNotificationSent) {
         // if canceling, unknown, or network error
         if ([printerStatus isEqualToString:kPrinterStatusCanceling] || [printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
             HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
-            [notifier sendPrintStatus:@"error" notifyUrl:services.notifyQples  tokenId:preparedToken serverStack:[self serverStackAsString]];
+            [notifier sendPrintStatus:@"error" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
             printJob.providerNotificationSent = YES;
             
         // if success or upstream error
         } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
             HPProviderNotifier *notifier = [[HPProviderNotifier alloc] init];
-            [notifier sendPrintStatus:@"success" notifyUrl:services.notifyQples  tokenId:preparedToken serverStack:[self serverStackAsString]];
+            [notifier sendPrintStatus:@"success" notifyUrl:services.notifyQples  tokenId:printJob.tokenId serverStack:[self serverStackAsString]];
             printJob.providerNotificationSent = YES;
         }
     }
@@ -259,19 +267,19 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         // if canceling
         if ([printerStatus isEqualToString:kPrinterStatusCanceling]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintCanceled metricsType:kMetricTypeUserData];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintCanceled forReason:nil forState:kStatePrintCancelled metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
         // if unknown or netork error
         } else if ([printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintFailed metricsType:kMetricTypeErrorMessage];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintFailed forReason:nil forState:kStatePrintError metricsType:kMetricTypeErrorMessage];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
         // if success or upstream error
         } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintSuccess metricsType:kMetricTypeUserData];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintSuccess forReason:nil forState:kStatePrintSuccess metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"SUCCESS metric sent");
         }
@@ -326,11 +334,9 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     HPTokenValidator *validator = [[HPTokenValidator alloc] init];
     NSLog(@"Token: %@", token);
-    NSString *preparedToken = [HPControlledPrintManagerUtil prepareToken:token];
-    NSLog(@"PreparedToken: %@", preparedToken);
-    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", services.validateQplesToken, preparedToken];
+    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", services.validateQplesToken, token];
     
-    [validator validate:preparedToken withServiceUrl:validationCall withCompletion:^(BOOL success) {
+    [validator validate:token withServiceUrl:validationCall withCompletion:^(BOOL success) {
         if (success) {
             completion(InitStatusTokenValid);
         } else {
@@ -349,9 +355,15 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     currentServerStack = stack;
     
+    
     __weak HPControlledPrintManager *weakSelf = self;
     [self setEnvironment: ^(InitStatus status){
         if (status == InitStatusServerStackAvailable) {
+            
+            NSLog(@"\n\nMetrics URL: %@\n\n", services.postMetricsUrl);
+            HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:nil forOperation:kStatusCouponAppLaunched forReason:nil forState:kStateAppLaunched metricsType:kMetricTypeUserData];
+
             if (token != nil && validate) {
                 [weakSelf validateToken:token withCompletion:^(InitStatus status){
                     if (completion){
@@ -464,7 +476,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     [self sendPrintJob:tokenId toPrinterIp:selectedPrinter.ipAddress];
     
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forOperation:kStatusCouponPrintRequested metricsType:kMetricTypeUserData];
+    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forOperation:kStatusCouponPrintRequested forReason:kStatePrintRequestInitiated forState:nil metricsType:kMetricTypeUserData];
     
     return YES;
 }

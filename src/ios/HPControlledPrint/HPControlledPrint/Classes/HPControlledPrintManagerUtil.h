@@ -13,8 +13,6 @@
 
 @interface HPControlledPrintManagerUtil : NSObject
 
-+ (NSString *)qplesPrefix;
-+ (NSString *)prepareToken:(NSString *)token;
 + (HPServices *)parseDiscoveryData:(NSDictionary *)data secureAssetPrint:(net_mobilewebprint::secure_asset_printing_api_t *)sap caymanRootUrl:(NSString *)caymanRootUrl;
 
 @end

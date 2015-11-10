@@ -14,25 +14,6 @@
 
 @implementation HPControlledPrintManagerUtil
 
-NSString *const kQplesTokenPrefix = @"asset-qples-";
-
-+ (NSString *)qplesPrefix
-{
-    return kQplesTokenPrefix;
-}
-
-// This method is used to remove "asset-qples-" from the beginning of the token before
-//  (1) validating the token
-//  (2) notifying Qples of a print success or failure.
-// It is not used when sending the print job to Mario since Mario strips off "asset-qples-".
-+ (NSString *)prepareToken:(NSString *)token
-{
-    if( (token != nil) && [token hasPrefix:kQplesTokenPrefix]) {
-        return [token substringFromIndex:12];
-    } else {
-        return token;
-    }
-}
 
 + (HPServices *)parseDiscoveryData:(NSDictionary *)dict secureAssetPrint:(net_mobilewebprint::secure_asset_printing_api_t *)sap caymanRootUrl:(NSString *)caymanRootUrl
 {

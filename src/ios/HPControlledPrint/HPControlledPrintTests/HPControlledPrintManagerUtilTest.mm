@@ -31,18 +31,6 @@ static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
     [super tearDown];
 }
 
-- (void)testPrepareToken {
-    //test a token without the Qples token prefix
-    NSString *token = @"QPLESLIKETOKEN-2321321312321321321";
-    NSString *preparedToken = [HPControlledPrintManagerUtil prepareToken:token];
-    XCTAssertTrue([token isEqualToString:preparedToken]);
-    
-    //test a token with the Qples token prefix
-    NSString *tokenWithPrefix = [NSString stringWithFormat:@"%@%@", [HPControlledPrintManagerUtil qplesPrefix], token];
-    preparedToken = [HPControlledPrintManagerUtil prepareToken:tokenWithPrefix];
-    XCTAssertTrue([token isEqualToString:preparedToken]); //the prefix should have been removed
-}
-
 - (void)testParseDiscoveryData {
     NSArray* hosts = [NSArray arrayWithObjects: @"hqdev", @"dev", @"dev", nil];
     NSDictionary *dict = [[NSDictionary alloc] initWithObjectsAndKeys:
