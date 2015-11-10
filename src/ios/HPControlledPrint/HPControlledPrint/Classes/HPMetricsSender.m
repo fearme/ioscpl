@@ -10,42 +10,48 @@
 #import "HPAsyncHttpPost.h"
 #import "HPPrintJobRequest.h"
 
-@interface HPMetricsSender () <HPAsyncHttpDelegate>
-
-@end
-
 
 @implementation HPMetricsSender
 
-- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation metricsType:(NSString *)metricsType
+- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation forReason:(NSString *)reason forState:(NSString *)state metricsType:(NSString *)metricsType
 {
-    NSString *blob = @"Print Request Initiated";
     NSString *blobType = metricsType;
     NSString *application = @"CP_SDK";
     NSString *origin = @"IOS";
-    NSString *hardwareId = printJobRequest.hardwareId == nil ? @"" : printJobRequest.hardwareId; //used as the UserID
+    
+    NSString *reasonElement = (reason == nil) ? @"" : [NSString stringWithFormat:@"<met:reason>%@</met:reason>", reason];
+    NSString *stateElement = (state == nil) ? @"" : [NSString stringWithFormat:@"<met:blob>%@</met:blob>", state];
     
     NSDateFormatter* formatter = [[NSDateFormatter alloc] init];
     [formatter setDateFormat:@"yyyy-MM-dd'T'hh:mm:ss"];
     NSDate *date = [[NSDate alloc] init];
     NSString *metricsTimestamp = [formatter stringFromDate:date];
     
-    //construct offer IDs
-    NSMutableString *offerIdStr;
-    if (printJobRequest.assetIds != nil) {
-        offerIdStr = [[NSMutableString alloc] initWithString:@""];
-        for (id offerId in printJobRequest.assetIds) {
-            [offerIdStr appendString:@"<met:items>"];
-            [offerIdStr appendString:(NSString *)offerId];
-            [offerIdStr appendString:@"</met:items>"];
+    //We need an HPPrintJobRequest for these
+    NSString *hardwareElement = @""; //used as the UserID
+    NSString *tokenElement = @"";
+    NSString *providerElement = @"";
+    NSMutableString *offerIdElement = [NSMutableString stringWithString:@""];
+    if (printJobRequest != nil) {
+        hardwareElement = printJobRequest.hardwareId == nil ? @"" : [NSString stringWithFormat:@"<met:userId>%@</met:userId>", printJobRequest.hardwareId];
+        tokenElement = [NSString stringWithFormat:@"<met:url>%@</met:url>", printJobRequest.tokenId];
+        providerElement = [NSString stringWithFormat:@"<met:vendorId>%@</met:vendorId>", [printJobRequest providerAsString]];
+        
+        //construct offer IDs
+        if (printJobRequest.assetIds != nil) {
+            offerIdElement = [[NSMutableString alloc] initWithString:@""];
+            for (id offerId in printJobRequest.assetIds) {
+                [offerIdElement appendString:@"<met:items>"];
+                [offerIdElement appendString:(NSString *)offerId];
+                [offerIdElement appendString:@"</met:items>"];
+            }
+        } else {
+            offerIdElement = [[NSMutableString alloc] initWithString:@""]; //If we don't have any items, we can't send the element
         }
-    } else {
-        offerIdStr = [[NSMutableString alloc] initWithString:@""]; //If we don't have any items, we can't send the element
+        //NSLog(@"offerIdStr: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", offerIdStr);
     }
-    //NSLog(@"offerIdStr: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", offerIdStr);
     
-    NSString *metricsXml = [NSString stringWithFormat:@"<xml-fragment xmlns:met=\"http://hp.com/sips/services/xml/metrics\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><met:userId>%@</met:userId><met:application>%@</met:application><met:operation>%@</met:operation><met:timestamp>%@</met:timestamp><met:url>%@</met:url><met:vendorId>%@</met:vendorId><met:blobType>%@</met:blobType><met:blob>%@</met:blob>%@<met:origin>%@</met:origin></xml-fragment>", hardwareId, application, operation, metricsTimestamp, printJobRequest.tokenId, [printJobRequest providerAsString], blobType, blob, offerIdStr, origin];
-    NSLog(@"metricsXml: %@ ^^^^^^^^^^^^^^^^^^^^^^^^^", metricsXml);
+    NSString *metricsXml = [NSString stringWithFormat:@"<xml-fragment xmlns:met=\"http://hp.com/sips/services/xml/metrics\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">%@<met:application>%@</met:application><met:operation>%@</met:operation><met:timestamp>%@</met:timestamp>%@%@<met:blobType>%@</met:blobType>%@%@%@<met:origin>%@</met:origin></xml-fragment>", hardwareElement, application, operation, metricsTimestamp, tokenElement, providerElement, blobType, stateElement, reasonElement, offerIdElement, origin];
 
     // Create the request.
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:[NSURL URLWithString:url]];
@@ -60,36 +66,24 @@
         NSData *responseData = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&connectionError];
         
         if (connectionError == nil) {
+            
+            NSLog(@"\n\nMetricsXml: %@\n\n", metricsXml);
+            
             if ([response isKindOfClass:[NSHTTPURLResponse class]]) {
                 //NSLog(@"Response description: %@", [(NSHTTPURLResponse *)response description]);
                 NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
                 if (statusCode != 200) {
-                    NSLog(@"HPMetricsSender METRICS:  Response code = %ld", (long)statusCode);
+                    NSLog(@"\n\nHPMetricsSender METRICS:  Response code = %ld\n\n", (long)statusCode);
                     return;
                 } else {
-                    NSLog(@"HPMetricsSender: The metric was successfully sent.");
+                    NSLog(@"\n\nHPMetricsSender: The metric was successfully sent.\n\n");
                 }
             }
         } else {
-            NSLog(@"HPMetricsSender METRICS:  Connection error = %@", connectionError);
+            NSLog(@"\n\nHPMetricsSender METRICS:  Connection error = %@\n\n", connectionError);
         }
     });
-    
-    //HPAsyncHttpPost *httpPost = [[HPAsyncHttpPost alloc] init];
-    //httpPost.delegate = self;
-    //[httpPost execute:url withData:metricsXml withContentType:@"application/xml; charset=utf-8"];
 }
 
-#pragma mark - HPAsyncHttpDelegate
-
-- (void)asyncHttpSucceeded: (NSData *)data
-{
-    NSLog(@"SUCCEEDED in sending print job metrics ====================");
-}
-
-- (void)asyncHttpErrored:(NSError *)error
-{
-    NSLog(@"FAILED in sending print job metrics ====================");
-}
 
 @end

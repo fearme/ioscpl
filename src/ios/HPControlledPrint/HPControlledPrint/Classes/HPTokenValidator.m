@@ -12,7 +12,7 @@
 
 @interface HPTokenValidator () <HPAsyncHttpDelegate, NSURLConnectionDelegate>
 @property (strong, nonatomic) NSMutableData *responseData;
-
+@property (strong, nonatomic) NSString *token;
 @end
 
 
@@ -22,8 +22,12 @@ HttpGetCompletion validationCompletion;
 
 - (void)validate:(NSString *)token withServiceUrl:(NSString *)serviceUrl withCompletion:(HttpGetCompletion)completion
 {
+    self.token = token;
     validationCompletion = completion;
-
+    
+    NSLog(@"Token to Validate: %@", token);
+    NSLog(@"Validation URL: %@", serviceUrl);
+    
     // Create the request.
     NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:serviceUrl]];
     
@@ -84,7 +88,7 @@ HttpGetCompletion validationCompletion;
     NSString *status = [dict objectForKey:@"status"];
     NSString *message = [dict objectForKey:@"message"];
     
-    NSLog(@"Qples Token Validation result. Status: %@. Message: %@", status, message);
+    NSLog(@"Qples Token Validation result. Token: '%@' Status: %@. Message: %@", self.token, status, message);
     
     if (validationCompletion != nil){
         if ([status isEqualToString:@"success"]) {

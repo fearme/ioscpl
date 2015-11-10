@@ -11,6 +11,6 @@
 
 @interface HPMetricsSender : NSObject
 
-- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation metricsType:(NSString *)metricsType;
+- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation forReason:(NSString *)reason forState:(NSString *)state metricsType:(NSString *)metricsType;
 
 @end

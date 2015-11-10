@@ -48,8 +48,20 @@
 		37C23FBA1B98D918009F0065 /* hp_sap.h in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB31B98D918009F0065 /* hp_sap.h */; };
 		37C23FBB1B98D918009F0065 /* mwp_core_api.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB41B98D918009F0065 /* mwp_core_api.hpp */; };
 		37C23FBD1B98D918009F0065 /* mwp_secure_asset_printing_api.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 37C23FB61B98D918009F0065 /* mwp_secure_asset_printing_api.hpp */; };
+		37DE92AD1BEC45E800FB5AF6 /* HPControlledPrintManagerUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */; };
+		37DE92AE1BEC4DA100FB5AF6 /* libcpl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C23FA61B98D90A009F0065 /* libcpl.a */; };
+		37DE92AF1BEC4DA400FB5AF6 /* libcurl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C23FA71B98D90A009F0065 /* libcurl.a */; };
+		37DE92B01BEC4DA800FB5AF6 /* libmwp.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C23FA81B98D90A009F0065 /* libmwp.a */; };
+		37DE92B11BEC4DAA00FB5AF6 /* libmwpcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C23FA91B98D90A009F0065 /* libmwpcore.a */; };
+		37DE92B21BEC4DAE00FB5AF6 /* libmwpcoreprotos.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 37C23FAA1B98D90A009F0065 /* libmwpcoreprotos.a */; };
+		37DE92B31BEC4DE800FB5AF6 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 375530B11B39D52900659D37 /* libz.dylib */; };
+		37DE92B41BEC4DEC00FB5AF6 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375530AF1B39D51F00659D37 /* Foundation.framework */; };
+		37DE92B51BEC4DEF00FB5AF6 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 375530AD1B39D51500659D37 /* Security.framework */; };
 		37DF03D31BE00EF400883A88 /* HPProviderNotifier.h in Headers */ = {isa = PBXBuildFile; fileRef = 37DF03D11BE00EF400883A88 /* HPProviderNotifier.h */; };
 		37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D21BE00EF400883A88 /* HPProviderNotifier.m */; };
+		37DF03DA1BEC229900883A88 /* HPControlledPrintManagerUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */; };
+		37DF03DB1BEC229900883A88 /* HPControlledPrintManagerUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */; };
+		37DF03DD1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -118,6 +130,9 @@
 		37C23FB61B98D918009F0065 /* mwp_secure_asset_printing_api.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = mwp_secure_asset_printing_api.hpp; sourceTree = "<group>"; };
 		37DF03D11BE00EF400883A88 /* HPProviderNotifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPProviderNotifier.h; sourceTree = "<group>"; };
 		37DF03D21BE00EF400883A88 /* HPProviderNotifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPProviderNotifier.m; sourceTree = "<group>"; };
+		37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPControlledPrintManagerUtil.h; sourceTree = "<group>"; };
+		37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtil.mm; sourceTree = "<group>"; };
+		37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtilTest.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -141,7 +156,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				375530731B39D42500659D37 /* HPControlledPrint.framework in Frameworks */,
+				37DE92B41BEC4DEC00FB5AF6 /* Foundation.framework in Frameworks */,
+				37DE92B01BEC4DA800FB5AF6 /* libmwp.a in Frameworks */,
+				37DE92AF1BEC4DA400FB5AF6 /* libcurl.a in Frameworks */,
+				37DE92B11BEC4DAA00FB5AF6 /* libmwpcore.a in Frameworks */,
 				372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */,
+				37DE92B51BEC4DEF00FB5AF6 /* Security.framework in Frameworks */,
+				37DE92B31BEC4DE800FB5AF6 /* libz.dylib in Frameworks */,
+				37DE92B21BEC4DAE00FB5AF6 /* libmwpcoreprotos.a in Frameworks */,
+				37DE92AE1BEC4DA100FB5AF6 /* libcpl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -226,6 +249,7 @@
 			isa = PBXGroup;
 			children = (
 				372E9E0D1BAA310D00F2796E /* HPControlledPrintManagerTest.m */,
+				37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */,
 				372E9E0F1BAA325700F2796E /* HPPrintJobRequestTest.m */,
 				372E9DFF1BAA302000F2796E /* Includes */,
 				372E9E001BAA302C00F2796E /* Libraries */,
@@ -247,6 +271,8 @@
 			children = (
 				375530881B39D4CC00659D37 /* HPControlledPrintManager.h */,
 				375530891B39D4CC00659D37 /* HPControlledPrintManager.mm */,
+				37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */,
+				37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */,
 				3755308A1B39D4CC00659D37 /* HPDiscoveredPrinters.h */,
 				3755308B1B39D4CC00659D37 /* HPDiscoveredPrinters.m */,
 				3755308C1B39D4CC00659D37 /* HPPrinterAttributes.h */,
@@ -309,6 +335,7 @@
 				3755309F1B39D4CC00659D37 /* HPDiscoveredPrinters.h in Headers */,
 				377D08521B4B496900D8AEB6 /* HPServices.h in Headers */,
 				37B8D9401B4DE0A100CCA7DD /* HPAsyncHttpPost.h in Headers */,
+				37DF03DA1BEC229900883A88 /* HPControlledPrintManagerUtil.h in Headers */,
 				37C23FBD1B98D918009F0065 /* mwp_secure_asset_printing_api.hpp in Headers */,
 				377D085A1B4B614F00D8AEB6 /* HPPrinter.h in Headers */,
 				374268AA1B8BCB31004D0DD1 /* HPTokenValidator.h in Headers */,
@@ -430,6 +457,7 @@
 				37633B651B717698000BF381 /* HPDiscoveredPrinters.m in Sources */,
 				37633B681B7176AC000BF381 /* HPAsyncHttpGet.m in Sources */,
 				37633B671B7176A3000BF381 /* HPAsyncHttp.m in Sources */,
+				37DF03DB1BEC229900883A88 /* HPControlledPrintManagerUtil.mm in Sources */,
 				37633B641B71768A000BF381 /* HPControlledPrintManager.mm in Sources */,
 				37633B6A1B7176B6000BF381 /* HPServices.m in Sources */,
 				37633B6C1B7176C1000BF381 /* HPPrinter.m in Sources */,
@@ -443,7 +471,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				372E9E0E1BAA310D00F2796E /* HPControlledPrintManagerTest.m in Sources */,
+				37DE92AD1BEC45E800FB5AF6 /* HPControlledPrintManagerUtil.mm in Sources */,
 				372E9E101BAA325700F2796E /* HPPrintJobRequestTest.m in Sources */,
+				37DF03DD1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -640,6 +670,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HPControlledPrintTests/Libaries",
+					"$(PROJECT_DIR)/HPControlledPrint/Libraries",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",
@@ -669,6 +700,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/HPControlledPrintTests/Libaries",
+					"$(PROJECT_DIR)/HPControlledPrint/Libraries",
 				);
 				OTHER_LDFLAGS = (
 					"$(inherited)",

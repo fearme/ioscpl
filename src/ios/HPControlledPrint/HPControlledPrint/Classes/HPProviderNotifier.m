@@ -34,14 +34,14 @@
                 //NSLog(@"Response description: %@", [(NSHTTPURLResponse *)response description]);
                 NSInteger statusCode = [(NSHTTPURLResponse *)response statusCode];
                 if (statusCode != 200) {
-                    NSLog(@"HPProviderNotifier: Response code = %ld", (long)statusCode);
+                    NSLog(@"\n\nHPProviderNotifier: Response code = %ld\n\n", (long)statusCode);
                     return;
                 } else {
-                    NSLog(@"HPProviderNotifier: Prodider was successfully notified.");
+                    NSLog(@"\n\nHPProviderNotifier: Provider was successfully notified.\n\n");
                 }
             }
         } else {
-            NSLog(@"HPProviderNotifier: Unable to notify Provider of print status. Connection error = %@", connectionError);
+            NSLog(@"\n\nHPProviderNotifier: Unable to notify Provider of print status. Connection error = %@\n\n", connectionError);
         }
     });
 }

@@ -42,7 +42,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         var printJob = HPPrintJobRequest()
         printJob.tokenId = source
         printJob.providerId = ProviderQples
-        printJob.hardwareId = "PhoneID"
+        printJob.hardwareId = "FDC_PhoneID"
         
         return ControlledPrint.cpl.print(printer, withJobRequest: printJob)
     }
