@@ -8,6 +8,7 @@ kill_dir()
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
 
 kill_dir ${WORKSPACE}/client/cmake-build/ios_simulator
+kill_dir ${WORKSPACE}/client/cmake-build/ios_simulator64
 kill_dir ${WORKSPACE}/client/cmake-build/ios_device
 kill_dir ${WORKSPACE}/client/deliveries/ios
 

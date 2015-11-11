@@ -367,11 +367,15 @@ public class CoreApi {
 
             if("1".equals(printerProps.getProperty("is_supported"))) {
               printer.is_supported = true;
+              printer.supported = Printer.Supportedness.SUPPORTED;
             } else {
               printer.is_supported = false;
+              printer.supported = Printer.Supportedness.UNSUPPORTED;
             }
 
 //          printer.is_supported    = printerProps.getProperty("is_supported");
+      } else {
+        printer.supported = Printer.Supportedness.UNKNOWN;
       }
 
       // TODO: knownEzStatus

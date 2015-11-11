@@ -34,6 +34,14 @@ public class Printer {
   public               int                knownEzStatus;
   public               boolean            is_supported;
 
+  public enum Supportedness {
+    UNKNOWN,
+    UNSUPPORTED,
+    SUPPORTED
+  }
+
+  public               Supportedness      supported;
+
 //  // Other attributes -- ones that aren't above.
 //  public               XJSONObject        extraInfo;
 //
@@ -98,6 +106,11 @@ public class Printer {
   public boolean getIsSupported(){
     return this.is_supported;
   }
+
+  public Supportedness getSupported() {
+    return supported;
+  }
+
 //
 //  public void setIsSupported(boolean value){
 //    if(value){

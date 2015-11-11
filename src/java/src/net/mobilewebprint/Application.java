@@ -335,7 +335,6 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       printer = printers.get(ip);
     } else {
       printer = new Properties();
-      printer.setProperty("is_supported", "0");
 
       printers.put(ip, printer);
     }
