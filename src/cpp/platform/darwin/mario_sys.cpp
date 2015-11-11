@@ -11,11 +11,6 @@
 
 using namespace net_mobilewebprint;
 
-char const * net_mobilewebprint::platform_name()
-{
-  return "darwin";
-}
-
 // ----------------------------------------------------------------------------------
 // Convert the system-preferred string type to US-ASCII -- the network APIs
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
