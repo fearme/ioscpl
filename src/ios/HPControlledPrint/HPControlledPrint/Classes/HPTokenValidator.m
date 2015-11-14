@@ -25,11 +25,13 @@ HttpGetCompletion validationCompletion;
     self.token = token;
     validationCompletion = completion;
     
-    NSLog(@"Token to Validate: %@", token);
-    NSLog(@"Validation URL: %@", serviceUrl);
     
     // Create the request.
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:serviceUrl]];
+    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", serviceUrl, token];
+    NSLog(@"Validation URL: %@", validationCall);
+    NSLog(@"Token to Validate: %@", token);
+    
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:validationCall]];
     
     // Create url connection and fire request
     NSURLConnection *conn = [[NSURLConnection alloc] initWithRequest:request delegate:self];

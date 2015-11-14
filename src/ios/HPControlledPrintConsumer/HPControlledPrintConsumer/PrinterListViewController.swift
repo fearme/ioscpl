@@ -31,30 +31,34 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         
         //Valid Token: QPLESLIKETOKEN-2321321312321321321
         //Valid File: http://www.pdfpdf.com/samples/Sample5.PDF
-        self.cpl?.initialize(selectedServerStack!, token: self.printSource!, validation: self.doValidation, completion:{(status: InitStatus) -> () in
+        self.cpl?.initialize(selectedServerStack!, completion:{(status: InitStatus) -> () in
             if (status.value == InitStatusServerStackNotAvailable.value) {
                 self.spinner.removeFromSuperview()
                 self.clearPrinterList = true
                 let alert = UIAlertView(title: "Server Error", message: "Unable to connect to the Server Stack.", delegate: self, cancelButtonTitle: "OK")
                 alert.show()
                 
-                //Launch an error page. But this page will not be embedded in the navigation stack.
-                //let mainStoryboard = UIStoryboard(name: "Main", bundle: NSBundle.mainBundle())
-                //let vc : UIViewController = mainStoryboard.instantiateViewControllerWithIdentifier("ServerError") as! UIViewController
-                //self.presentViewController(vc, animated: true, completion: nil)
-                
-            } else if (status.value == InitStatusTokenInvalid.value) {
-                self.spinner.removeFromSuperview()
-                self.clearPrinterList = true
-                let alert = UIAlertView(title: "Invalid Coupon", message: "Coupon Token is INVALID.", delegate: self, cancelButtonTitle: "OK")
-                alert.show()
-                
-            } else {
-                self.clearPrinterList = false
-                self.cpl!.scanForPrinters()
+            } else if (status.value == InitStatusServerStackAvailable.value) {
+                if (self.doValidation) {
+                    self.cpl?.validateToken(self.printSource!, completion: {(valid: Bool) -> () in
+                        if (!valid) {
+                            self.spinner.removeFromSuperview()
+                            self.clearPrinterList = true
+                            let alert = UIAlertView(title: "Invalid Coupon", message: "Coupon Token is INVALID.", delegate: self, cancelButtonTitle: "OK")
+                            alert.show()
+                            
+                        } else {
+                            self.clearPrinterList = false
+                            self.cpl!.scanForPrinters()
+                        }
+                    })
+                    
+                } else {
+                    self.clearPrinterList = false
+                    self.cpl!.scanForPrinters()
+                }
             }
         })
-
     }
 
     override func didReceiveMemoryWarning() {

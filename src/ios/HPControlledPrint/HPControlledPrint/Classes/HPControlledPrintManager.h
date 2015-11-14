@@ -15,9 +15,7 @@ typedef enum {
 
 typedef enum {
     InitStatusServerStackNotAvailable,
-    InitStatusServerStackAvailable,
-    InitStatusTokenInvalid,
-    InitStatusTokenValid
+    InitStatusServerStackAvailable
 } InitStatus;
 
 
@@ -28,11 +26,14 @@ typedef enum {
 
 - (void)proxy:(NSString *)host onPort:(NSString *)port;
 
-- (void)initialize: (ServerStack)stack withToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion;
-- (void)initialize: (ServerStack)stack withToken:(NSString *)token doValidation:(BOOL)validate withCompletion:(void (^)(InitStatus status))completion;
+- (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion;
+
+- (void)validateToken:(NSString *)token withCompletion:(void (^)(BOOL valid))completion;
 
 - (BOOL)scanForPrinters;
-- (BOOL)print: (HPPrinter *)selectedPrinter withJobRequest:(HPPrintJobRequest *)printJobRequest;
+
+- (BOOL)print:(HPPrinter *)selectedPrinter withJobRequest:(HPPrintJobRequest *)printJobRequest;
+
 - (BOOL)exit;
 
 

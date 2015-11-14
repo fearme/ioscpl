@@ -13,7 +13,7 @@
 
 @implementation HPMetricsSender
 
-- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forOperation:(NSString *)operation forReason:(NSString *)reason forState:(NSString *)state metricsType:(NSString *)metricsType
+- (void)send:(NSString *)url withPrintJobRequest:(HPPrintJobRequest *)printJobRequest forHardwarId:(NSString *)hardwareId forOperation:(NSString *)operation forReason:(NSString *)reason forState:(NSString *)state metricsType:(NSString *)metricsType
 {
     NSString *blobType = metricsType;
     NSString *application = @"CP_SDK";
@@ -33,8 +33,8 @@
     NSString *providerElement = @"";
     NSMutableString *offerIdElement = [NSMutableString stringWithString:@""];
     if (printJobRequest != nil) {
-        hardwareElement = printJobRequest.hardwareId == nil ? @"" : [NSString stringWithFormat:@"<met:userId>%@</met:userId>", printJobRequest.hardwareId];
-        tokenElement = [NSString stringWithFormat:@"<met:url>%@</met:url>", printJobRequest.tokenId];
+        hardwareElement = hardwareId == nil ? @"" : [NSString stringWithFormat:@"<met:userId>%@</met:userId>", hardwareId];
+        tokenElement = printJobRequest.tokenId == nil ? @"" : [NSString stringWithFormat:@"<met:url>%@</met:url>", printJobRequest.tokenId];
         providerElement = [NSString stringWithFormat:@"<met:vendorId>%@</met:vendorId>", [printJobRequest providerAsString]];
         
         //construct offer IDs

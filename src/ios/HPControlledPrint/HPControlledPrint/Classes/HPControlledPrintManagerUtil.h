@@ -15,4 +15,8 @@
 
 + (HPServices *)parseDiscoveryData:(NSDictionary *)data secureAssetPrint:(net_mobilewebprint::secure_asset_printing_api_t *)sap caymanRootUrl:(NSString *)caymanRootUrl;
 
++ (NSString *) hash:(NSString *)source withSalt:(NSString *)salt;
+
++ (NSString *) salt:(int)length;
+
 @end

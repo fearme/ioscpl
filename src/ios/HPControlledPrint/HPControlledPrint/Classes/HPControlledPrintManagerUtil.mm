@@ -6,6 +6,8 @@
 //  Copyright (c) 2015 Secure Print & Mobile Enablement. All rights reserved.
 //
 
+#import <CommonCrypto/CommonHMAC.h>
+
 #import "HPControlledPrintManagerUtil.h"
 #import "HPServices.h"
 
@@ -72,6 +74,36 @@
     NSLog(@"domainName: %s", domainName);
     
     return services;
+}
+
++ (NSString *) hash:(NSString *)source withSalt:(NSString *)salt
+{
+    const char *cKey  = [salt cStringUsingEncoding:NSUTF8StringEncoding];
+    const char *cData = [source cStringUsingEncoding:NSUTF8StringEncoding];
+    unsigned char cHMAC[CC_SHA512_DIGEST_LENGTH];
+    CCHmac(kCCHmacAlgSHA512, cKey, strlen(cKey), cData, strlen(cData), cHMAC);
+    
+    NSString *hash;
+    
+    NSMutableString* output = [NSMutableString stringWithCapacity:CC_SHA512_DIGEST_LENGTH * 2];
+    
+    for(int i = 0; i < CC_SHA512_DIGEST_LENGTH; i++)
+        [output appendFormat:@"%02x", cHMAC[i]];
+    hash = output;
+    return hash;
+}
+
+
++ (NSString *) salt:(int)length
+{    
+    NSString *letters = @"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    NSMutableString *randomString = [NSMutableString stringWithCapacity: length];
+    
+    for (int i=0; i < length; i++) {
+        [randomString appendFormat: @"%C", [letters characterAtIndex: arc4random_uniform([letters length])]];
+    }
+    
+    return randomString;
 }
 
 @end

@@ -1,4 +1,6 @@
 
+#import <UIKit/UIKit.h>
+
 #import "HPControlledPrintManager.h"
 #import "HPControlledPrintManagerUtil.h"
 #import "HPPrinterAttributes.h"
@@ -8,11 +10,11 @@
 #import "HPProviderNotifier.h"
 #import "HPTokenValidator.h"
 
-
 #include "../Includes/mwp_secure_asset_printing_api.hpp"
 
 @interface HPControlledPrintManager () <HPAsyncHttpDelegate>
 @property (strong, nonatomic) void(^httpGetCompletion)(InitStatus status);
+@property (strong, nonatomic) NSString *uuidHashed;
 @end
 
 
@@ -22,19 +24,20 @@ int const kSendPrintersIntervalSeconds = 3;
 
 int timerInterval = 0;
 
-NSString *const kStatusCouponAppLaunched     = @"COUPON_DOCUMENT_APP_LAUNCHED";
-NSString *const kStatusCouponPrintRequested  = @"COUPON_DOCUMENT_PRINT_REQUESTED";
-NSString *const kStatusCouponPrintSuccess    = @"COUPON_DOCUMENT_PRINT_SUCCESS";
-NSString *const kStatusCouponPrintFailed     = @"FAILED_PRINT_COUPON_DOCUMENT";
-NSString *const kStatusCouponPrintCanceled   = @"CANCELED_PRINT_COUPON_DOCUMENT";
-NSString *const kStatusCouponPrintDeferred   = @"COUPON_DOCUMENT_DEFERRED";
+NSString *const kOperationNewToken           = @"COUPON_DOCUMENT_NEW_TOKEN";
+NSString *const kOperationPrintRequested     = @"COUPON_DOCUMENT_PRINT_REQUESTED";
+NSString *const kOperationPrintSuccess       = @"COUPON_DOCUMENT_PRINT_SUCCESS";
+NSString *const kOperationPrintFailed        = @"FAILED_PRINT_COUPON_DOCUMENT";
+NSString *const kOperationPrintCanceled      = @"CANCELED_PRINT_COUPON_DOCUMENT";
+NSString *const kOperationPrintDeferred      = @"COUPON_DOCUMENT_DEFERRED";
 
-NSString *const kStatePrintRequestInitiated = @"Print Request Initiated";
-NSString *const kStatePrintSuccess          = @"Print Success";
-NSString *const kStatePrintCancelled        = @"Print Cancelled";
-NSString *const kStatePrintError            = @"Print Error";
+NSString *const kStatePrintRequestInitiated  = @"Print Request Initiated";
+NSString *const kStatePrintSuccess           = @"Print Success";
+NSString *const kStatePrintCancelled         = @"Print Cancelled";
+NSString *const kStatePrintError             = @"Print Error";
+NSString *const kStateNewToken               = @"NEW_TOKEN";
 
-NSString *const kStateAppLaunched            = @"LAUNCHED";
+NSString *const kReasonNewTokenRegistered    = @"New Token Registered";
 
 NSString *const kPrinterStatusPrinting       = @"PRINTING";
 NSString *const kPrinterStatusIdle           = @"IDLE";
@@ -71,7 +74,7 @@ BOOL printerScanStarted;
 - (instancetype)init
 {
     self = [super init];
-    if (self && secureAssetPrinter == nil){
+    if (self && secureAssetPrinter == nil) {
         secureAssetPrinter = net_mobilewebprint::sap_api();
         printers = [[NSMutableDictionary alloc] init];
         timerInterval = kSendPrintersIntervalSeconds;
@@ -83,7 +86,21 @@ BOOL printerScanStarted;
     NSBundle *bundle = [NSBundle bundleForClass:[self class]];
     NSLog(@"%@", [bundle description]);
     
+    self.uuidHashed = [self hashUUID];
+    
     return self;
+}
+
+
+- (NSString *)hashUUID
+{
+    NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt:8]];
+    NSLog(@"UUID: %@", uuid);
+    NSLog(@"UUID Hashed: %@", hashed);
+    NSLog(@"UUID Hashed Length: %lu", (unsigned long)[hashed length]);
+    
+    return hashed;
 }
 
 - (void)setScanIntervalSeconds:(int32)seconds {
@@ -267,19 +284,19 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         // if canceling
         if ([printerStatus isEqualToString:kPrinterStatusCanceling]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintCanceled forReason:nil forState:kStatePrintCancelled metricsType:kMetricTypeUserData];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintCanceled forReason:nil forState:kStatePrintCancelled metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
         // if unknown or netork error
         } else if ([printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintFailed forReason:nil forState:kStatePrintError metricsType:kMetricTypeErrorMessage];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintFailed forReason:nil forState:kStatePrintError metricsType:kMetricTypeErrorMessage];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
         // if success or upstream error
         } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forOperation:kStatusCouponPrintSuccess forReason:nil forState:kStatePrintSuccess metricsType:kMetricTypeUserData];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintSuccess forReason:nil forState:kStatePrintSuccess metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"SUCCESS metric sent");
         }
@@ -330,55 +347,14 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     proxyPort = port;
 }
 
-- (void)validateToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion
+#pragma mark - initialize:
+
+- (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-    HPTokenValidator *validator = [[HPTokenValidator alloc] init];
-    NSLog(@"Token: %@", token);
-    NSString *validationCall = [NSString stringWithFormat:@"%@?tokenId=%@", services.validateQplesToken, token];
-    
-    [validator validate:token withServiceUrl:validationCall withCompletion:^(BOOL success) {
-        if (success) {
-            completion(InitStatusTokenValid);
-        } else {
-            completion(InitStatusTokenInvalid);
-        }
-    }];
-}
-
-#pragma mark - initialize()
-
-- (void)initialize: (ServerStack)stack withToken:(NSString *)token withCompletion:(void (^)(InitStatus status))completion {
-    [self initialize:stack withToken:token doValidation:YES withCompletion:completion];
-}
-
-- (void)initialize: (ServerStack)stack withToken:(NSString *)token doValidation:(BOOL)validate withCompletion:(void (^)(InitStatus status))completion
-{
-    currentServerStack = stack;
-    
-    
-    __weak HPControlledPrintManager *weakSelf = self;
+    currentServerStack = stack;    
     [self setEnvironment: ^(InitStatus status){
-        if (status == InitStatusServerStackAvailable) {
-            
-            NSLog(@"\n\nMetrics URL: %@\n\n", services.postMetricsUrl);
-            HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:nil forOperation:kStatusCouponAppLaunched forReason:nil forState:kStateAppLaunched metricsType:kMetricTypeUserData];
-
-            if (token != nil && validate) {
-                [weakSelf validateToken:token withCompletion:^(InitStatus status){
-                    if (completion){
-                        completion(status);
-                    }
-                }];
-            } else {
-                if (completion){
-                    completion(status);
-                }
-            }
-        }  else {
-            if (completion){
-                completion(InitStatusServerStackNotAvailable);
-            }
+        if (completion){
+            completion(status);
         }
     }];
 }
@@ -420,6 +396,23 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     HPAsyncHttpGet *httpGet = [[HPAsyncHttpGet alloc] init];
     httpGet.delegate = self;
     [httpGet execute:discoveryUrl];
+}
+
+#pragma mark - validateToken:
+
+- (void)validateToken:(NSString *)token withCompletion:(void (^)(BOOL valid))completion
+{
+    NSLog(@"\n\nMetrics URL: %@\n\n", services.postMetricsUrl);
+    HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
+    HPPrintJobRequest *tempRequest = [[HPPrintJobRequest alloc] init];
+    [metricsSender send:services.postMetricsUrl withPrintJobRequest:tempRequest forHardwarId:self.uuidHashed forOperation:kOperationNewToken forReason:kReasonNewTokenRegistered forState:kStateNewToken metricsType:kMetricTypeUserData];
+    
+    HPTokenValidator *validator = [[HPTokenValidator alloc] init];    
+    [validator validate:token withServiceUrl:services.validateQplesToken withCompletion:^(BOOL valid) {
+        if (completion) {
+            completion(valid);
+        }
+    }];
 }
 
 #pragma mark - scanForPrinters()
@@ -476,7 +469,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     [self sendPrintJob:tokenId toPrinterIp:selectedPrinter.ipAddress];
     
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forOperation:kStatusCouponPrintRequested forReason:kStatePrintRequestInitiated forState:nil metricsType:kMetricTypeUserData];
+    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forHardwarId:self.uuidHashed forOperation:kOperationPrintRequested forReason:kStatePrintRequestInitiated forState:nil metricsType:kMetricTypeUserData];
     
     return YES;
 }

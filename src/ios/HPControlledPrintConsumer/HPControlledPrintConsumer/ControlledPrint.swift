@@ -21,9 +21,15 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         ControlledPrint.cpl.printerAttributesDelegate = self
     }
     
-    func initialize(stack: ServerStack, token: String, validation: Bool, completion: ((InitStatus) -> ())) {
-        ControlledPrint.cpl.initialize(stack, withToken: token, doValidation: validation, withCompletion:{(status: InitStatus) in
+    func initialize(stack: ServerStack, completion: ((InitStatus) -> ())) {
+        ControlledPrint.cpl.initialize(stack, withCompletion:{(status: InitStatus) in
             completion(status)
+        })
+    }
+    
+    func validateToken(token: String, completion: ((Bool) -> ())) {
+        ControlledPrint.cpl.validateToken(token, withCompletion: {(valid: Bool) in
+            completion(valid)
         })
     }
     
@@ -42,7 +48,6 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         var printJob = HPPrintJobRequest()
         printJob.tokenId = source
         printJob.providerId = ProviderQples
-        printJob.hardwareId = "FDC_PhoneID"
         
         return ControlledPrint.cpl.print(printer, withJobRequest: printJob)
     }

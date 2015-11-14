@@ -13,7 +13,6 @@ typedef enum {
 // Required
 @property (strong, nonatomic) NSString *tokenId; //The identifier of the coupon
 @property (assign) Provider providerId; //The identifier for the asset provider
-@property (strong, nonatomic) NSString *hardwareId; //The identifier for the client hardware
 
 // Flag for whether the final print status metric of print job was sent
 @property (assign, nonatomic) BOOL finalPrintStatusMetricSent;
