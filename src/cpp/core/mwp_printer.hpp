@@ -153,6 +153,7 @@ namespace net_mobilewebprint {
 
     void soft_network_error(string const & ip, int error_number);
     void network_error(string const & ip, int error_number);
+    void upstream_error(string const & ip, int error_number);
     void remove_printer(printer_t*&);
 
     void send_print_job(uint32 & connection_id, string const & ip);

@@ -1042,6 +1042,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     state = "NETWORK_ERROR";
     message = "Network error.";
     is_finishing = true;
+  } else if(state == "UPSTREAM_ERROR" || printerState == "UPSTREAM_ERROR" || jobStatus == "UPSTREAM_ERROR"){
+    printerState = job_stat(pcl_txn_id, "status", "UPSTREAM_ERROR");
+    jobStatus = job_stat(pcl_txn_id, "jobStatus", "UPSTREAM_ERROR");
+    state = "UPSTREAM_ERROR";
+    message = "Upstream error.";
+    is_finishing = true;
   } else {
 
     log_v(5, "", "progress0(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
