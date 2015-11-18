@@ -1266,6 +1266,24 @@ void net_mobilewebprint::printer_list_t::network_error(string const & ip, int er
 
 }
 
+void net_mobilewebprint::printer_list_t::upstream_error(string const & ip, int error_number)
+{
+  controller.sendTelemetry("network", "upstreamError", "ip", ip, "errno", error_number);
+
+  printer_t * printer = _get_printer(ip);
+  if (printer == NULL) {
+    return;
+  }
+
+  log_d(1, "curl", "curl upstream error printer");
+
+  /* otherwise */
+  printer->attrs_lc.insert(make_pair("status", "UPSTREAM_ERROR"));
+  controller.job_stat(printer->connection_id, "status", "UPSTREAM_ERROR");
+  controller.job_stat(printer->connection_id, "jobStatus", "UPSTREAM_ERROR");
+
+}
+
 void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
 {
   if (printer && printer->has_ip()) {
