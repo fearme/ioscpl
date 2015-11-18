@@ -31,13 +31,16 @@ NSString *const kOperationPrintFailed        = @"FAILED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintCanceled      = @"CANCELED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintDeferred      = @"COUPON_DOCUMENT_DEFERRED";
 
-NSString *const kStatePrintRequestInitiated  = @"Print Request Initiated";
-NSString *const kStatePrintSuccess           = @"Print Success";
-NSString *const kStatePrintCancelled         = @"Print Cancelled";
-NSString *const kStatePrintError             = @"Print Error";
+NSString *const kStatePrintRequestInitiated  = @"INITIATED";
+NSString *const kStatePrintSuccess           = @"SUCCESS";
+NSString *const kStatePrintCancelled         = @"CANCELLED";
 NSString *const kStateNewToken               = @"NEW_TOKEN";
+NSString *const kStateUnknown                = @"UNKNOWN";
+NSString *const kStateNetworkError           = @"NETWORK_ERROR";
+NSString *const kStateUpstreamError          = @"UPSTREAM_ERROR";
 
 NSString *const kReasonNewTokenRegistered    = @"New Token Registered";
+NSString *const kReasonPrintRequestInitiated = @"Print Request Initiated";
 
 NSString *const kPrinterStatusPrinting       = @"PRINTING";
 NSString *const kPrinterStatusIdle           = @"IDLE";
@@ -95,7 +98,7 @@ BOOL printerScanStarted;
 - (NSString *)hashUUID
 {
     NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt:8]];
+    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt:32]];
     NSLog(@"UUID: %@", uuid);
     NSLog(@"UUID Hashed: %@", hashed);
     NSLog(@"UUID Hashed Length: %lu", (unsigned long)[hashed length]);
@@ -163,6 +166,8 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     //int n4 = (params != NULL ? params->n4 : 0);
     //int n5 = (params != NULL ? params->n5 : 0);
     
+    //printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message, ident, (int)transactionId, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
+
     //begin_printer_changes
     //Doc URL: https://www.dropbox.com/s/o9m66y4h67yfwmq/Avatar1.jpg?dl=0
     //end_printer_enum
@@ -211,9 +216,8 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             attributes._supportedFlagIsSet = YES;
         }
         
-        [printers setObject:attributes forKey:printerIp];
-        
         //printf("%s: %s = %s\n", p1, p2, p3);
+        [printers setObject:attributes forKey:printerIp];
 
     } else if ([stringMessage isEqualToString:@"print_progress"]) {
         //Notes on parameter values
@@ -240,13 +244,9 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         [self notifyProviderOfPrintStatus:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
-        
-        //printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message, ident, (int)transactionId, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
-
-    } else {
-        //printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message, ident, (int)transactionId, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
+    } else if ([stringMessage isEqualToString:@"begin_new_printer_list"]) {
+        [printers removeAllObjects];
     }
-    
 }
 
 - (void)notifyProviderOfPrintStatus:(HPPrintJobRequest *)printJob withUserVisibleStatus:(NSString *)userVisibleStatus withPrinterStatus:(NSString *)printerStatus
@@ -284,19 +284,31 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         // if canceling
         if ([printerStatus isEqualToString:kPrinterStatusCanceling]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintCanceled forReason:nil forState:kStatePrintCancelled metricsType:kMetricTypeUserData];
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintCanceled forReason:userVisibleStatus forState:kStatePrintCancelled metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
         // if unknown or netork error
         } else if ([printerStatus isEqualToString:kPrinterStatusUnknown] || [printerStatus isEqualToString:kPrinterStatusNetworkError]) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintFailed forReason:nil forState:kStatePrintError metricsType:kMetricTypeErrorMessage];
+            NSString *state;
+            if ([printerStatus isEqualToString:kPrinterStatusUnknown]) {
+                state = kStateUnknown;
+            } else {
+                state = kStateNetworkError;
+            }
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintFailed forReason:userVisibleStatus forState:state metricsType:kMetricTypeErrorMessage];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"%@ metric sent", printerStatus);
             
-        // if success or upstream error
+        // if success or upstream error are treated as success
         } else if ( ([userVisibleStatus isEqualToString:kPrinterStatusDone] && [printerStatus isEqualToString:kPrinterStatusIdle]) || [printerStatus isEqualToString:kPrinterStatusUpstreamError] ) {
-            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintSuccess forReason:nil forState:kStatePrintSuccess metricsType:kMetricTypeUserData];
+            NSString *state;
+            if ([printerStatus isEqualToString:kPrinterStatusUpstreamError]) {
+                state = kStateUpstreamError;
+            } else {
+                state = kStatePrintSuccess;
+            }
+            [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJob forHardwarId:self.uuidHashed forOperation:kOperationPrintSuccess forReason:userVisibleStatus forState:state metricsType:kMetricTypeUserData];
             printJob.finalPrintStatusMetricSent = YES;
             NSLog(@"SUCCESS metric sent");
         }
@@ -469,7 +481,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     [self sendPrintJob:tokenId toPrinterIp:selectedPrinter.ipAddress];
     
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
-    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forHardwarId:self.uuidHashed forOperation:kOperationPrintRequested forReason:kStatePrintRequestInitiated forState:nil metricsType:kMetricTypeUserData];
+    [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forHardwarId:self.uuidHashed forOperation:kOperationPrintRequested forReason:kReasonPrintRequestInitiated forState:kStatePrintRequestInitiated metricsType:kMetricTypeUserData];
     
     return YES;
 }
