@@ -1741,6 +1741,9 @@ namespace net_mobilewebprint {
     return result;
   }
 
+  enum { HTTP_CODE_498 = 498 };
+  enum { CURL_NO_ERROR = 0 };
+
 };
 
 
