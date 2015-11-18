@@ -252,9 +252,9 @@ e_handle_result net_mobilewebprint::tcp_job_connection_t::_on_txn_close(string c
     buffer_view_i::const_iterator p = payload.first();
     uint32 curl_status = payload.read_uint32(p);
     long http_code = payload.read_long(p);
-    if(curl_status != CURL_NO_ERROR){
+    if(curl_status != curl_no_error){
       controller.printers.network_error(printer->ip, curl_status);
-    } else if(http_code == HTTP_CODE_498) {
+    } else if(http_code == http_code_498) {
       controller.printers.upstream_error(printer->ip, http_code);
     }
     mq.deregister_for_select(*printer);
