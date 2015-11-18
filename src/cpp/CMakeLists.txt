@@ -53,21 +53,20 @@ set(MARIO_CURL_CPP "core/mwp_curl_null.cpp")
 #   MARIO_APP_SHARED    -- If it is for an app, do we want static libs, or shared?
 #   MARIO_CURL_CPP      -- The CPP file to use for controlling curl
 
+set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
+
 # What platform are we on?
 if(IOS)
-  set(MARIO_BASE_CPP platform/base/mario_sys.cpp)
   set(MARIO_PLATFORM_DIR platform/darwin)
   set(MARIO_PLATFORM_LOG platform/ios)
   set(MARIO_APP True)
   set(MARIO_APP_SHARED False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (APPLE)
-  set(MARIO_BASE_CPP platform/base/mario_sys.cpp)
   set(MARIO_PLATFORM_DIR platform/darwin)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP False)
 else()
-  set(MARIO_BASE_CPP platform/base/mario_sys.cpp)
   set(MARIO_PLATFORM_DIR platform/android)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP True)
@@ -75,13 +74,18 @@ else()
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 endif()
 
+set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario_sys.cpp)
 
+if(IOS)
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/ios/platform_name.cpp)
+elseif (APPLE)
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
+endif()
 
 # "mariocli" is a command-line tool to drive functionality during development
 add_executable(mwpcli
-               ${MARIO_BASE_CPP}
+               ${MARIO_PLATFORM_SOURCES}
                ${MARIO_CURL_CPP}
-               ${MARIO_PLATFORM_DIR}/mario_sys.cpp
                platform/stdio_out_err/mario_cli.cpp)
 
 target_link_libraries(mwpcli mwpcore mwpcoreprotos)
@@ -95,9 +99,8 @@ if (MARIO_APP)
       include_directories(${ZLIB_INCLUDE_DIRS})
 
       add_library(mwp SHARED
-                  ${MARIO_BASE_CPP}
+                  ${MARIO_PLATFORM_SOURCES}
                   ${MARIO_CURL_CPP}
-                  ${MARIO_PLATFORM_DIR}/mario_sys.cpp
                   ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
       target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
@@ -107,9 +110,8 @@ if (MARIO_APP)
   else()
     # iOS
     add_library(mwp
-                ${MARIO_BASE_CPP}
+                ${MARIO_PLATFORM_SOURCES}
                 ${MARIO_CURL_CPP}
-                ${MARIO_PLATFORM_DIR}/mario_sys.cpp
                 ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
     target_link_libraries(mwp mwpcore mwpcoreprotos cpl)
