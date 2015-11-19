@@ -8,7 +8,7 @@
         <!--SquitchyTink-->
         <scene sceneID="ufC-wZ-h7g">
             <objects>
-                <viewController id="vXZ-lx-hvc" customClass="PrinterListViewController" customModule="HPControlledPrintConsumer" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PrinterListViewController" id="vXZ-lx-hvc" customClass="PrinterListViewController" customModule="HPControlledPrintConsumer" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="jyV-Pf-zRb"/>
                         <viewControllerLayoutGuide type="bottom" id="2fi-mo-0CV"/>
@@ -66,7 +66,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="x5A-6p-PRh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="878" y="-806"/>
+            <point key="canvasLocation" x="1690" y="-806"/>
         </scene>
         <!--SquitchyTink Setup-->
         <scene sceneID="d38-ha-XRX">
@@ -143,7 +143,7 @@
                                             </constraints>
                                         </tableViewCellContentView>
                                         <connections>
-                                            <segue destination="vXZ-lx-hvc" kind="show" identifier="Print" id="QhE-LU-j4Y"/>
+                                            <segue destination="cjp-Dj-fFs" kind="show" identifier="Print" id="QhE-LU-j4Y"/>
                                         </connections>
                                     </tableViewCell>
                                 </cells>
@@ -324,7 +324,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="RaS-fy-nwC" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1910" y="-794"/>
+            <point key="canvasLocation" x="2722" y="-794"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="9Mq-GZ-v0b">
@@ -343,6 +343,24 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="9b2-Om-aWP" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="-813" y="-1823"/>
+        </scene>
+        <!--Navigation Controller-->
+        <scene sceneID="je0-Na-hgi">
+            <objects>
+                <navigationController storyboardIdentifier="PrintNavigationController" automaticallyAdjustsScrollViewInsets="NO" id="cjp-Dj-fFs" sceneMemberID="viewController">
+                    <toolbarItems/>
+                    <navigationBar key="navigationBar" contentMode="scaleToFill" id="d6E-Ao-Vy5">
+                        <rect key="frame" x="0.0" y="0.0" width="320" height="44"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                    </navigationBar>
+                    <nil name="viewControllers"/>
+                    <connections>
+                        <segue destination="vXZ-lx-hvc" kind="relationship" relationship="rootViewController" id="dx0-ej-wdf"/>
+                    </connections>
+                </navigationController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="DCY-pq-9aG" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="878" y="-806"/>
         </scene>
     </scenes>
 </document>
