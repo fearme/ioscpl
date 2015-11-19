@@ -36,6 +36,11 @@ bool net_mobilewebprint::core_api_t::mq_is_done()
 
 bool net_mobilewebprint::core_api_t::send_job(char const * url, const char * printer_ip)
 {
+  if (printer_ip == NULL) {
+    return controller->send_job(url, "");
+  }
+
+  /* otherwise */
   return controller->send_job(url, printer_ip);
 }
 

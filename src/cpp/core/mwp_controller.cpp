@@ -908,21 +908,49 @@ bool net_mobilewebprint::controller_base_t::mq_is_done()
  *
  *  The message is to allocate a job id.
  */
-bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url, string const & printer_ip_)
+bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url_, string const & printer_ip_)
 {
   string printer_ip = printer_ip_;
+  string asset_url  = asset_url_;
 
   log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
+
+  // Remove the launcher sessionId
+  string launchSessionId;
+  size_t tildePos = asset_url.find("~");
+  if (tildePos != string::npos) {
+    asset_url = asset_url.substr(0, tildePos);
+    launchSessionId = asset_url_.substr(tildePos + 1);
+    sendTelemetry("session", "launch", "launchSessionId", launchSessionId, "sessionId", sessionId);
+  }
+
+  // An empty printer_ip is a heads-up of what the URL will be (the print asset). We can get a head-start.
+  if (printer_ip_.length() == 0) {
+
+    // Pre-allocate job
+    stats_t stats("txn_id", _unique());
+
+    serialization_json_t json;
+    json.set("launchSessionId", launchSessionId);
+    json.set("assetUrl", asset_url);
+
+    string stream_name = upstream.send("/preAllocateJobId", json, "_pre_alloced_job", stats);
+
+    return true;
+  }
+
+  /* otherwise */
 
   // Convert mac address into IP
   if (printer_ip.length() == 17) {
     printer_ip = printers.get_ip(printer_ip);
-    log_api("send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
   }
-  uint32 txn_id = _unique();
 
+  log_api("No, really I mean send_job(asset_url=%s, ip=%s)", asset_url.c_str(), printer_ip.c_str());
+
+  uint32 txn_id    = _unique();
   string device_id = replace_chars(printers.get_device_id(printer_ip), " ", "+");
-  string url = string("/pcl/typeofprint-unknown/") + _lower(device_id) + "/" + replace(asset_url, "://", "/");
+  string url       = string("/pcl/typeofprint-unknown/") + _lower(device_id) + "/" + replace(asset_url, "://", "/");
 
   log_d("send_job fetching %s", url.c_str());
 
