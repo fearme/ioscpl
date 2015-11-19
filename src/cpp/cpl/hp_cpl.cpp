@@ -38,6 +38,11 @@ extern "C" bool hp_cpl_start_ex(uint32 flags_)
   return startup(cpl_api(), flags_);
 }
 
+extern "C" bool hp_cpl_register_bootstrap(char const * name, void * app_data, hp_cpl_callback_t callback)
+{
+  return cpl_api()->register_bootstrap(name, app_data, callback);
+}
+
 extern "C" bool hp_cpl_register_handler(char const * name, void * app_data, hp_cpl_callback_t callback)
 {
   return cpl_api()->register_handler(name, app_data, callback);

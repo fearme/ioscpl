@@ -83,6 +83,8 @@ else
   die "must specify --platform=xyz ($PLATFORM)   (simulator, device)"
 fi
 
+BUILD_FOR="${OS}_${PLATFORM}"
+
 if [ "$BUILD_TOOL" == "xcode" ]; then
   GENERATOR_CMAKE="Xcode"
   MAKE_TOOL="xcodebuild"
@@ -129,27 +131,32 @@ echo "--------------------------------------------------------------------------
 mkdir -p ${WORKSPACE}/client/cmake-build/${OS}_${PLATFORM}/${DEBUG_RELEASE} && cd $_
 BUILD_TREE_ROOT=$(pwd)
 
+TARGET="mwp"
 if [ "$BUILD_TOOL" == "xcode" ]; then
-  if [ "$OS" == "ios" ]; then
 
-    if [ "$PLATFORM_UC" == "SIMULATOR" ]; then
-      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
-    elif [ "$PLATFORM_UC" == "SIMULATOR64" ]; then
-      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
-    else
-      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM="OS"
-    fi
-
-    ${MAKE_TOOL} -target mwp -configuration ${DEBUG_RELEASE_CAP}
-  else
+  if [ "$BUILD_FOR" == "ios_simulator" ]; then
+    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+  elif [ "$BUILD_FOR" == "ios_simulator64" ]; then
+    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+  elif [ "$BUILD_FOR" == "ios_device" ]; then
+    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM="OS"
+  elif [ "$BUILD_FOR" == "macosx_workstation" ]; then
     cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/
-    ${MAKE_TOOL} -target mwpcli -configuration ${DEBUG_RELEASE_CAP}
+    TARGET="mwpcli"
   fi
-elif [ "$BUILD_TOOL" == "android-ndk" ]; then
-  mkdir -p $ABI && cd $_
-  BUILD_TREE_ROOT=$(pwd)
-  cmake -G "${GENERATOR_CMAKE}" ${WORKSPACE}/client/src/cpp/ -DANDROID_ABI="${ABI}" -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -DANDROID_STL=stlport_static
-  ${MAKE_TOOL} mwp
+
+  ${MAKE_TOOL} -target $TARGET -configuration ${DEBUG_RELEASE_CAP}
+
+else
+
+  if [ "$BUILD_FOR" == "android_device" ]; then
+    mkdir -p $ABI && cd $_
+    BUILD_TREE_ROOT=$(pwd)
+    cmake -G "${GENERATOR_CMAKE}" ${WORKSPACE}/client/src/cpp/ -DANDROID_ABI="${ABI}" -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -DANDROID_STL=stlport_static
+  fi
+
+  ${MAKE_TOOL} $TARGET
+
 fi
 
 # -------------------------------------------------------------
@@ -166,11 +173,11 @@ if [ -z "$SHARED_LIB" ]; then
   # src/cpp/platform/ios/*.a
   find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.a$' | egrep -v 'arm[v6]' | while read f; do cp $f ./; done
 else
-  # cmake-build/xcode_ios_simulator/*.so
+  # cmake-build/android_device/debug/armeabi-v7a/*.so
   mkdir -p $ABI
   find ${BUILD_TREE_ROOT} -type f | egrep -i '\.so$' | while read f; do cp $f ./${ABI}; done
 
-  # src/cpp/platform/ios/*.so
+  # src/cpp/platform/android/*.so
   find ${WORKSPACE}/client/src/cpp/platform/${OS} -type f | egrep -i '\.so$' | while read f; do cp $f ./${ABI}; done
 fi
 

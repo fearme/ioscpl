@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 $(dirname $0)/build-base --type=debug --os=ios --platform=device --build-tool=xcode
 $(dirname $0)/package --type=debug --os=ios --platform=device --build-tool=xcode

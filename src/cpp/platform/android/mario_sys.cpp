@@ -440,7 +440,14 @@ char const * net_mobilewebprint::platform_name()
   return "android";
 }
 
-// Convert the system-preferred string type to US-ASCII -- the network APIs
+// ----------------------------------------------------------------------------------
+// Startup
+// ----------------------------------------------------------------------------------
+void net_mobilewebprint::platform_bootstrap()
+{
+  net_mobilewebprint::dumb_and_ok::platform_bootstrap();
+}
+
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
 // that gets passed around.  This platform uses 'normal' C (utf-8) strings.
 string net_mobilewebprint::platform_to_ascii_string(void const *str)

@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 # WORKSPACE is the name of the dir on Jenkins
 test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."

@@ -71,6 +71,8 @@
 #endif
 
 #define MWP_STRLEN_BUFFER_STRING 31
+#define MWP_DEFAULT_FQDN         "pub.mobilewebprint.net"
+#define MWP_DEFAULT_ROOT_URL     "http://" MWP_DEFAULT_FQDN "/"
 
 namespace net_mobilewebprint {
 
@@ -108,6 +110,9 @@ namespace net_mobilewebprint {
 
   // ----- General -----
   char const * platform_name();
+
+  // ----- Startup -----
+  void platform_bootstrap();
 
   // Logging -- the weird signature makes it unlikely that this will clash with the printf-style logging
 
@@ -173,6 +178,7 @@ namespace net_mobilewebprint {
     int       mwp_assert(int);
     bool      mwp_assert(bool);
 
+    void      platform_bootstrap();                           // Does nothing
     string    platform_to_ascii_string(void const *str);      // Just returns str
   };
 

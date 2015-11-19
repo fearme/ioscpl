@@ -12,11 +12,13 @@ set(BUILD_USER    $ENV{USER})
 set(CMAKE_MACOSX_RPATH 1)
 
 if(IOS)
-  set(MARIO_PLATFORM IOS)
+  set(MARIO_PLATFORM "ios")
 elseif (APPLE)
-  set(MARIO_PLATFORM MACOSX)
+  set(MARIO_PLATFORM "macosx")
+elseif (ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH)
+  set(MARIO_PLATFORM "android")
 else()
-  set(MARIO_PLATFORM ANDROID)
+  message(FATAL_ERROR "Unknown platform.  Exiting.")
 endif()
 
 #enable_testing()
@@ -41,6 +43,9 @@ include_directories("${PROJECT_BINARY_DIR}/cpl")
 add_subdirectory(aprotocols)
 include_directories("${PROJECT_BINARY_DIR}/aprotocols")
 
+add_subdirectory(objc)
+include_directories("${PROJECT_BINARY_DIR}/objc")
+
 # Use the NULL curl implementation, if another better one does not show up
 set(MARIO_CURL_CPP "core/mwp_curl_null.cpp")
 
@@ -56,17 +61,17 @@ set(MARIO_CURL_CPP "core/mwp_curl_null.cpp")
 set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
 
 # What platform are we on?
-if(IOS)
+if(${MARIO_PLATFORM} STREQUAL "ios")
   set(MARIO_PLATFORM_DIR platform/darwin)
   set(MARIO_PLATFORM_LOG platform/ios)
   set(MARIO_APP True)
   set(MARIO_APP_SHARED False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
-elseif (APPLE)
+elseif (${MARIO_PLATFORM} STREQUAL "macosx")
   set(MARIO_PLATFORM_DIR platform/darwin)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP False)
-else()
+elseif (${MARIO_PLATFORM} STREQUAL "android")
   set(MARIO_PLATFORM_DIR platform/android)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP True)
@@ -76,46 +81,49 @@ endif()
 
 set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario_sys.cpp)
 
-if(IOS)
+if(${MARIO_PLATFORM} STREQUAL "ios")
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/ios/platform_name.cpp)
-elseif (APPLE)
+elseif (${MARIO_PLATFORM} STREQUAL "macosx")
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
 endif()
 
-# "mariocli" is a command-line tool to drive functionality during development
-add_executable(mwpcli
-               ${MARIO_PLATFORM_SOURCES}
-               ${MARIO_CURL_CPP}
-               platform/stdio_out_err/mario_cli.cpp)
+# Build the main library
+if(${MARIO_PLATFORM} STREQUAL "ios")
 
-target_link_libraries(mwpcli mwpcore mwpcoreprotos)
+  add_library(mwp
+              ${MARIO_PLATFORM_SOURCES}
+              ${MARIO_CURL_CPP}
+              ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
-# "marioapp" is a library for an "app"
-if (MARIO_APP)
-  if (MARIO_APP_SHARED)
-    # Android
-    find_package(ZLIB REQUIRED)
-    if (ZLIB_FOUND)
-      include_directories(${ZLIB_INCLUDE_DIRS})
+  target_link_libraries(mwp mwpcore mwpcoreprotos cpl mwpobjcinterop)
 
-      add_library(mwp SHARED
-                  ${MARIO_PLATFORM_SOURCES}
-                  ${MARIO_CURL_CPP}
-                  ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
+elseif (${MARIO_PLATFORM} STREQUAL "macosx")
 
-      target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
-                  ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/${ANDROID_ABI}/libcurl.a
-                  ${ZLIB_LIBRARIES})
-    endif()
-  else()
-    # iOS
-    add_library(mwp
+  # "mariocli" is a command-line tool to drive functionality during development
+  add_executable(mwpcli
+                 ${MARIO_PLATFORM_SOURCES}
+                 ${MARIO_CURL_CPP}
+                 platform/stdio_out_err/mario_cli.cpp)
+
+  target_link_libraries(mwpcli mwpcore mwpcoreprotos)
+
+
+elseif (${MARIO_PLATFORM} STREQUAL "android")
+
+  find_package(ZLIB REQUIRED)
+  if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+
+    add_library(mwp SHARED
                 ${MARIO_PLATFORM_SOURCES}
                 ${MARIO_CURL_CPP}
                 ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
 
-    target_link_libraries(mwp mwpcore mwpcoreprotos cpl)
+    target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
+                ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/${ANDROID_ABI}/libcurl.a
+                ${ZLIB_LIBRARIES})
   endif()
+
 endif()
 
 #add_test(marioTest mwp)

@@ -45,6 +45,13 @@ int net_mobilewebprint::controlled_print_library_api_t::app_set_timeout(char con
   return sap->app_set_timeout(message_to_send, msecs_to_wait);
 }
 
+bool net_mobilewebprint::controlled_print_library_api_t::register_bootstrap(char const * name, void * app_data, hp_cpl_callback_t callback)
+{
+  // TODO: Convert callback to sap-style callback and call it
+  //return sap->register_bootstrap(name, app_data, callback);
+  return false;
+}
+
 bool net_mobilewebprint::controlled_print_library_api_t::register_handler(char const * name, void * app_data, hp_cpl_callback_t callback)
 {
   // TODO: Convert callback to sap-style callback and call it

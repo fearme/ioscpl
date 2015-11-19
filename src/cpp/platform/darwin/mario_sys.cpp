@@ -3,13 +3,61 @@
  *
  *  Mario core has all the network functionality that Mario-client needs, and is
  *  centered on the BSD-socket APIs, which are "universally" implemented.  However,
- *  Mario needs a handful of other system APIs (like a function to start a new 
+ *  Mario needs a handful of other system APIs (like a function to start a new
  *  thread).  This file supplies that functionality for this above-named platform.
  */
 
 #include "mwp_types.hpp"
+#include <CoreFoundation/CoreFoundation.h>
+#include <CFNetwork/CFNetwork.h>
 
 using namespace net_mobilewebprint;
+
+// ----------------------------------------------------------------------------------
+// Startup
+// ----------------------------------------------------------------------------------
+void net_mobilewebprint::platform_bootstrap()
+{
+  // Get proxy
+  int             port          = -1;
+  char const *    host          = NULL;
+
+  CFDictionaryRef proxyDicRef   = NULL;
+  CFDictionaryRef urlDicRef     = NULL;
+  CFURLRef        urlRef        = NULL;
+  CFArrayRef      proxyArrayRef = NULL;
+  CFNumberRef     portNumberRef = NULL;
+  CFStringRef     hostNameRef   = NULL;
+
+  if ((proxyDicRef = CFNetworkCopySystemProxySettings()) != NULL) {
+    if ((urlRef = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8* const)MWP_DEFAULT_ROOT_URL, ::strlen(MWP_DEFAULT_ROOT_URL), kCFStringEncodingASCII, NULL)) != NULL) {
+      if ((proxyArrayRef = CFNetworkCopyProxiesForURL(urlRef, proxyDicRef)) != NULL) {
+        if ((urlDicRef = (CFDictionaryRef)CFArrayGetValueAtIndex(proxyArrayRef, 0)) != NULL) {
+          if ((portNumberRef = (CFNumberRef)CFDictionaryGetValue(urlDicRef, (void const *)kCFProxyPortNumberKey)) != NULL) {
+            if ((hostNameRef = (CFStringRef)CFDictionaryGetValue(urlDicRef, (void const *)kCFProxyHostNameKey)) != NULL) {
+
+              if (CFNumberGetValue(portNumberRef, kCFNumberSInt32Type, &port)) {
+                if ((host = CFStringGetCStringPtr(hostNameRef, kCFStringEncodingASCII)) != NULL) {
+
+                  // Wow.  Finally got it
+                  hp_mwp_set_option("http_proxy_name", host);
+                  hp_mwp_set_int_option("http_proxy_port", port);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (proxyDicRef != NULL) { CFRelease(proxyDicRef); }
+  if (urlDicRef != NULL) { CFRelease(urlDicRef); }
+  if (urlRef != NULL) { CFRelease(urlRef); }
+  if (proxyArrayRef != NULL) { CFRelease(proxyArrayRef); }
+  if (portNumberRef != NULL) { CFRelease(portNumberRef); }
+
+}
 
 // ----------------------------------------------------------------------------------
 // Convert the system-preferred string type to US-ASCII -- the network APIs

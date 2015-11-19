@@ -100,6 +100,8 @@ extern "C" {
   typedef int(*hp_@MWP_INTERFACE_NAME@_callback_t)(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, @MWP_INTERFACE_NAME@_params const * params);
 
   /* 1. ---------- Register your callback fn ---------- */
+  bool hp_@MWP_INTERFACE_NAME@_register_bootstrap(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
+
   bool hp_@MWP_INTERFACE_NAME@_register_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
   bool hp_@MWP_INTERFACE_NAME@_deregister_handler(char const * name);
 

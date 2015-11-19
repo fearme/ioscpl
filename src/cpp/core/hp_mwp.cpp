@@ -29,6 +29,18 @@ net_mobilewebprint::secure_asset_printing_api_t * net_mobilewebprint::sap_api()
   return sap_api_ = new net_mobilewebprint::secure_asset_printing_api_t();
 }
 
+/**
+ *  The api object that has been started.
+ */
+net_mobilewebprint::core_api_t * started_api()
+{
+  if (sap_api_ != NULL) { return sap_api_; }
+  if (mwp_api_ != NULL) { return mwp_api_; }
+
+  /* otherwise */
+  net_mobilewebprint::mwp_assert(false);
+  return NULL;
+}
 
 
 
@@ -56,6 +68,12 @@ extern "C" bool hp_mwp_start_ex(uint32 flags)
   return startup(core_api(), flags);
 }
 
+extern "C" bool hp_mwp_register_bootstrap(char const * name, void * app_data, hp_mwp_callback_t callback)
+{
+  //printf("-------------------------------------------- here i am receiving a mwp bootstrap fn\n");
+  return started_api()->register_bootstrap(name, app_data, callback);
+}
+
 extern "C" bool hp_mwp_register_handler(char const * name, void * app_data, hp_mwp_callback_t callback)
 {
   return core_api()->register_handler(name, app_data, callback);
@@ -76,62 +94,68 @@ extern "C" bool hp_mwp_send_job(char const * url, char const * printer_ip)
   return core_api()->send_job(url, printer_ip);
 }
 
+//---------------------------------------------------------------------------------------------
+// setting options
+//---------------------------------------------------------------------------------------------
+
 extern "C" char const * hp_mwp_get_option(char const *name, char * buffer, uint32 buf_len)
 {
-  ::strncpy(buffer, core_api()->get_option(name).c_str(), buf_len);
+  ::strncpy(buffer, started_api()->get_option(name).c_str(), buf_len);
   return buffer;
 }
 
 extern "C" char const * hp_mwp_get_option_def(char const *name, char const *def, char * buffer, uint32 buf_len)
 {
-  ::strncpy(buffer, core_api()->get_option(name, def).c_str(), buf_len);
+  ::strncpy(buffer, started_api()->get_option(name, def).c_str(), buf_len);
   return buffer;
 }
 
 extern "C" int hp_mwp_get_int_option(char const *name)
 {
-  return core_api()->get_int_option(name);
+  return started_api()->get_int_option(name);
 }
 
 extern "C" int hp_mwp_get_int_option_def(char const *name, int def)
 {
-  return core_api()->get_int_option(name, def);
+  return started_api()->get_int_option(name, def);
 }
 
 extern "C" bool hp_mwp_get_flag(char const *name)
 {
-  return core_api()->get_bool_option(name);
+  return started_api()->get_bool_option(name);
 }
 
 extern "C" int hp_mwp_set_option(char const *name, char const *value)
 {
-  core_api()->set_option(name, value);
+  started_api()->set_option(name, value);
   return 1;
 }
 
 extern "C" int hp_mwp_set_int_option(char const *name, int value)
 {
-  core_api()->set_option(name, value);
+  started_api()->set_option(name, value);
   return 1;
 }
 
 extern "C" int hp_mwp_set_flag(char const *name, bool value)
 {
-  core_api()->set_option(name, value);
+  started_api()->set_option(name, value);
   return 1;
 }
 
 extern "C" int hp_mwp_clear_flag(char const *name)
 {
-  core_api()->set_option(name, false);
+  started_api()->set_option(name, false);
   return 1;
 }
 
 extern "C" int  hp_mwp_parse_cli(int argc, void const * argv[])
 {
-  core_api()->parse_cli(argc, argv);
+  started_api()->parse_cli(argc, argv);
   return 1;
 }
+
+//---------------------------------------------------------------------------------------------
 
 extern "C" int  hp_mwp_send(char const *message, char const *payload)
 {
@@ -186,6 +210,12 @@ extern "C" bool hp_sap_start_ex(uint32 flags_)
   return startup(sap_api(), flags);
 }
 
+extern "C" bool hp_sap_register_bootstrap(char const * name, void * app_data, hp_sap_callback_t callback)
+{
+  //printf("-------------------------------------------- here i am receiving a sap bootstrap fn\n");
+  return sap_api()->register_bootstrap(name, app_data, callback);
+}
+
 extern "C" bool hp_sap_register_handler(char const * name, void * app_data, hp_sap_callback_t callback)
 {
   return sap_api()->register_handler(name, app_data, callback);
@@ -217,6 +247,10 @@ extern "C" char const * hp_sap_get_option_def(char const *name, char const *def,
   ::strncpy(buffer, sap_api()->get_option(name, def).c_str(), buf_len);
   return buffer;
 }
+
+//---------------------------------------------------------------------------------------------
+// setting options
+//---------------------------------------------------------------------------------------------
 
 extern "C" int hp_sap_get_int_option(char const *name)
 {
@@ -262,6 +296,7 @@ extern "C" int  hp_sap_parse_cli(int argc, void const * argv[])
   sap_api()->parse_cli(argc, argv);
   return 1;
 }
+//---------------------------------------------------------------------------------------------
 
 extern "C" int  hp_sap_send(char const *message, char const *payload)
 {

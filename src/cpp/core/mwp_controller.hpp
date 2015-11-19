@@ -140,6 +140,10 @@ namespace net_mobilewebprint {
 
     // ---------- The app is messaging with MWP ----------
 
+    // The app calls this to register a bootstrap
+    bool register_bootstrap(char const * name, void * app_data, hp_mwp_callback_t callback);
+    bool register_bootstrap(char const * name, void * app_data, hp_sap_callback_t callback);
+
     // The app calls this to register a handler
     bool register_handler(char const * name, void * app_data, hp_mwp_callback_t callback);
     bool register_handler(char const * name, void * app_data, hp_sap_callback_t callback);
@@ -292,6 +296,9 @@ namespace net_mobilewebprint {
     mq_manual_timer_t         server_command_timer;
     mq_manual_timer_t         network_ifaces_timer;
     //uint32                    job_stats_upload_time,          job_stats_upload_interval;
+
+    mwp_app_cb_list_t *       mwp_app_bootstraps_;
+    sap_app_cb_list_t *       sap_app_bootstraps_;
 
     app_timer_table_t         timer_table;
     mwp_app_cb_list_t *       mwp_app_callbacks_;

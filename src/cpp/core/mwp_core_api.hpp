@@ -32,6 +32,8 @@ namespace net_mobilewebprint {
 //    virtual void                   set_job_param       (std::string const & job_id, char const * name, double const &);
 
     // ---------- Messaging with the app ----------
+    virtual bool                   register_bootstrap  (char const * name, void * app_data, hp_mwp_callback_t callback);
+
     virtual bool                   register_handler    (char const * name, void * app_data, hp_mwp_callback_t callback);
     virtual bool                   deregister_handler  (char const * name);
     virtual bool                   app_send            (char const * name, char const * payload = NULL);

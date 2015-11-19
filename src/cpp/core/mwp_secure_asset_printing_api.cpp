@@ -26,6 +26,11 @@ bool net_mobilewebprint::secure_asset_printing_api_t::send_job(char const * url,
   return core_api_t::send_job(url, printer_ip);
 }
 
+bool net_mobilewebprint::secure_asset_printing_api_t::register_bootstrap(char const * name, void * app_data, hp_sap_callback_t callback)
+{
+  return controller->register_bootstrap(name, app_data, callback);
+}
+
 bool net_mobilewebprint::secure_asset_printing_api_t::register_handler(char const * name, void * app_data, hp_sap_callback_t callback)
 {
   return controller->register_handler(name, app_data, callback);

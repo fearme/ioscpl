@@ -25,6 +25,14 @@ using std::map;
 using namespace net_mobilewebprint;
 
 // ----------------------------------------------------------------------------------
+// Startup
+// ----------------------------------------------------------------------------------
+void net_mobilewebprint::dumb_and_ok::platform_bootstrap()
+{
+  // Nothing
+}
+
+// ----------------------------------------------------------------------------------
 // Convert the system-preferred string type to US-ASCII -- the network APIs
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
 // that gets passed around.  This platform uses 'normal' C (utf-8) strings.

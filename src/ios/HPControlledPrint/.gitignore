@@ -10,4 +10,5 @@ HPControlledPrint/Libraries/libcurl.a
 HPControlledPrint/Libraries/libmwp.a
 HPControlledPrint/Libraries/libmwpcore.a
 HPControlledPrint/Libraries/libmwpcoreprotos.a
+HPControlledPrint/Libraries/libmwpobjcinterop.a
 

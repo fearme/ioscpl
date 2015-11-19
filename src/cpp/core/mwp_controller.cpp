@@ -56,6 +56,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
     alloc_report(0, 5000),
@@ -90,6 +91,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
     alloc_report(0, 5000),
@@ -373,9 +375,43 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
 
   log_v(2, "", "Seeding: %d, %d", tm, hash);
 
+  // Set any options
+  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
+
+  // Do platform specific setup of options
+  platform_bootstrap();
+
+  // Do registered bootstrapping
+  if (mwp_app_bootstraps_) {
+    for (mwp_app_cb_list_t::const_iterator it = mwp_app_bootstraps_->begin(); it != mwp_app_bootstraps_->end(); ++it) {
+      hp_mwp_callback_t app_cb   = it->second.callback;
+      void *            app_data = it->second.app_data;
+
+      //printf("-------------------------------------------- here i am about to call a mwp bootstrap\n");
+      if (app_cb) {
+        app_cb(app_data, "bootstrap", 0, 0, NULL, NULL);
+      }
+    }
+  }
+  delete mwp_app_bootstraps_;
+  mwp_app_bootstraps_ = NULL;
+
+  if (sap_app_bootstraps_) {
+    for (sap_app_cb_list_t::const_iterator it = sap_app_bootstraps_->begin(); it != sap_app_bootstraps_->end(); ++it) {
+      hp_sap_callback_t app_cb   = it->second.callback;
+      void *            app_data = it->second.app_data;
+
+      //printf("-------------------------------------------- here i am about to call a sap bootstrap\n");
+      if (app_cb) {
+        app_cb(app_data, "bootstrap", 0, 0, NULL, NULL);
+      }
+    }
+  }
+  delete sap_app_bootstraps_;
+  sap_app_bootstraps_ = NULL;
+
   log_api("start(scan=%d, block=%d)", start_scanning, block);
   show_options();
-  set_arg("last_resort_client_id", (string("FFFFFFFF")+random_string(56)).c_str());
 
   bool result = true;
   result = result && mq.run();
@@ -1394,6 +1430,47 @@ int net_mobilewebprint::controller_base_t::app_set_timeout(char const * message_
   timer_table[timer_id] = message_to_send;
 
   return timer_id;
+}
+
+/**
+ *  Register a bootstrap function (callback) for an app (called once, when the app is loaded).
+ *
+ *  @param[in]  name      The name of the handler.
+ *  @param[in]  app_data  Any data that the app wants MWP to send with each message.  Usually a this pointer.
+ *  @param[in]  callback  The function to be called.
+ */
+bool net_mobilewebprint::controller_base_t::register_bootstrap(char const * name, void * app_data_, hp_mwp_callback_t callback)
+{
+  if (!mwp_app_bootstraps_) { return false; }
+
+  printf("-------------------------------------------- here i am receiving a mwp bootstrap fn\n");
+
+  (*mwp_app_bootstraps_)[name] = mwp_app_callback_t(name, app_data_, callback);
+
+  bool result = false;
+//  result = send_to_app("recd_register_bootstrap", 1, 1, (uint8 const *)name, (mwp_params*)NULL) != 0;
+  return result;
+}
+
+/**
+ *  Register a bootstrap function (callback) for an app (called once, when the app is loaded).
+ *
+ *  @param[in]  name      The name of the handler.
+ *  @param[in]  app_data  Any data that the app wants MWP to send with each message.  Usually a this pointer.
+ *  @param[in]  callback  The function to be called.
+ */
+bool net_mobilewebprint::controller_base_t::register_bootstrap(char const * name, void * app_data_, hp_sap_callback_t callback)
+{
+  if (!sap_app_bootstraps_) { return false; }
+
+  /* otherwise */
+
+  printf("-------------------------------------------- here i am receiving a sap bootstrap fn\n");
+  (*sap_app_bootstraps_)[name] = sap_app_callback_t(name, app_data_, callback);
+
+  bool result = false;
+//  result = send_to_app("recd_register_bootstrap", 1, 1, (uint8 const *)name, (sap_params*)NULL) != 0;
+  return result;
 }
 
 /**

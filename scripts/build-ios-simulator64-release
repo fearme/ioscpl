@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash -e
 
 $(dirname $0)/build-base --type=release --os=ios --platform=simulator64 --build-tool=xcode
 $(dirname $0)/package --type=release --os=ios --platform=simulator64 --build-tool=xcode
