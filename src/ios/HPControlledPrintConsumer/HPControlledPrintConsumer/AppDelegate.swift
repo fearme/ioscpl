@@ -12,8 +12,27 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
-
+    var launchToken: String?
+  
+    func application(application: UIApplication, openURL url: NSURL, sourceApplication: String?, annotation: AnyObject?) -> Bool {
+        if let path = url.path as NSString? { //path is the rest of the url after "printit://"
+            let range: NSRange = path.rangeOfString("asset-qples-")
+            let length =  range.length
+            let location = range.location
+            
+            if (location >= 0) {
+                let range2 = location...path.length
+                launchToken = path.substringFromIndex(location)
+                self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
+                let storyboard = UIStoryboard(name: "Main", bundle: nil)
+                let initialViewController = storyboard.instantiateViewControllerWithIdentifier("PrintNavigationController") as! UIViewController;
+                self.window?.rootViewController = initialViewController
+                self.window?.makeKeyAndVisible()
+            }
+        }
+        return true
+    }
+    
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
         return true

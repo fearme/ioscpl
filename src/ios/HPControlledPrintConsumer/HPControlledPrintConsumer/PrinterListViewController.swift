@@ -12,8 +12,8 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     var cpl: ControlledPrint?
     var printers = [HPPrinterAttributes]()
     var printJob: PrintJob?
-    var selectedServerStack: ServerStack?
-    var printSource: String?
+    var selectedServerStack: ServerStack = ServerStackDevelopment
+    var printSource = "QPLESLIKETOKEN-2321321312321321321"
     var doValidation = true
     var clearPrinterList = false
     
@@ -31,7 +31,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         
         //Valid Token: QPLESLIKETOKEN-2321321312321321321
         //Valid File: http://www.pdfpdf.com/samples/Sample5.PDF
-        self.cpl?.initialize(selectedServerStack!, completion:{(status: InitStatus) -> () in
+        self.cpl?.initialize(selectedServerStack, completion:{(status: InitStatus) -> () in
             if (status.value == InitStatusServerStackNotAvailable.value) {
                 self.spinner.removeFromSuperview()
                 self.clearPrinterList = true
@@ -40,7 +40,14 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
                 
             } else if (status.value == InitStatusServerStackAvailable.value) {
                 if (self.doValidation) {
-                    self.cpl?.validateToken(self.printSource!, completion: {(valid: Bool) -> () in
+                    
+                    if let delegate = UIApplication.sharedApplication().delegate as? AppDelegate {                        
+                        if let token = delegate.launchToken {
+                            self.printSource = token
+                        }
+                    }
+                    
+                    self.cpl?.validateToken(self.printSource, completion: {(valid: Bool) -> () in
                         if (!valid) {
                             self.spinner.removeFromSuperview()
                             self.clearPrinterList = true
@@ -177,7 +184,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
             if let cell = self.availablePrintersTableView.cellForRowAtIndexPath(indexPath) {
                 let selectedPrinterName = cell.textLabel?.text
                 let selectedPrinterIp = cell.detailTextLabel?.text
-                self.printJob = PrintJob(printerName: selectedPrinterName!, printerIp: selectedPrinterIp!, printSource: self.printSource!)
+                self.printJob = PrintJob(printerName: selectedPrinterName!, printerIp: selectedPrinterIp!, printSource: self.printSource)
                 printScene.printJob = self.printJob
             }
         }
