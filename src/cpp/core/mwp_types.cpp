@@ -93,14 +93,14 @@ bool net_mobilewebprint::buffer_view_i::is_valid(const_iterator it, size_t count
 
 net_mobilewebprint::byte net_mobilewebprint::buffer_view_i::read_byte(const_iterator & it) const
 {
-  mwp_assert(is_valid(it));
+  mwp_assert(is_valid(it), "buffer_view_i::read_byte buffer is invalid");
 
   return *it++;
 }
 
 uint16 net_mobilewebprint::buffer_view_i::read_uint16(const_iterator & it) const
 {
-  mwp_assert(is_valid(it));
+  mwp_assert(is_valid(it), "buffer_view_i::read_uint16 buffer is invalid");
 
   uint16 result = ntohs(*(uint16*)it);
   it += sizeof(uint16);
@@ -109,7 +109,7 @@ uint16 net_mobilewebprint::buffer_view_i::read_uint16(const_iterator & it) const
 
 uint32 net_mobilewebprint::buffer_view_i::read_uint32(const_iterator & it) const
 {
-  mwp_assert(is_valid(it));
+  mwp_assert(is_valid(it), "buffer_view_i::read_uint32 buffer is invalid");
 
   uint32 result = ntohl(*(uint32*)it);
   it += sizeof(uint32);
@@ -118,7 +118,7 @@ uint32 net_mobilewebprint::buffer_view_i::read_uint32(const_iterator & it) const
 
 long net_mobilewebprint::buffer_view_i::read_long(const_iterator & it) const
 {
-  mwp_assert(is_valid(it));
+  mwp_assert(is_valid(it), "buffer_view_i::read_long buffer is invalid");
 
   long result = ntohl(*(long*)it);
   it += sizeof(long);
@@ -127,7 +127,7 @@ long net_mobilewebprint::buffer_view_i::read_long(const_iterator & it) const
 
 std::string net_mobilewebprint::buffer_view_i::read_string_nz(const_iterator & it, size_t count) const
 {
-  mwp_assert(is_valid(it + count - 1));
+  mwp_assert(is_valid(it + count - 1), "buffer_view_i::read_string_nz buffer is invalid");
 
   std::string result(it, it + count);
 
@@ -138,7 +138,7 @@ std::string net_mobilewebprint::buffer_view_i::read_string_nz(const_iterator & i
 
 std::string net_mobilewebprint::buffer_view_i::read_string(const_iterator & it) const
 {
-//  mwp_assert(is_valid(it + count - 1));
+//  mwp_assert(is_valid(it + count - 1), "buffer_view_i::read_string buffer is invalid");
 
   std::string result((char const *)it);
 
@@ -152,7 +152,7 @@ bool net_mobilewebprint::buffer_view_i::read_string_nz(const_iterator & it, size
   begin_ = (char const *)it;
   end_   = (char const *)min(it + count, const_end());
 
-  if (!mwp_assert(is_valid((iterator)(end_ - 1)))) { return false; }
+  if (!mwp_assert(is_valid((iterator)(end_ - 1)), "buffer_view_i::read_string_nz buffer is invalid")) { return false; }
 
   it += count;
 

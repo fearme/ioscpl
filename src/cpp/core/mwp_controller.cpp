@@ -380,6 +380,7 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
 
   // Do platform specific setup of options
   platform_bootstrap();
+  interop_bootstrap();
 
   // Do registered bootstrapping
   if (mwp_app_bootstraps_) {

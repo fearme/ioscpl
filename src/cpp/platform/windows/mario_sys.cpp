@@ -42,6 +42,11 @@ void net_mobilewebprint::platform_bootstrap()
   net_mobilewebprint::dumb_and_ok::platform_bootstrap();
 }
 
+void net_mobilewebprint::interop_bootstrap()
+{
+  net_mobilewebprint::dumb_and_ok::interop_bootstrap();
+}
+
 // ===================================================================================================================================
 //             Implement system functions
 // ===================================================================================================================================

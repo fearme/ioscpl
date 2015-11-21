@@ -59,6 +59,13 @@ void net_mobilewebprint::platform_bootstrap()
 
 }
 
+extern int mwp_interop_bootstrap(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, mwp_params const * params);
+void net_mobilewebprint::interop_bootstrap()
+{
+  mwp_interop_bootstrap(NULL, NULL, 0, 0, NULL, NULL);
+  // Nothing
+}
+
 // ----------------------------------------------------------------------------------
 // Convert the system-preferred string type to US-ASCII -- the network APIs
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
@@ -144,13 +151,13 @@ void * net_mobilewebprint::mwp_assert(void * x)
   return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
 }
 
-int    net_mobilewebprint::mwp_assert(int x)
+int    net_mobilewebprint::mwp_assert(int x, char const * msg)
 {
-  return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
+  return net_mobilewebprint::dumb_and_ok::mwp_assert(x, msg);
 }
 
-bool   net_mobilewebprint::mwp_assert(bool x)
+bool   net_mobilewebprint::mwp_assert(bool x, char const * msg)
 {
-  return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
+  return net_mobilewebprint::dumb_and_ok::mwp_assert(x, msg);
 }
 

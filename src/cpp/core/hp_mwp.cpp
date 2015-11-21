@@ -13,7 +13,7 @@ static net_mobilewebprint::secure_asset_printing_api_t  * sap_api_ = NULL;
 // Common
 net_mobilewebprint::core_api_t * net_mobilewebprint::core_api()
 {
-  net_mobilewebprint::mwp_assert(sap_api_ == NULL);
+  net_mobilewebprint::mwp_assert(sap_api_ == NULL, "mwp::core_api sap_api does not exist");
   if (mwp_api_ != NULL) { return mwp_api_; }
 
   /* otherwise */
@@ -22,7 +22,7 @@ net_mobilewebprint::core_api_t * net_mobilewebprint::core_api()
 
 net_mobilewebprint::secure_asset_printing_api_t * net_mobilewebprint::sap_api()
 {
-  net_mobilewebprint::mwp_assert(mwp_api_ == NULL);
+  net_mobilewebprint::mwp_assert(mwp_api_ == NULL, "mwp::core_api mwp_api does not exist");
   if (sap_api_ != NULL) { return sap_api_; }
 
   /* otherwise */
@@ -38,7 +38,7 @@ net_mobilewebprint::core_api_t * started_api()
   if (mwp_api_ != NULL) { return mwp_api_; }
 
   /* otherwise */
-  net_mobilewebprint::mwp_assert(false);
+  net_mobilewebprint::mwp_assert(false, "started_api neither api started");
   return NULL;
 }
 

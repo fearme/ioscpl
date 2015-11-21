@@ -32,6 +32,11 @@ void net_mobilewebprint::dumb_and_ok::platform_bootstrap()
   // Nothing
 }
 
+void net_mobilewebprint::dumb_and_ok::interop_bootstrap()
+{
+  // Nothing
+}
+
 // ----------------------------------------------------------------------------------
 // Convert the system-preferred string type to US-ASCII -- the network APIs
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
@@ -183,7 +188,7 @@ void * net_mobilewebprint::dumb_and_ok::mwp_assert(void * x)
   return x;
 }
 
-int    net_mobilewebprint::dumb_and_ok::mwp_assert(int x)
+int    net_mobilewebprint::dumb_and_ok::mwp_assert(int x, char const * msg)
 {
   if (x == 0) {
     printf("ASSERT-FAILx!!!!!!!!!!!!!!!!!\n");
@@ -195,10 +200,16 @@ int    net_mobilewebprint::dumb_and_ok::mwp_assert(int x)
   return x;
 }
 
-bool   net_mobilewebprint::dumb_and_ok::mwp_assert(bool x)
+bool   net_mobilewebprint::dumb_and_ok::mwp_assert(bool x, char const * msg_)
 {
   if (!x) {
-    printf("ASSERT-FAILb!!!!!!!!!!!!!!!!!\n");
+
+    char const * msg = msg_;
+    if (msg == NULL) {
+      msg = "~~undefined~~";
+    }
+
+    printf("ASSERT-FAILb!!!!!!!!!!!!!!!!! %s\n", msg);
     if (net_mobilewebprint::get_flag("fast_fail")) {
       *(int*)(0) = 1234;
     }

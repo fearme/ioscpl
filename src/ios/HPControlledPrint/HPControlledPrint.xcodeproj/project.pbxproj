@@ -64,6 +64,8 @@
 		37DF03DA1BEC229900883A88 /* HPControlledPrintManagerUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */; };
 		37DF03DB1BEC229900883A88 /* HPControlledPrintManagerUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */; };
 		37DF03DD1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */; };
+		BF2EB24F1C010FBC0053B840 /* libmwpobjcinterop.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF61540E1C010D010011366D /* libmwpobjcinterop.a */; };
+		BF61540F1C010D010011366D /* libmwpobjcinterop.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF61540E1C010D010011366D /* libmwpobjcinterop.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -136,6 +138,7 @@
 		37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPControlledPrintManagerUtil.h; sourceTree = "<group>"; };
 		37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtil.mm; sourceTree = "<group>"; };
 		37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtilTest.mm; sourceTree = "<group>"; };
+		BF61540E1C010D010011366D /* libmwpobjcinterop.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmwpobjcinterop.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -143,6 +146,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF61540F1C010D010011366D /* libmwpobjcinterop.a in Frameworks */,
 				3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */,
 				37C23FAC1B98D90A009F0065 /* libcurl.a in Frameworks */,
 				37C23FAE1B98D90A009F0065 /* libmwpcore.a in Frameworks */,
@@ -164,6 +168,7 @@
 				37DE92B01BEC4DA800FB5AF6 /* libmwp.a in Frameworks */,
 				37DE92AF1BEC4DA400FB5AF6 /* libcurl.a in Frameworks */,
 				37DE92B11BEC4DAA00FB5AF6 /* libmwpcore.a in Frameworks */,
+				BF2EB24F1C010FBC0053B840 /* libmwpobjcinterop.a in Frameworks */,
 				372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */,
 				37DE92B51BEC4DEF00FB5AF6 /* Security.framework in Frameworks */,
 				37DE92B31BEC4DE800FB5AF6 /* libz.dylib in Frameworks */,
@@ -325,6 +330,7 @@
 				37C23FA81B98D90A009F0065 /* libmwp.a */,
 				37C23FA91B98D90A009F0065 /* libmwpcore.a */,
 				37C23FAA1B98D90A009F0065 /* libmwpcoreprotos.a */,
+				BF61540E1C010D010011366D /* libmwpobjcinterop.a */,
 			);
 			path = Libraries;
 			sourceTree = "<group>";
@@ -616,6 +622,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SYMROOT = "~/workspace/xcode_build";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64 armv7 armv7s x86_64 i386";
 			};
 			name = Debug;
@@ -653,6 +660,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				SYMROOT = "~/workspace/xcode_build";
+				TARGETED_DEVICE_FAMILY = "1,2";
 				VALID_ARCHS = "arm64 armv7 armv7s x86_64 i386";
 			};
 			name = Release;

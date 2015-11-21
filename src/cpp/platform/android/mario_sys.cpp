@@ -448,6 +448,11 @@ void net_mobilewebprint::platform_bootstrap()
   net_mobilewebprint::dumb_and_ok::platform_bootstrap();
 }
 
+void net_mobilewebprint::interop_bootstrap()
+{
+  net_mobilewebprint::dumb_and_ok::interop_bootstrap();
+}
+
 // use US-ASCII.  For example, Windows prefers UNICODE as the string type
 // that gets passed around.  This platform uses 'normal' C (utf-8) strings.
 string net_mobilewebprint::platform_to_ascii_string(void const *str)
@@ -530,13 +535,13 @@ void * net_mobilewebprint::mwp_assert(void * x)
   return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
 }
 
-int    net_mobilewebprint::mwp_assert(int x)
+int    net_mobilewebprint::mwp_assert(int x, char const * msg)
 {
-  return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
+  return net_mobilewebprint::dumb_and_ok::mwp_assert(x, msg);
 }
 
-bool   net_mobilewebprint::mwp_assert(bool x)
+bool   net_mobilewebprint::mwp_assert(bool x, char const * msg)
 {
-  return net_mobilewebprint::dumb_and_ok::mwp_assert(x);
+  return net_mobilewebprint::dumb_and_ok::mwp_assert(x, msg);
 }
 

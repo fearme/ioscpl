@@ -113,6 +113,7 @@ namespace net_mobilewebprint {
 
   // ----- Startup -----
   void platform_bootstrap();
+  void interop_bootstrap();
 
   // Logging -- the weird signature makes it unlikely that this will clash with the printf-style logging
 
@@ -130,8 +131,8 @@ namespace net_mobilewebprint {
   //     NOTE: it should "assert" as the C/C++/POSIX community knows it.  (Said another way: under MSVC
   //     it should use "verify" as verify gets compiled into release builds, where assert does not.
   void * mwp_assert(void *);
-  int    mwp_assert(int);
-  bool   mwp_assert(bool);
+  int    mwp_assert(int, char const * msg);
+  bool   mwp_assert(bool, char const * msg);
 
   // The hosting applicaiton needs to translate the host-style string to a C standard ASCII string.
   //     NOTE: the networking functions expect ASCII strings, irrespective of the "normal" platform
@@ -175,10 +176,12 @@ namespace net_mobilewebprint {
 
   namespace dumb_and_ok {
     void *    mwp_assert(void *);
-    int       mwp_assert(int);
-    bool      mwp_assert(bool);
+    int       mwp_assert(int, char const * msg);
+    bool      mwp_assert(bool, char const * msg);
 
     void      platform_bootstrap();                           // Does nothing
+    void      interop_bootstrap();                            // Does nothing
+
     string    platform_to_ascii_string(void const *str);      // Just returns str
   };
 

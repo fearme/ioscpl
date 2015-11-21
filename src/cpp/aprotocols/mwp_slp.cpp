@@ -127,8 +127,8 @@ bool net_mobilewebprint::slp_t::parse_packet(buffer_view_i & payload, char const
 {
   buffer_view_i::const_iterator p = payload.first();
 
-  mwp_assert(payload.read_byte(p) == 1);
-  mwp_assert(payload.read_byte(p) == SLP_RESPONSE);
+  mwp_assert(payload.read_byte(p) == 1, "slp_t::parse_packet read first byte");
+  mwp_assert(payload.read_byte(p) == SLP_RESPONSE, "slp_t::parse_packet read second byte");
 
   /*uint16 packet_length =*/ payload.read_uint16(p);
 
@@ -138,7 +138,7 @@ bool net_mobilewebprint::slp_t::parse_packet(buffer_view_i & payload, char const
   payload.read_uint16(p);                                 // Encoding (3 == us-ascii)
   payload.read_uint16(p);                                 // Transaction id
 
-  mwp_assert(payload.read_uint16(p) == 0);                    // Error-code should be zero
+  mwp_assert(payload.read_uint16(p) == 0, "slp_t::parse_packet read errorcode");                    // Error-code should be zero
 
   uint16 len = payload.read_uint16(p);
   return payload.read_string_nz(p, len, begin, end);

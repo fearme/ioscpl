@@ -20,11 +20,11 @@
 		375530EF1B3A1B6D00659D37 /* ControlledPrint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530EC1B3A1B6D00659D37 /* ControlledPrint.swift */; };
 		375530F01B3A1B6D00659D37 /* PrintJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530ED1B3A1B6D00659D37 /* PrintJob.swift */; };
 		375530F11B3A1B6D00659D37 /* PrintViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530EE1B3A1B6D00659D37 /* PrintViewController.swift */; };
-		378C79391BFD043B0074E4BE /* HPControlledPrint.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; };
-		378C793A1BFD043B0074E4BE /* HPControlledPrint.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		37A850361B5041660018F059 /* ServerStackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A850351B5041660018F059 /* ServerStackViewController.swift */; };
 		396252eae814c8452ec69dcc /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 284865160736011911c6b816 /* CFNetwork.framework */; };
 		790b528807bfea3079511c1e /* PrinterListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530C91B3A19BD00659D37 /* PrinterListViewController.swift */; };
+		BF9C73C91C011A25008B2FD1 /* HPControlledPrint.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; };
+		BF9C73CA1C011A25008B2FD1 /* HPControlledPrint.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		a1e80271cc739299605fd820 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 375530CB1B3A19BD00659D37 /* Main.storyboard */; };
 		a55d979a89c775e29e63a1e6 /* ControlledPrint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530EC1B3A1B6D00659D37 /* ControlledPrint.swift */; };
 		a7c5e8a6a8bc00cbe1e64d8e /* ServerStackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A850351B5041660018F059 /* ServerStackViewController.swift */; };
@@ -57,13 +57,13 @@
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		3702BE171B990134006A09D0 /* Embed Frameworks */ = {
+		BF9C73CB1C011A25008B2FD1 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				378C793A1BFD043B0074E4BE /* HPControlledPrint.framework in Embed Frameworks */,
+				BF9C73CA1C011A25008B2FD1 /* HPControlledPrint.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -99,7 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				378C79391BFD043B0074E4BE /* HPControlledPrint.framework in Frameworks */,
+				BF9C73C91C011A25008B2FD1 /* HPControlledPrint.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -207,7 +207,7 @@
 				375530BE1B3A19BD00659D37 /* Sources */,
 				375530BF1B3A19BD00659D37 /* Frameworks */,
 				375530C01B3A19BD00659D37 /* Resources */,
-				3702BE171B990134006A09D0 /* Embed Frameworks */,
+				BF9C73CB1C011A25008B2FD1 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -487,6 +487,7 @@
 					"$(PROJECT_DIR)",
 					/Users/fredy/workspace/coupons/mario/client/deliveries/ios/cpl/release,
 					/Users/fredy/Downloads,
+					"/Users/sparksb/dev/mario-develop/client/deliveries/ios/cpl/release",
 				);
 				INFOPLIST_FILE = HPControlledPrintConsumer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -506,6 +507,7 @@
 					"$(PROJECT_DIR)",
 					/Users/fredy/workspace/coupons/mario/client/deliveries/ios/cpl/release,
 					/Users/fredy/Downloads,
+					"/Users/sparksb/dev/mario-develop/client/deliveries/ios/cpl/release",
 				);
 				INFOPLIST_FILE = HPControlledPrintConsumer/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

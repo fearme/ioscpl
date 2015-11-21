@@ -315,7 +315,7 @@ bool net_mobilewebprint::printer_t::from_slp(slp_t & slp, buffer_view_i const & 
 {
   strmap attrs_local, attrs_lc_local;
 
-  if (!mwp_assert(parse_slp(slp, payload, attrs_local, attrs_lc_local, tags))) { return false; }
+  if (!mwp_assert(parse_slp(slp, payload, attrs_local, attrs_lc_local, tags), "printer_t::from_slp parse_slp")) { return false; }
 
   fixup_snapshot_t snapshot(*this);
 
@@ -631,7 +631,7 @@ bool net_mobilewebprint::printer_t::is_missing()
 
   // Log when the printer is "almost" missing
   if (num_status_misses > 2 && _time_since(last_status_arrival) < missing_threshold + 5000) {
-    log_v(2, "ttt", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
+    log_v(4, "ttt", "is the printer going missing? (%15s) %d %d", ip.c_str(), num_status_misses, _time_since(last_status_arrival));
   }
 
   max_status_arrival_delay= max(max_status_arrival_delay, _time_since(last_status_arrival));

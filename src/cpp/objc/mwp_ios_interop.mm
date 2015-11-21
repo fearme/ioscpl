@@ -13,6 +13,6 @@ int mwp_interop_bootstrap(void * app_data, char const * message, int id, int32 t
   return 0;
 }
 
-bool registered_bootstrap = hp_mwp_register_bootstrap("ios_interop", NULL, mwp_interop_bootstrap);
-bool registered_handler = hp_mwp_register_handler("ios_interop", NULL, mwp_interop_bootstrap);
+//bool registered_bootstrap = hp_mwp_register_bootstrap("ios_interop", NULL, mwp_interop_bootstrap);
+//bool registered_handler = hp_mwp_register_handler("ios_interop", NULL, mwp_interop_bootstrap);
 
