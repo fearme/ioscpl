@@ -1006,6 +1006,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
     /* otherwise -- The WiFi has gone away!!! */
     log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
 
+#if 1
+    on_lost_wifi();
+#else
     printer_t * printer = NULL;
 
     // Remove all the printers in the list
@@ -1022,6 +1025,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
 
     // Reset various things that rely on the wifi -- TODO: any PCL downloads
     printer_list_in_flight = false;
+#endif
 
   } else if (name == "CONNECTIVITY_ENABLED") {
 
@@ -1031,6 +1035,19 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
     if (value == "true") {
       log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
       mq.send("re_scan_for_printers");
+    }
+
+  } else if (name == "LOCAL_REACHABILITY_CHANGED") {
+
+    byte const * p = payload.const_begin();
+    string value = payload.read_string(p);
+    controller.sendTelemetry("network", "LOCAL_REACHABILITY_CHANGED", "state", value);
+    log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++LOCAL_REACHABILITY_CHANGED: %s", value.c_str());
+
+    if (value == "REACHABLE") {
+      mq.send("re_scan_for_printers");
+    } else {
+      on_lost_wifi();
     }
 
   } else if (name == "getSortedPrinterList_notification") {
@@ -1299,6 +1316,25 @@ void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
     delete printer;
     printer = NULL;
   }
+}
+
+void net_mobilewebprint::printer_list_t::on_lost_wifi()
+{
+  printer_t * printer = NULL;
+
+  // Remove all the printers in the list
+  printer_enum_id += 1;
+  controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
+
+  while(by_ip.size() > 0) {
+    printer = by_ip.begin()->second;
+    remove_printer(printer);
+  }
+
+  controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+
+  // Reset various things that rely on the wifi -- TODO: any PCL downloads
+  printer_list_in_flight = false;
 }
 
 bool net_mobilewebprint::printer_list_t::from_snmp(string ip, map<string, buffer_view_i const *> const & attrs)

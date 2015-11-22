@@ -160,6 +160,7 @@ extern "C" {
 
   /* Send a message through the event queue */
   int  hp_@MWP_INTERFACE_NAME@_send(char const *message, char const *payload); // payload may be NULL
+  bool hp_@MWP_INTERFACE_NAME@_send_immediately(char const *message, char const *payload); // payload may be NULL
   int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);
 
 #ifdef __cplusplus

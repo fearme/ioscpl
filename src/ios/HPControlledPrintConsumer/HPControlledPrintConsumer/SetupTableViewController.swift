@@ -52,6 +52,8 @@ class SetupTableViewController: UITableViewController {
             serverStackScene.setupTableViewController = self
             
         } else if segue.identifier == "Print" {
+            return;
+
             var printerListView = segue.destinationViewController as! PrinterListViewController
             printerListView.selectedServerStack = self.selectedServerStack
             printerListView.printSource = self.printSource

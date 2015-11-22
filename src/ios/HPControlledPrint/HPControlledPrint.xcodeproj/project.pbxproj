@@ -65,6 +65,8 @@
 		37DF03DB1BEC229900883A88 /* HPControlledPrintManagerUtil.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */; };
 		37DF03DD1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */; };
 		BF2EB24F1C010FBC0053B840 /* libmwpobjcinterop.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF61540E1C010D010011366D /* libmwpobjcinterop.a */; };
+		BF58DB171C0152D200314B85 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF58DB161C0152D200314B85 /* SystemConfiguration.framework */; };
+		BF58DB181C01535A00314B85 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = BF58DB161C0152D200314B85 /* SystemConfiguration.framework */; };
 		BF61540F1C010D010011366D /* libmwpobjcinterop.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BF61540E1C010D010011366D /* libmwpobjcinterop.a */; };
 /* End PBXBuildFile section */
 
@@ -138,6 +140,7 @@
 		37DF03D81BEC229900883A88 /* HPControlledPrintManagerUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPControlledPrintManagerUtil.h; sourceTree = "<group>"; };
 		37DF03D91BEC229900883A88 /* HPControlledPrintManagerUtil.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtil.mm; sourceTree = "<group>"; };
 		37DF03DC1BEC244900883A88 /* HPControlledPrintManagerUtilTest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; path = HPControlledPrintManagerUtilTest.mm; sourceTree = "<group>"; };
+		BF58DB161C0152D200314B85 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		BF61540E1C010D010011366D /* libmwpobjcinterop.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libmwpobjcinterop.a; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -146,6 +149,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BF58DB171C0152D200314B85 /* SystemConfiguration.framework in Frameworks */,
 				BF61540F1C010D010011366D /* libmwpobjcinterop.a in Frameworks */,
 				3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */,
 				37C23FAC1B98D90A009F0065 /* libcurl.a in Frameworks */,
@@ -173,6 +177,7 @@
 				37DE92B51BEC4DEF00FB5AF6 /* Security.framework in Frameworks */,
 				37DE92B31BEC4DE800FB5AF6 /* libz.dylib in Frameworks */,
 				37DE92B21BEC4DAE00FB5AF6 /* libmwpcoreprotos.a in Frameworks */,
+				BF58DB181C01535A00314B85 /* SystemConfiguration.framework in Frameworks */,
 				37DE92AE1BEC4DA100FB5AF6 /* libcpl.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -216,6 +221,7 @@
 		3755305D1B39D42500659D37 = {
 			isa = PBXGroup;
 			children = (
+				BF58DB161C0152D200314B85 /* SystemConfiguration.framework */,
 				3705A2901BF6B5BB00C291CB /* UIKit.framework */,
 				375530B11B39D52900659D37 /* libz.dylib */,
 				375530AF1B39D51F00659D37 /* Foundation.framework */,

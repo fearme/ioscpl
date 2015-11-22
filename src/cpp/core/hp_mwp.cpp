@@ -169,6 +169,11 @@ extern "C" bool hp_mwp_send_full_printer_list()
   return true;
 }
 
+extern "C" bool hp_mwp_send_immediately(char const *message, char const *payload)
+{
+  return started_api()->send_immediately(message, payload);
+}
+
 extern "C" int hp_mwp_set_timeout(char const * message_to_send, int msecs_to_wait)
 {
   return core_api()->app_set_timeout(message_to_send, msecs_to_wait);
@@ -308,6 +313,11 @@ extern "C" bool hp_sap_send_full_printer_list()
 {
   sap_api()->send_full_printer_list();
   return true;
+}
+
+extern "C" bool hp_sap_send_immediately(char const *message, char const *payload)
+{
+  return sap_api()->send_immediately(message, payload);
 }
 
 extern "C" int hp_sap_set_timeout(char const * message_to_send, int msecs_to_wait)
