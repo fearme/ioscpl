@@ -982,7 +982,7 @@ void net_mobilewebprint::json_array_t::log_v_(int level, char const * mod, char 
   }
 }
 
-int net_mobilewebprint::json_array_t::insert(string const & key_, string const & value)
+void net_mobilewebprint::json_array_t::insert(string const & key_, string const & value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
@@ -990,14 +990,14 @@ int net_mobilewebprint::json_array_t::insert(string const & key_, string const &
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(string const & key_, char const * value)
+void net_mobilewebprint::json_array_t::insert(string const & key_, char const * value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(string const & key_, int value)
+void net_mobilewebprint::json_array_t::insert(string const & key_, int value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
@@ -1005,7 +1005,7 @@ int net_mobilewebprint::json_array_t::insert(string const & key_, int value)
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(string const & key_, bool value)
+void net_mobilewebprint::json_array_t::insert(string const & key_, bool value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
@@ -1013,28 +1013,28 @@ int net_mobilewebprint::json_array_t::insert(string const & key_, bool value)
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(char const * key_, string const & value)
+void net_mobilewebprint::json_array_t::insert(char const * key_, string const & value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(char const * key_, char const * value)
+void net_mobilewebprint::json_array_t::insert(char const * key_, char const * value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(char const * key_, int value)
+void net_mobilewebprint::json_array_t::insert(char const * key_, int value)
 {
   string key = key_;
   int index = fixup_json_key2(key);
   _lookupp(arr, index)->insert(key, value);
 }
 
-int net_mobilewebprint::json_array_t::insert(char const * key_, bool value)
+void net_mobilewebprint::json_array_t::insert(char const * key_, bool value)
 {
   string key = key_;
   int index = fixup_json_key2(key);

@@ -141,6 +141,25 @@ public class Client {
     return result;
   }
 
+  public String getWifiInfo()
+  {
+    String        result      = "";
+    WifiManager   wifiManager = (WifiManager) context.getSystemService(android.content.Context.WIFI_SERVICE);
+
+    if (wifiManager == null) { return result; }
+
+    /* otherwise */
+    WifiInfo info = wifiManager.getConnectionInfo();
+    if (info == null) { return result; }
+
+    result +=       info.getSSID();
+    result += "/" + info.getBSSID();
+    result += "/" + info.getMacAddress();
+    result += "/" + info.getRssi();
+
+    return result;
+  }
+
   public static void _setItemProperty(Map<String, String> item, String name, String value)
   {
     if (value != null) {

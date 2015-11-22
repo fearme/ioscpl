@@ -70,7 +70,7 @@ namespace net_mobilewebprint {
     printer_t(controller_base_t & controller);
     printer_t(controller_base_t & controller, string const & ip);
 
-    ~printer_t();
+    virtual ~printer_t();
 
     int   port_for_proto(int udp_tcp, int proto);    // SOCK_DGRAM or SOCK_STREAM
 
@@ -155,7 +155,13 @@ namespace net_mobilewebprint {
     void network_error(string const & ip, int error_number);
     void upstream_error(string const & ip, int error_number);
     void remove_printer(printer_t*&);
+    void remove_all_printers();
+
+    int  parse_network_change(string const & info, string & value, string & ssid, string & bssid);
+
     void on_lost_wifi();
+    void on_gained_wifi();
+    void on_wifi_switch();
 
     void send_print_job(uint32 & connection_id, string const & ip);
 

@@ -1831,7 +1831,7 @@ bool net_mobilewebprint::controller_base_t::job_frozen(uint32 id, char const * s
   return _lookup_job_stat(id, "frozen", false);
 }
 
-bool net_mobilewebprint::controller_base_t::job_stat_changed(uint32 id, bool value, char const * stat_name)
+void net_mobilewebprint::controller_base_t::job_stat_changed(uint32 id, bool value, char const * stat_name)
 {
   //if (value) { log_d(1, "", "$$$$$$$$$$$$$$$ %s changed for %d", stat_name, id); }
   job_stats[id].bool_attrs["changed"] = value;

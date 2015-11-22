@@ -228,7 +228,7 @@ namespace net_mobilewebprint {
     int  job_stat_incr(uint32 id, char const * stat_name,            int value, bool silent = false);
     bool      job_stat(uint32 id, char const * stat_name,           bool value, bool silent = false);
 
-    bool      job_stat_changed(uint32 id, bool did_change, char const * stat_name);
+    void      job_stat_changed(uint32 id, bool did_change, char const * stat_name);
     bool      job_frozen(uint32 id, char const * stat_name);
 
     map<string, stats_t> packet_stats;
@@ -309,6 +309,8 @@ namespace net_mobilewebprint {
 
     args_t                    ARGS;
 
+    string                    ssid;
+    string                    bssid;
     uint32                    unique_number;
     string                    clientId();
 

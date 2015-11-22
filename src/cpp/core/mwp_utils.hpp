@@ -33,6 +33,7 @@ namespace net_mobilewebprint {
   extern int           tok_len(char const * sz, char ch);
 
   extern string        trim(string const & str);
+  extern string        trim(string const & str, char ch);
   extern string        rtrim(string const & str);
   extern string        rtrim(string const & str, char ch);
   extern string        ltrim(string const & str);
@@ -102,6 +103,10 @@ namespace net_mobilewebprint {
   extern strvlist splitv(string const & str, char sep = ',');
   extern strvlist splitv(char const * sz, char sep = ',');
   extern strvlist splitv(char const * sz, char const * sep, char const * end = NULL);
+
+  extern int      splitv(strvlist & result, string const & str, char sep = ',');
+  extern int      splitv(strvlist & result, char const * sz, char sep = ',');
+
   extern strvlist compact(strvlist const & that);
 
   // String sets

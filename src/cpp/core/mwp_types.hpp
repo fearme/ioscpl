@@ -1549,15 +1549,15 @@ namespace net_mobilewebprint {
     bool            has(int n) const;
     json_t const *  get(int n) const;
 
-    int             insert(string const & key, string const & value);
-    int             insert(string const & key, char const * value);
-    int             insert(string const & key, int value);
-    int             insert(string const & key, bool value);
+    void            insert(string const & key, string const & value);
+    void            insert(string const & key, char const * value);
+    void            insert(string const & key, int value);
+    void            insert(string const & key, bool value);
 
-    int             insert(char const * key, string const & value);
-    int             insert(char const * key, char const * value);
-    int             insert(char const * key, int value);
-    int             insert(char const * key, bool value);
+    void            insert(char const * key, string const & value);
+    void            insert(char const * key, char const * value);
+    void            insert(char const * key, int value);
+    void            insert(char const * key, bool value);
 
     string          stringify() const;
 

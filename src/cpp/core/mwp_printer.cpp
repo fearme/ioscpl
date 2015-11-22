@@ -1006,46 +1006,61 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::printer_list_t::handle(s
     /* otherwise -- The WiFi has gone away!!! */
     log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++WIFI_STATE_CHANGED: |%s|", value.c_str());
 
-#if 1
     on_lost_wifi();
-#else
-    printer_t * printer = NULL;
-
-    // Remove all the printers in the list
-    printer_enum_id += 1;
-    controller.send_to_app(HP_MWP_BEGIN_PRINTER_CHANGES_MSG, -1, printer_enum_id);
-
-    plist_t::const_iterator it;
-    while(by_ip.size() > 0) {
-      printer = by_ip.begin()->second;
-      remove_printer(printer);
-    }
-
-    controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
-
-    // Reset various things that rely on the wifi -- TODO: any PCL downloads
-    printer_list_in_flight = false;
-#endif
 
   } else if (name == "CONNECTIVITY_ENABLED") {
 
     byte const * p = payload.const_begin();
-    string value = payload.read_string(p);
-    controller.sendTelemetry("network", "CONNECTIVITY_ENABLED", "state", value);
-    if (value == "true") {
-      log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED: %s", value.c_str());
-      mq.send("re_scan_for_printers");
+    string value_ = payload.read_string(p);
+
+    controller.sendTelemetry("network", "CONNECTIVITY_ENABLED", "state", value_);
+    log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++CONNECTIVITY_ENABLED(%s): %s", controller.ssid.c_str(), value_.c_str());
+
+    // How much changed?  (Did we switch networks?)
+    string  value;
+    bool    switching_networks = false;
+    string  old_ssid           = controller.ssid;
+
+    if (parse_network_change(value_, value, controller.ssid, controller.bssid) > 2) {
+
+      // Are we switching?
+      if (value == "true" && old_ssid.length() > 0 && controller.ssid.length() > 0) {
+        switching_networks = (old_ssid != controller.ssid);
+      }
+      log_v(2, "", "----------------------------switching? %d %s %s %s", (int)switching_networks, value.c_str(), old_ssid.c_str(), controller.ssid.c_str());
+    }
+
+    if (switching_networks) {
+      on_wifi_switch();
+    } else if (value == "true") {
+      on_gained_wifi();
     }
 
   } else if (name == "LOCAL_REACHABILITY_CHANGED") {
 
     byte const * p = payload.const_begin();
-    string value = payload.read_string(p);
-    controller.sendTelemetry("network", "LOCAL_REACHABILITY_CHANGED", "state", value);
-    log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++LOCAL_REACHABILITY_CHANGED: %s", value.c_str());
+    string value_ = payload.read_string(p);
 
-    if (value == "REACHABLE") {
-      mq.send("re_scan_for_printers");
+    log_v(2, "ttt", "+++++++++++++++++++++++++++++++++++++++++++++++++++LOCAL_REACHABILITY_CHANGED(%s): %s", controller.ssid.c_str(), value_.c_str());
+    controller.sendTelemetry("network", "LOCAL_REACHABILITY_CHANGED", "state", value_);
+
+    // How much changed?  (Did we switch networks?)
+    string  value;
+    bool    switching_networks = false;
+    string  old_ssid           = controller.ssid;
+
+    if (parse_network_change(value_, value, controller.ssid, controller.bssid) > 2) {
+
+      // Are we switching?
+      if (value == "REACHABLE" && old_ssid.length() > 0 && controller.ssid.length() > 0) {
+        switching_networks = (old_ssid != controller.ssid);
+      }
+    }
+
+    if (switching_networks) {
+      on_wifi_switch();
+    } else if (value == "REACHABLE") {
+      on_gained_wifi();
     } else {
       on_lost_wifi();
     }
@@ -1318,7 +1333,63 @@ void net_mobilewebprint::printer_list_t::remove_printer(printer_t *& printer)
   }
 }
 
+int net_mobilewebprint::printer_list_t::parse_network_change(string const & info, string & value, string & ssid, string & bssid)
+{
+  strvlist parts;
+  int result = splitv(parts, info, '/');
+
+  if (result > 0) {
+    value = parts[0];
+  } else {
+    value = info;
+  }
+
+  if (result > 2) {
+    bssid = parts[2];
+
+    ssid = trim(parts[1], '"');
+  }
+
+  log_v(4, "", "---------- parse network change(%d): %s -> /%s/%s/%s/", result, info.c_str(), value.c_str(), ssid.c_str(), bssid.c_str());
+  return result;
+}
+
 void net_mobilewebprint::printer_list_t::on_lost_wifi()
+{
+  log_v(2, "ttt", "lost wifi");
+
+  remove_all_printers();
+
+  // Reset various things that rely on the wifi -- TODO: any PCL downloads
+  printer_list_in_flight = false;
+}
+
+void net_mobilewebprint::printer_list_t::on_gained_wifi()
+{
+  log_v(2, "ttt", "gained wifi: %s %s", controller.ssid.c_str(), controller.bssid.c_str());
+
+  printer_enum_id += 1;
+  controller.send_to_app(HP_MWP_BEGIN_NEW_PRINTER_LIST_MSG, -1, printer_enum_id);
+
+  mq.send("re_scan_for_printers");
+}
+
+void net_mobilewebprint::printer_list_t::on_wifi_switch()
+{
+  log_v(2, "ttt", "switching networks: %s %s", controller.ssid.c_str(), controller.bssid.c_str());
+
+  remove_all_printers();
+
+  // Reset various things that rely on the wifi -- TODO: any PCL downloads
+  printer_list_in_flight = false;
+
+  printer_enum_id += 1;
+  controller.send_to_app(HP_MWP_BEGIN_NEW_PRINTER_LIST_MSG, -1, printer_enum_id);
+
+  mq.send("re_scan_for_printers");
+}
+
+void net_mobilewebprint::printer_list_t::remove_all_printers()
 {
   printer_t * printer = NULL;
 
@@ -1332,9 +1403,6 @@ void net_mobilewebprint::printer_list_t::on_lost_wifi()
   }
 
   controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
-
-  // Reset various things that rely on the wifi -- TODO: any PCL downloads
-  printer_list_in_flight = false;
 }
 
 bool net_mobilewebprint::printer_list_t::from_snmp(string ip, map<string, buffer_view_i const *> const & attrs)

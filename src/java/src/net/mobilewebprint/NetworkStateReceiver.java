@@ -97,7 +97,8 @@ public class NetworkStateReceiver extends BroadcastReceiver {
         }
       }
 
-      mwp().sendImmediately("CONNECTIVITY_ENABLED", isConnected ? "true" : "false");
+      String value = isConnected ? "true" : "false";
+      mwp().sendImmediately("CONNECTIVITY_ENABLED", value + "/" + mwp().getWifiInfo());
       return;
     }
   }

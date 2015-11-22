@@ -122,6 +122,10 @@ net_mobilewebprint::mq_manual_timer_t::mq_manual_timer_t(uint32 time__, uint32 i
 {
 }
 
+net_mobilewebprint::mq_manual_timer_t::~mq_manual_timer_t()
+{
+}
+
 bool net_mobilewebprint::mq_manual_timer_t::has_elapsed(uint32 current_time)
 {
   time_ = time;

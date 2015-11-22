@@ -546,6 +546,27 @@ net_mobilewebprint::strvlist net_mobilewebprint::splitv(char const * str, char s
   return result;
 }
 
+int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, string const & str, char sep)
+{
+  return splitv(result, str.c_str(), sep);
+}
+
+int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, char const * str, char sep)
+{
+  if (!*str) { return result.size(); }
+
+  char const * p1 = NULL, *p2 = str - 1;
+
+  do {
+    p1 = p2 + 1;
+    p2 = find(p1, sep);
+    result.push_back(string(p1, p2 - p1));
+
+  } while (*p2);
+
+  return result.size();
+}
+
 net_mobilewebprint::strvlist net_mobilewebprint::splitv(char const * sz, char const * sep, char const * end)
 {
   if (end == NULL) {
@@ -992,6 +1013,11 @@ string net_mobilewebprint::trim(string const & str)
 {
   char const * start = ltrim(str.c_str());
   return string(start, tok_len(start) + 1);
+}
+
+string net_mobilewebprint::trim(string const & str, char ch)
+{
+  return ltrim(rtrim(str, ch), ch);
 }
 
 string net_mobilewebprint::rtrim(string const & str)

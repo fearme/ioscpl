@@ -144,6 +144,7 @@ namespace net_mobilewebprint {
     bool    recurring;
 
     mq_manual_timer_t(uint32 time, uint32 interval, bool recurring = true);
+    virtual ~mq_manual_timer_t();
 
     virtual bool has_elapsed(uint32 current_time);
     virtual void revert();
