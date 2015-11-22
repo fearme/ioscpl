@@ -19,9 +19,9 @@ namespace net_mobilewebprint {
     virtual bool                   send_job            (char const * url, const char * printer_ip);
 
     // ---------- Messaging with the app ----------
-    virtual bool                   register_bootstrap  (char const * name, void * app_data, hp_sap_callback_t callback);
+            bool                   register_bootstrap  (char const * name, void * app_data, hp_sap_callback_t callback);
 
-    virtual bool                   register_handler    (char const * name, void * app_data, hp_sap_callback_t callback);
+            bool                   register_handler    (char const * name, void * app_data, hp_sap_callback_t callback);
     virtual bool                   deregister_handler  (char const * name);
     virtual bool                   app_send            (char const * name, char const * payload = NULL);
     virtual int                    app_set_timeout     (char const * message_to_send, int msecs_to_wait);

@@ -181,7 +181,7 @@ void * net_mobilewebprint::dumb_and_ok::mwp_assert(void * x)
   if (x == NULL) {
     printf("ASSERT-FAIL*!!!!!!!!!!!!!!!!!\n");
     if (net_mobilewebprint::get_flag("fast_fail")) {
-      *(int*)(0) = 1234;
+      *(int volatile *)(0) = 1234;
     }
   }
 
@@ -193,7 +193,7 @@ int    net_mobilewebprint::dumb_and_ok::mwp_assert(int x, char const * msg)
   if (x == 0) {
     printf("ASSERT-FAILx!!!!!!!!!!!!!!!!!\n");
     if (net_mobilewebprint::get_flag("fast_fail")) {
-      *(int*)(0) = 1234;
+      *(int volatile *)(0) = 1234;
     }
   }
 
@@ -211,7 +211,7 @@ bool   net_mobilewebprint::dumb_and_ok::mwp_assert(bool x, char const * msg_)
 
     printf("ASSERT-FAILb!!!!!!!!!!!!!!!!! %s\n", msg);
     if (net_mobilewebprint::get_flag("fast_fail")) {
-      *(int*)(0) = 1234;
+      *(int volatile *)(0) = 1234;
     }
   }
 
