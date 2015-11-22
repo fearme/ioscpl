@@ -86,7 +86,7 @@ e_handle_result net_mobilewebprint::send_tcp_job_t::handle(string const & name, 
   connections_t::iterator it;
   tcp_job_connection_t * connection = NULL;
 
-  if (name == "_on_http_payload" || name == "_on_txn_close") {
+  if (name == "_on_http_payload" || name == "_on_http_headers" || name == "_on_txn_close") {
 
     it = connections.find(extra.txn_id);
     if (it != connections.end()) {
@@ -130,7 +130,7 @@ bool net_mobilewebprint::send_tcp_job_t::connection_is_closed(connections_t::ite
  *  tcp_job_connection_t ctor.
  */
 net_mobilewebprint::tcp_job_connection_t::tcp_job_connection_t(controller_base_t & controller_, network_node_t * connection_, uint32 id_)
-  : controller(controller_), mq(controller_.mq), printer(connection_), connection_id(id_), txn_closed(false), closed(false), packet_num(-1)
+  : controller(controller_), mq(controller_.mq), printer(connection_), connection_id(id_), http_response_code(-1), txn_closed(false), closed(false), packet_num(-1)
 {
   //  mq.register_tcp_for_select(*printer);       // TODO: We need to register, or connect, but do not want write events until we have data to send
 }
@@ -149,7 +149,9 @@ std::string net_mobilewebprint::tcp_job_connection_t::mod_name()
 int net_mobilewebprint::tcp_job_connection_t::pre_select(mq_pre_select_data_t * pre_select_data)
 {
   if (chunks.size() > 0 && !closed) {
-    mq.check_tcp_write(*printer);
+    if (http_response_code > 99 && http_response_code < 400) {
+      mq.check_tcp_write(*printer);
+    }
   }
 
   if (!closed) {
@@ -161,6 +163,7 @@ int net_mobilewebprint::tcp_job_connection_t::pre_select(mq_pre_select_data_t * 
 
 e_handle_result net_mobilewebprint::tcp_job_connection_t::handle(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
 {
+  if (name == "_on_http_headers")       { return _on_http_headers(name, payload, data, extra); }
   if (name == "_on_http_payload")       { return _on_http_payload(name, payload, data, extra); }
   if (name == "_on_txn_close")          { return _on_txn_close(name, payload, data, extra); }
 
@@ -232,9 +235,43 @@ e_handle_result net_mobilewebprint::tcp_job_connection_t::_mq_selected(string co
   return result;
 }
 
+e_handle_result net_mobilewebprint::tcp_job_connection_t::_on_http_headers(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
+{
+  //payload.dump(NULL, "tcp_job looking at header", 1024);
+
+  strvlist parts;
+
+  buffer_view_i::const_iterator p = payload.first();
+  string header = payload.read_string_nz(p, payload.dsize());
+  header = rtrim(header, 0x0a);
+  header = rtrim(header, 0x0d);
+  log_v(4, "", "tcp_job looking at http headers(%d): %d bytes: |%s|", extra.txn_id, (int)payload.dsize(), header.c_str());
+
+  // First line is the response code
+  if (http_response_code == -1) {
+
+    if (splitv(parts, header, ' ') > 2) {
+      int code = mwp_atoi(parts[1]);
+      if (code > 99 && code <= 999) {   // Three digits
+        http_response_code = code;
+      }
+    }
+  } else {
+
+    if (splitv(parts, header, ':') > 1) {
+      string key    = _lower(parts[0]);
+      string value  = _lower(ltrim(parts[1], ' '));
+
+      if (key == "content-type") {
+        content_type = value;
+      }
+    }
+  }
+}
+
 e_handle_result net_mobilewebprint::tcp_job_connection_t::_on_http_payload(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra)
 {
-  log_v("http payload(%d): %d bytes\n", extra.txn_id, (int)payload.dsize());
+  log_v(4, "", "http payload(%d): %d bytes", extra.txn_id, (int)payload.dsize());
   chunks.push_back(new chunk_t(data, payload)); /**/ num_chunk_allocations += 1;
 
   controller.job_stat_incr(connection_id, "numDownloaded", (int)payload.dsize());
@@ -246,17 +283,37 @@ e_handle_result net_mobilewebprint::tcp_job_connection_t::_on_txn_close(string c
 {
   txn_closed = true;
 
-  log_v("############################# At close time, we had %d chunks remaining\n", (int)chunks.size());
+  log_v(4, "", "############################# At close time, we had %d chunks remaining\n", (int)chunks.size());
 
-  if (chunks.size() == 0) {
-    buffer_view_i::const_iterator p = payload.first();
-    uint32 curl_status = payload.read_uint32(p);
-    long http_code = payload.read_long(p);
-    if(curl_status != curl_no_error){
-      controller.printers.network_error(printer->ip, curl_status);
-    } else if(http_code == http_code_498) {
+  buffer_view_i::const_iterator p = payload.first();
+
+  uint32  curl_status  = payload.read_uint32(p);
+  long    http_code    = payload.read_long(p);
+
+  if(curl_status != curl_no_error){
+    controller.printers.network_error(printer->ip, curl_status);
+  } else if(http_code > 399) {
+
+    // Check content_type for json, read the response data (chunks), send message up to app
+    string body = join(chunks, "");
+    log_v(2, "", "Http error: %d (%s): |%s|", http_code, content_type.c_str(), body.c_str());
+
+    if (content_type.find("json") != string::npos) {
+      controller.job_stat(connection_id, "result_json", body);
+    }
+
+    if(http_code == http_code_498) {
       controller.printers.upstream_error(printer->ip, http_code);
     }
+
+    while (chunks.size() > 0) {
+      chunk_t * chunk = chunks.front();
+      chunks.pop_front();
+      delete chunk; /**/ num_chunk_allocations -= 1;
+    }
+  }
+
+  if (chunks.size() == 0) {
     mq.deregister_for_select(*printer);
     printer->close();
     closed = true;

@@ -43,6 +43,8 @@ namespace net_mobilewebprint {
 
     network_node_t *          printer;
     uint32                    connection_id;
+    int                       http_response_code;
+    string                    content_type;
     bool                      txn_closed;
     bool                      closed;
 
@@ -58,6 +60,7 @@ namespace net_mobilewebprint {
     virtual e_handle_result        _mq_selected(string const & name, buffer_view_i const & payload, buffer_t * data, mq_select_handler_extra_t & extra);
 
     virtual e_handle_result              handle(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
+            e_handle_result    _on_http_headers(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
             e_handle_result    _on_http_payload(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
             e_handle_result       _on_txn_close(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 

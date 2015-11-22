@@ -157,36 +157,6 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     char const * p2 = (params != NULL ? params->p2 != NULL ? (char const *)params->p2 : "" : "");
     char const * p3 = (params != NULL ? params->p3 != NULL ? (char const *)params->p3 : "" : "");
     
-#if 0
-    if (params == NULL) {
-      printf("-------------MM (%s)\n", p1);
-    } else {
-
-      char const * p4 = (params->p4 != NULL ? (char const *)params->p4 : "");
-      char const * p5 = (params->p5 != NULL ? (char const *)params->p5 : "");
-
-      int n1 = params->n1;
-      int n2 = params->n2;
-      int n3 = params->n3;
-      int n4 = params->n4;
-      int n5 = params->n5;
-
-      if (n1 == 0 && n2 == 0 && n3 == 0 && n4 == 0 && n5 == 0) {
-        if (p4 == NULL && p5 == NULL) {
-          if (p2 == NULL && p3 == NULL) {
-            printf("-------------MM (%s)\n", p1);
-          } else {
-            printf("-------------MM (%s): %s = %s\n", p1, p2, p3);
-          }
-        } else {
-          printf("-------------MM (%s): %s = %s (%s) (%s)\n", p1, p2, p3, p4, p5);
-        }
-      } else {
-        printf("-------------MM (%s): %s = %s (%s) (%s) %6d %6d %6d %6d %6d\n", p1, p2, p3, p4, p5, n1, n2, n3, n4, n5);
-      }
-    }
-#endif
-    
     //printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message, ident, (int)transactionId, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
 
     //begin_printer_changes

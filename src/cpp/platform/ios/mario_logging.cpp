@@ -6,6 +6,8 @@ using namespace net_mobilewebprint;
 
 #define APP_TYPE sap_params
 
+int darwin_log(char type, char const * tag, char const * message);
+
 void net_mobilewebprint::log_d(char const * msg, log_param_t x)
 {
   net_mobilewebprint::log_d(msg, "MobileWebPrint", x);
@@ -15,14 +17,14 @@ void net_mobilewebprint::log_d(char const * msg, char const * tag, log_param_t)
 {
   if (get_flag("quiet")) { return; }
 
-  send_to_app("log_d", -1, 0, (byte const *)msg, (APP_TYPE const *)NULL);
+  darwin_log('d', tag, msg);
 }
 
 void net_mobilewebprint::log_w(char const * msg, log_param_t)
 {
   if (get_flag("no_warn")) { return; }
 
-  send_to_app("log_w", -1, 0, (byte const *)msg, (APP_TYPE const *)NULL);
+  darwin_log('w', "", msg);
 }
 
 void net_mobilewebprint::log_v(char const * msg, log_param_t x)
@@ -34,11 +36,11 @@ void net_mobilewebprint::log_v(char const * msg, char const * tag, log_param_t)
 {
   if (!get_flag("verbose")) { return; }
 
-  send_to_app("log_v", -1, 0, (byte const *)msg, (APP_TYPE const *)NULL);
+  darwin_log('v', tag, msg);
 }
 
 void net_mobilewebprint::log_e(char const * msg, log_param_t)
 {
-  send_to_app("log_e", -1, 0, (byte const *)msg, (APP_TYPE const *)NULL);
+  darwin_log('e', "", msg);
 }
 

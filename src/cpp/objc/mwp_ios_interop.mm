@@ -22,6 +22,13 @@ int mwp_interop_bootstrap(void * app_data, char const * message, int id, int32 t
   return 0;
 }
 
+int darwin_log(char type, char const * tag, char const * message)
+{
+  //NSLog(@"%s", message);
+  //printf("----- %s\n", message);
+  printf("%s\n", message);
+}
+
 void set_client_id()
 {
   NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];

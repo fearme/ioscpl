@@ -1100,19 +1100,44 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     is_done = _lookup(http_stats.bool_attrs, "byte_stream_done", false);
   }
 
-  bool is_finishing = false;
+  bool is_error_condition = false;
+  bool is_finishing       = false;
+
   if (state == "NETWORK_ERROR" || printerState == "NETWORK_ERROR" || jobStatus == "NETWORK_ERROR") {
+
     printerState = job_stat(pcl_txn_id, "status", "NETWORK_ERROR");
     jobStatus = job_stat(pcl_txn_id, "jobStatus", "NETWORK_ERROR");
     state = "NETWORK_ERROR";
     message = "Network error.";
-    is_finishing = true;
+    is_error_condition = true;
+
   } else if (state == "UPSTREAM_ERROR" || printerState == "UPSTREAM_ERROR" || jobStatus == "UPSTREAM_ERROR"){
+
     printerState = job_stat(pcl_txn_id, "status", "UPSTREAM_ERROR");
     jobStatus = job_stat(pcl_txn_id, "jobStatus", "UPSTREAM_ERROR");
     state = "UPSTREAM_ERROR";
     message = "Upstream error.";
+    is_error_condition = true;
+  }
+
+  // Handle error, or continue with the job
+  if (is_error_condition) {
     is_finishing = true;
+
+    // Get a better message, if possible
+    message = _lookup(http_stats.attrs, "result_json", message);
+    if (_has(http_stats.attrs, "result_json")) {
+
+      json_t json;
+      if (JSON_parse(json, message)) {
+        if      (json.has_string("error_message"))  { message = json.lookup("error_message"); }
+        else if (json.has_string("error"))          { message = json.lookup("error"); }
+        else if (json.has_string("err"))            { message = json.lookup("err"); }
+        else if (json.has_string("message"))        { message = json.lookup("message"); }
+        else if (json.has_string("msg"))            { message = json.lookup("msg"); }
+      }
+    }
+
   } else {
 
     log_v(5, "", "progress0(%04d): |%s| printerState: |%s|, jobStatus: |%s| totalSent: %d/%d, all-sent: %s", pcl_txn_id, job_id.c_str(), printerState.c_str(), jobStatus.c_str(), totalSent, num_downloaded, is_done ? "true" : "false");
