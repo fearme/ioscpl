@@ -553,14 +553,23 @@ int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, string con
 
 int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, char const * str, char sep)
 {
+  result = strvlist();
   if (!*str) { return result.size(); }
 
-  char const * p1 = NULL, *p2 = str - 1;
+  char const * p1 = NULL, *p2 = str - 1, *p3 = NULL;
 
   do {
     p1 = p2 + 1;
-    p2 = find(p1, sep);
+    p2 = p3 = find(p1, sep);
     result.push_back(string(p1, p2 - p1));
+
+    // Skip consecutive white space
+    if (sep == ' ' || sep == '\n' || sep == '\t') {
+      while (*p2 && *p2 == sep) {
+        p2 += 1;
+      }
+      p2 = max(p2 - 1, p3);
+    }
 
   } while (*p2);
 

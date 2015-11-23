@@ -302,8 +302,10 @@ e_handle_result net_mobilewebprint::tcp_job_connection_t::_on_txn_close(string c
       controller.job_stat(connection_id, "result_json", body);
     }
 
-    if(http_code == http_code_498) {
-      controller.printers.upstream_error(printer->ip, http_code);
+    if (http_code > 399) {
+      //if(http_code == http_code_498) {
+        controller.printers.upstream_error(printer->ip, http_code);
+      //}
     }
 
     while (chunks.size() > 0) {

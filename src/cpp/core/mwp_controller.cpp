@@ -66,7 +66,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     //job_stats_upload_time(0), job_stats_upload_interval(2000),
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
-    network_ifaces_timer(0, 1000),
+    network_ifaces_timer(0, 6000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
@@ -100,7 +100,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     upload_job_stats(0, 500),
     cleanup_time(0, 250),
     server_command_timer(0, 100, false),
-    network_ifaces_timer(0, 1000),
+    network_ifaces_timer(0, 6000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
@@ -193,6 +193,26 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   }
 
   if (network_ifaces_timer.has_elapsed(loop_start_data.current_loop_start)) {
+//    char buf[1024];
+//    strvlist parts;
+//    FILE * pf = fopen("/proc/net/arp", "r");
+//    if (pf) {
+//      serialization_json_t json;
+//      serialization_json_t & sub_json = json.getObject("items");
+//
+//      int line = 0;
+//      while (fgets(buf, sizeof(buf), pf)) {
+//
+//        log_v(4, "", "procnetarp: %15s %18s %s", parts[0].c_str(), parts[3].c_str(), buf);
+//        if (line++ == 0) { continue; }          // Skip the first line, it has a table heading
+//
+//        if (splitv(parts, buf, ' ') >= 4) {
+//          sub_json.set(dashify_key(parts[0]), parts[3]);
+//        }
+//      }
+//      sendTelemetry("printerScan", "arpCache", json);
+//      fclose(pf);
+//    }
   }
 
   // Push progress-telemetry up to the server
@@ -1131,10 +1151,10 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       json_t json;
       if (JSON_parse(json, message)) {
         if      (json.has_string("error_message"))  { message = json.lookup("error_message"); }
-        else if (json.has_string("error"))          { message = json.lookup("error"); }
-        else if (json.has_string("err"))            { message = json.lookup("err"); }
         else if (json.has_string("message"))        { message = json.lookup("message"); }
         else if (json.has_string("msg"))            { message = json.lookup("msg"); }
+        //else if (json.has_string("error"))          { message = json.lookup("error"); }
+        //else if (json.has_string("err"))            { message = json.lookup("err"); }
       }
     }
 
