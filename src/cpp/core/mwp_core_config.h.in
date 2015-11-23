@@ -4,7 +4,8 @@
 
 #cmakedefine HAVE_IF_ETHER_H 1
 
-#define BUILD_NUMBER "@BUILD_NUMBER@"
-#define BUILD_USER   "@BUILD_USER@"
+#define BUILD_NUMBER      "@BUILD_NUMBER@"
+#define BUILD_USER        "@BUILD_USER@"
+#define MARIO_PLATFORM    "@MARIO_PLATFORM@"
 
 #endif  // __MWP_CORE_CONFIG_H__

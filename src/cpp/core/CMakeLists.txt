@@ -1,6 +1,6 @@
 
 # TODO: This should be removed, right?
-set(MARIO_PLATFORM ANDROID)
+#set(MARIO_PLATFORM ANDROID)
 
 include(CheckIncludeFiles)
 

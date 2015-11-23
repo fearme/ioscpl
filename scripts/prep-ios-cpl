@@ -1,0 +1,38 @@
+#!/bin/bash -e
+
+die() { echo "$@"; exit 1; }
+
+DEB_REL="release"
+
+for arg in "$@"; do
+  case $arg in
+
+    --build=*)      BUILD="${arg#*=}";    shift;;
+    --debug)        DEB_REL="debug";      shift;;
+    --release)      DEB_REL="release";    shift;;
+
+  esac
+done
+
+test -z "$BUILD" && die "Need --build=x"
+test -d "/tmp/"  || die "No /tmp dir???"
+
+START_DIR=$(pwd)
+zip_name="mwp_sap_cpl-ios-fat-${DEB_REL}_1.1-${BUILD}.zip"
+
+cd /tmp/ && rm -rf prep-ios-cpl
+mkdir -p prep-ios-cpl && cd $_
+
+curl -sOL "http://pso-artifactory.hp10.us/artifactory/mario-local/ios/mario_1.1/develop/${BUILD}/${zip_name}"
+unzip "${zip_name}"
+
+#tree
+#ls -l
+
+# Copy include files and binaries to HPControlledPrint
+mkdir -p $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes \
+         $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries
+
+cp -Rf include/*    $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes
+cp -Rf libs/*       $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries
+
