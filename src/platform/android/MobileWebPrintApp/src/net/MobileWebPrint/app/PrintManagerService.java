@@ -82,10 +82,15 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
   @Override
   public int onStartCommand(Intent intent, int flags, int startId) {
 
-    Log.v(TAG, "lifetime:- PrintManagerService.onStartCommand");
+    Log.v(TAG, String.format("lifetime:- PrintManagerService.onStartCommand flags: 0x%x, startId: %d, intent: %s", flags, startId, intent));
 
     Toast.makeText(this, "service starting", Toast.LENGTH_SHORT).show();
-    return super.onStartCommand(intent, flags, startId);
+    int result = super.onStartCommand(intent, flags, startId);
+    result = START_NOT_STICKY;
+
+    Log.v(TAG, String.format("lifetime:- PrintManagerService.onStartCommand result: %d", result));
+
+    return result;
   }
 
   @Override

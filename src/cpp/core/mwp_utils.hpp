@@ -106,6 +106,8 @@ namespace net_mobilewebprint {
 
   extern int      splitv(strvlist & result, string const & str, char sep = ',');
   extern int      splitv(strvlist & result, char const * sz, char sep = ',');
+  extern int      splitv(strvlist & result, char const * sz, size_t mem_len, char sep = ',');
+  extern int      splitv(strvlist & result, char const * sz, char const * end, char sep = ',');
 
   extern strvlist compact(strvlist const & that);
 
@@ -218,6 +220,8 @@ namespace net_mobilewebprint {
   extern void log_d(map<string, string> const &, string pre = "", string post = "");
   extern char const *  find(char const *p, char ch);
   extern char const *  find(char const *p, char const * sz);
+  extern char const *  find(char const *p, char ch, char const *end);
+  extern char const *  find(char const *p, char const * sz, char const *end);
 
   extern void           dump(std::map<string, int> const & dict);
 

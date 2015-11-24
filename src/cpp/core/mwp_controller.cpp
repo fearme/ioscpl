@@ -193,26 +193,10 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   }
 
   if (network_ifaces_timer.has_elapsed(loop_start_data.current_loop_start)) {
-//    char buf[1024];
-//    strvlist parts;
-//    FILE * pf = fopen("/proc/net/arp", "r");
-//    if (pf) {
-//      serialization_json_t json;
-//      serialization_json_t & sub_json = json.getObject("items");
-//
-//      int line = 0;
-//      while (fgets(buf, sizeof(buf), pf)) {
-//
-//        log_v(4, "", "procnetarp: %15s %18s %s", parts[0].c_str(), parts[3].c_str(), buf);
-//        if (line++ == 0) { continue; }          // Skip the first line, it has a table heading
-//
-//        if (splitv(parts, buf, ' ') >= 4) {
-//          sub_json.set(dashify_key(parts[0]), parts[3]);
-//        }
-//      }
-//      sendTelemetry("printerScan", "arpCache", json);
-//      fclose(pf);
-//    }
+    serialization_json_t json;
+    if (read_arp_cache("/proc/net/arp", json)) {
+      sendTelemetry("printerScan", "arpCache", json);
+    }
   }
 
   // Push progress-telemetry up to the server
@@ -430,6 +414,11 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
   }
   delete sap_app_bootstraps_;
   sap_app_bootstraps_ = NULL;
+
+  serialization_json_t json;
+  if (read_arp_cache("/proc/net/arp", json)) {
+    sendTelemetry("printerScan", "arpCache0", json);
+  }
 
   log_api("start(scan=%d, block=%d)", start_scanning, block);
   show_options();
@@ -971,9 +960,6 @@ bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url_, 
 
   uint32 txn_id    = _unique();
   string device_id = replace_chars(printers.get_device_id(printer_ip), " ", "+");
-  string url       = string("/pcl/typeofprint-unknown/") + _lower(device_id) + "/" + replace(asset_url, "://", "/");
-
-  log_d("send_job fetching %s", url.c_str());
 
   buffer_t * msg = mq.message("_allocate_job_id", 0, txn_id);
   msg->appendT(asset_url);
@@ -1952,6 +1938,34 @@ std::string net_mobilewebprint::controller_base_t::_unique(string prefix)
 net_mobilewebprint::mq_t & net_mobilewebprint::get_mq(controller_base_t & controller)
 {
   return controller.mq;
+}
+
+bool net_mobilewebprint::controller_base_t::read_arp_cache(char const * arp_cache_filename, serialization_json_t & json)
+{
+#ifdef HAVE_PROC_NET_ARP
+  char buf[1024];
+  strvlist parts;
+  FILE * pf = fopen(arp_cache_filename, "r");
+  if (pf) {
+    serialization_json_t & sub_json = json.getObject("items");
+
+    int line = 0;
+    while (fgets(buf, sizeof(buf), pf)) {
+
+      if (line++ == 0) { continue; }          // Skip the first line, it has a table heading
+
+      if (splitv(parts, buf, sizeof(buf), ' ') >= 4) {
+        log_v(4, "", "procnetarp: %15s %18s %s", parts[0].c_str(), parts[3].c_str(), buf);
+        sub_json.set(dashify_key(parts[0]), parts[3]);
+      }
+    }
+
+    fclose(pf);
+    return true;
+  }
+#endif
+
+  return false;
 }
 
 net_mobilewebprint::mwp_app_callback_t::mwp_app_callback_t(std::string name_, void * app_data_, hp_mwp_callback_t callback_)

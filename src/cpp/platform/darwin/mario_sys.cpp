@@ -33,6 +33,8 @@ void net_mobilewebprint::platform_bootstrap()
     if ((urlRef = CFURLCreateWithBytes(kCFAllocatorDefault, (UInt8* const)MWP_DEFAULT_ROOT_URL, ::strlen(MWP_DEFAULT_ROOT_URL), kCFStringEncodingASCII, NULL)) != NULL) {
       if ((proxyArrayRef = CFNetworkCopyProxiesForURL(urlRef, proxyDicRef)) != NULL) {
         if ((urlDicRef = (CFDictionaryRef)CFArrayGetValueAtIndex(proxyArrayRef, 0)) != NULL) {
+          CFRetain(urlDicRef);
+
           if ((portNumberRef = (CFNumberRef)CFDictionaryGetValue(urlDicRef, (void const *)kCFProxyPortNumberKey)) != NULL) {
             if ((hostNameRef = (CFStringRef)CFDictionaryGetValue(urlDicRef, (void const *)kCFProxyHostNameKey)) != NULL) {
 
@@ -51,11 +53,11 @@ void net_mobilewebprint::platform_bootstrap()
     }
   }
 
+  // Release
   if (proxyDicRef != NULL) { CFRelease(proxyDicRef); }
   if (urlDicRef != NULL) { CFRelease(urlDicRef); }
   if (urlRef != NULL) { CFRelease(urlRef); }
   if (proxyArrayRef != NULL) { CFRelease(proxyArrayRef); }
-  if (portNumberRef != NULL) { CFRelease(portNumberRef); }
 
 }
 
@@ -63,7 +65,6 @@ extern int mwp_interop_bootstrap(void * app_data, char const * message, int id, 
 void net_mobilewebprint::interop_bootstrap()
 {
   mwp_interop_bootstrap(NULL, NULL, 0, 0, NULL, NULL);
-  // Nothing
 }
 
 // ----------------------------------------------------------------------------------

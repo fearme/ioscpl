@@ -313,6 +313,37 @@ char const * net_mobilewebprint::find(char const *p, char const * sz)
   return NULL;
 }
 
+char const * net_mobilewebprint::find(char const *p, char ch, char const * end)
+{
+  while (p < end && *p != 0 && *p != ch) {
+    p++;
+  }
+
+  if (p == end) { return NULL; }
+
+  /* otherwise */
+  return p;
+}
+
+char const * net_mobilewebprint::find(char const *p, char const * sz, char const * end)
+{
+  char const * psz, *p2;
+  for (;p < end && *p != 0; ++p) {
+    for (psz = sz, p2 = p; *psz != 0 && *p2 != 0; ++psz, ++p2) {
+      if (*psz != *p2) {
+        break;
+      }
+    }
+
+    // If we found the null terminator for sz, we matched
+    if (*psz == 0) {
+      return p;
+    }
+  }
+
+  return NULL;
+}
+
 unsigned char char_lc[] = {
      0,    1,    2,    3,    4,    5,    6,    7,    8,    9, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
   0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
@@ -553,25 +584,50 @@ int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, string con
 
 int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, char const * str, char sep)
 {
+  return splitv(result, str, ::strlen(str) + 1, sep);
+}
+
+int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, char const * str, size_t mem_len, char sep)
+{
+  return splitv(result, str, str + mem_len, sep);
+}
+
+int net_mobilewebprint::splitv(net_mobilewebprint::strvlist & result, char const * str, char const * end, char sep)
+{
   result = strvlist();
   if (!*str) { return result.size(); }
 
-  char const * p1 = NULL, *p2 = str - 1, *p3 = NULL;
+  char const * p1 = str, *p2 = NULL;
 
   do {
-    p1 = p2 + 1;
-    p2 = p3 = find(p1, sep);
-    result.push_back(string(p1, p2 - p1));
 
-    // Skip consecutive white space
-    if (sep == ' ' || sep == '\n' || sep == '\t') {
-      while (*p2 && *p2 == sep) {
-        p2 += 1;
+    if ((p2 = find(p1, sep, end)) != NULL) {
+      result.push_back(string(p1, p2 - p1));
+
+      // Skip consecutive white space
+      if (sep == ' ' || sep == '\n' || sep == '\t') {
+
+        char const * p3 = NULL;
+        for (p3 = p2; p3 < end && *p3 == sep;) {
+          p3 += 1;
+        }
+        p3 -= 1;
+
+        if (p3 > p2) {
+          p2 = p3;
+        }
       }
-      p2 = max(p2 - 1, p3);
+
+    } else {
+      // We did not find another instance of the separator, add the last chunk to the returned list
+      if (p1 + 1 < end) {
+        result.push_back(string(p1, end - p1));
+      }
+      break;
     }
 
-  } while (*p2);
+    p1 = p2 + 1;
+  } while ((p2+1) < end && *p2);
 
   return result.size();
 }

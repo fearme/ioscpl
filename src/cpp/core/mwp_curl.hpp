@@ -28,6 +28,7 @@ namespace net_mobilewebprint {
 
     string                 server_name;
     uint16                 server_port;
+    string                 netapp_subdomain;
 
     CURLM *                mcurl;
     uint32                 connection_id;

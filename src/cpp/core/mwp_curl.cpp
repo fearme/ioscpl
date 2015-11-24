@@ -12,7 +12,7 @@ using namespace net_mobilewebprint;
  *  curl_t ctor.
  */
 net_mobilewebprint::curl_t::curl_t(controller_base_t & controller_, string server_name_, uint16 server_port_)
-  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), mcurl(NULL)
+  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), netapp_subdomain("netapp"), mcurl(NULL)
 {
   mq.on(this);
   mq.on_selected(this);
@@ -138,7 +138,7 @@ std::string net_mobilewebprint::curl_t::translate_path(string const & path)
     size_t end = server_name.find(".mobile");
     if (end != string::npos) {
       string netapp_server_name = server_name;
-      netapp_server_name.replace(0, end, "netapp");
+      netapp_server_name.replace(0, end, netapp_subdomain);
       string netapp_path = path;
       netapp_path.replace(0, ::strlen("netapp::"), "");
       full_url = "http://" + netapp_server_name + ":" + mwp_itoa(server_port) + netapp_path;

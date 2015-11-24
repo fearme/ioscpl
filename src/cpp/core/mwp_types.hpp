@@ -42,12 +42,12 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-#if HAVE_IF_ETHER_H
+#ifdef HAVE_IF_ETHER_H
 #include <netinet/if_ether.h>
 #define HAVE_SIOCGARP 1
 #endif
 
-#if HAVE_IF_ARP_H
+#ifdef HAVE_IF_ARP_H
 #include <net/if_arp.h>
 #endif
 
@@ -993,7 +993,7 @@ namespace net_mobilewebprint {
 
     void get_mac(struct sockaddr_in & addr) {
 
-#if HAVE_SIOCGARP
+#ifdef HAVE_SIOCGARP
       char temp[32];
       char ip_[INET_ADDRSTRLEN + 1];
       inet_ntop(AF_INET, &addr.sin_addr, ip_, INET_ADDRSTRLEN);

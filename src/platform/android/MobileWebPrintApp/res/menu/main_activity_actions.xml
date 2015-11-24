@@ -3,6 +3,6 @@
       xmlns:androidx="http://schemas.android.com/apk/res-auto">
 
     <item android:id="@+id/action_death"
-          android:title="exit and restart service" />
+          android:title="exit" />
 </menu>
 

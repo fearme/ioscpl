@@ -333,6 +333,8 @@ namespace net_mobilewebprint {
       ARGS.merge(ARGS(argc, argv));
     }
 
+    bool                      read_arp_cache(char const * arp_cache_filename, serialization_json_t & json);
+
     // ---------------------- Heartbeat ----------------------
     mq_manual_timer_t         heartbeat_timer;
 
