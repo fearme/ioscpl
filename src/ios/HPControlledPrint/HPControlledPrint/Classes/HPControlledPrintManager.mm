@@ -31,6 +31,7 @@ NSString *const kOperationPrintFailed        = @"FAILED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintCanceled      = @"CANCELED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintDeferred      = @"COUPON_DOCUMENT_DEFERRED";
 
+//The SDK sends these to Cayman metrics
 NSString *const kStatePrintRequestInitiated  = @"INITIATED";
 NSString *const kStatePrintSuccess           = @"SUCCESS";
 NSString *const kStatePrintCancelled         = @"CANCELLED";
@@ -42,6 +43,7 @@ NSString *const kStateUpstreamError          = @"UPSTREAM_ERROR";
 NSString *const kReasonNewTokenRegistered    = @"New Token Registered";
 NSString *const kReasonPrintRequestInitiated = @"Print Request Initiated";
 
+//Mario sends these messages to the SDK
 NSString *const kPrinterStatusPrinting       = @"PRINTING";
 NSString *const kPrinterStatusIdle           = @"IDLE";
 NSString *const kPrinterStatusCanceling      = @"CANCELING PRINTING";
@@ -98,7 +100,7 @@ BOOL printerScanStarted;
 - (NSString *)hashUUID
 {
     NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt:32]];
+    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt]];
     NSLog(@"UUID: %@", uuid);
     NSLog(@"UUID Hashed: %@", hashed);
     NSLog(@"UUID Hashed Length: %lu", (unsigned long)[hashed length]);
@@ -311,8 +313,9 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     if ([[self printerAttributesDelegate] respondsToSelector:@selector(didReceivePrinters:)]) {
         //make sure we only send printers with IPs, names, and isSupported set
         HPDiscoveredPrinters *printersToSend = [[HPDiscoveredPrinters alloc] init];
-        for (NSString *ip in printers) {
-            HPPrinterAttributes *printer = [printers objectForKey:ip];
+        NSDictionary *dict = [printers copy]; //make a copy so that we don't accidentally do a read and write on the printers object at the same time. That would crash the app.
+        for (NSString *ip in dict) {
+            HPPrinterAttributes *printer = [dict objectForKey:ip];
             if (printer.ip != nil && printer.name != nil && printer._supportedFlagIsSet) {
                 [printersToSend.printers setObject:printer forKey:ip];
             }

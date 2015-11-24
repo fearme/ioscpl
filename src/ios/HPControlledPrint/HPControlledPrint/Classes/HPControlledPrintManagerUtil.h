@@ -17,6 +17,6 @@
 
 + (NSString *) hash:(NSString *)source withSalt:(NSString *)salt;
 
-+ (NSString *) salt:(int)length;
++ (NSString *) salt;
 
 @end

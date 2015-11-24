@@ -21,10 +21,10 @@
 		375530F01B3A1B6D00659D37 /* PrintJob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530ED1B3A1B6D00659D37 /* PrintJob.swift */; };
 		375530F11B3A1B6D00659D37 /* PrintViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530EE1B3A1B6D00659D37 /* PrintViewController.swift */; };
 		37A850361B5041660018F059 /* ServerStackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A850351B5041660018F059 /* ServerStackViewController.swift */; };
+		37B9AA111C03CE6400AB8B2C /* HPControlledPrint.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 37B9AA0F1C03CE4600AB8B2C /* HPControlledPrint.framework */; };
+		37B9AA121C03CE6400AB8B2C /* HPControlledPrint.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 37B9AA0F1C03CE4600AB8B2C /* HPControlledPrint.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		396252eae814c8452ec69dcc /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 284865160736011911c6b816 /* CFNetwork.framework */; };
 		790b528807bfea3079511c1e /* PrinterListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530C91B3A19BD00659D37 /* PrinterListViewController.swift */; };
-		BF9C73C91C011A25008B2FD1 /* HPControlledPrint.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; };
-		BF9C73CA1C011A25008B2FD1 /* HPControlledPrint.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 378C79371BFD04360074E4BE /* HPControlledPrint.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		a1e80271cc739299605fd820 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 375530CB1B3A19BD00659D37 /* Main.storyboard */; };
 		a55d979a89c775e29e63a1e6 /* ControlledPrint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 375530EC1B3A1B6D00659D37 /* ControlledPrint.swift */; };
 		a7c5e8a6a8bc00cbe1e64d8e /* ServerStackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A850351B5041660018F059 /* ServerStackViewController.swift */; };
@@ -63,7 +63,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				BF9C73CA1C011A25008B2FD1 /* HPControlledPrint.framework in Embed Frameworks */,
+				37B9AA121C03CE6400AB8B2C /* HPControlledPrint.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -88,8 +88,8 @@
 		375530EC1B3A1B6D00659D37 /* ControlledPrint.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ControlledPrint.swift; sourceTree = "<group>"; };
 		375530ED1B3A1B6D00659D37 /* PrintJob.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrintJob.swift; sourceTree = "<group>"; };
 		375530EE1B3A1B6D00659D37 /* PrintViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PrintViewController.swift; sourceTree = "<group>"; };
-		378C79371BFD04360074E4BE /* HPControlledPrint.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HPControlledPrint.framework; path = ../../../deliveries/ios/cpl/release/HPControlledPrint.framework; sourceTree = "<group>"; };
 		37A850351B5041660018F059 /* ServerStackViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ServerStackViewController.swift; sourceTree = "<group>"; };
+		37B9AA0F1C03CE4600AB8B2C /* HPControlledPrint.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = HPControlledPrint.framework; path = ../../../deliveries/ios/cpl/release/HPControlledPrint.framework; sourceTree = "<group>"; };
 		37C5CA931B3B32CB00C529C9 /* HPControlledPrint-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "HPControlledPrint-Bridging-Header.h"; sourceTree = "<group>"; };
 		a0be7cfb04b652e2f8bf395c /* calabash.framework */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = wrapper.framework; path = calabash.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -99,7 +99,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				BF9C73C91C011A25008B2FD1 /* HPControlledPrint.framework in Frameworks */,
+				37B9AA111C03CE6400AB8B2C /* HPControlledPrint.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -125,7 +125,7 @@
 		3704FFAB1BC7092300DB581F /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				378C79371BFD04360074E4BE /* HPControlledPrint.framework */,
+				37B9AA0F1C03CE4600AB8B2C /* HPControlledPrint.framework */,
 				284865160736011911c6b816 /* CFNetwork.framework */,
 				a0be7cfb04b652e2f8bf395c /* calabash.framework */,
 			);
