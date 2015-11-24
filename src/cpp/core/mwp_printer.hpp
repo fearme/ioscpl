@@ -121,7 +121,7 @@ namespace net_mobilewebprint {
   };
 
   struct printer_list_response_t : public upstream_handler_t {
-    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 
   struct printer_list_t

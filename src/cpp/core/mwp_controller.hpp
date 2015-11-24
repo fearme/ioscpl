@@ -82,13 +82,18 @@ namespace net_mobilewebprint {
     std::string           url;
     serialization_json_t  json_body;
 
+    std::string           content_type;
+    std::string           body;
+
     controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, serialization_json_t const & json);
     controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, strmap const & query, serialization_json_t const & json);
+
+    controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, string const & body, string content_type);
   };
 
   struct server_command_response_t : public upstream_handler_t {
     virtual ~server_command_response_t();
-    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 
   struct controller_base_t : public mq_handler_t
@@ -255,13 +260,19 @@ namespace net_mobilewebprint {
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json, upstream_handler_t *);
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json);
 
+    string                send_local(string ip, int port, string path, string const & body, string content_type, upstream_handler_t *);
+
     private:
       uint32               curl_http_post(string const & url, serialization_json_t &);
+      uint32               curl_http_post(string const & url, string const & body, string content_type);
       uint32                curl_http_get(string const & url);
 
-      uint32               curl_http_post(string const & url, serialization_json_t &, uint32 id);
+      uint32               curl_http_post(string const & url, serialization_json_t &, uint32 txn_id);
+      uint32               curl_http_post(string const & url, string const & body, string content_type, uint32 txn_id);
       uint32               curl_http_post(controller_http_request_t const & request);
       uint32                curl_http_get(string const & url, uint32 id);
+
+      uint32               curl_local_send(string ip, int port, string path, string const & body, string content_type, string verb = "POST");
 
     friend struct upstream_t;
     public:
@@ -323,7 +334,7 @@ namespace net_mobilewebprint {
     e_handle_result process_upstream_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
     e_handle_result _on_progress_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
-    void handle_server_command(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    void handle_server_command(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
 
     // Log an api if that option is set
     void                log_api(char const * format, ...);
@@ -405,8 +416,15 @@ namespace net_mobilewebprint {
 
   };
 
+  struct http_reverse_upload_t : public upstream_handler_t {
+    controller_base_t & controller;
+    http_reverse_upload_t(controller_base_t & controller);
+    virtual ~http_reverse_upload_t();
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
+  };
+
   struct telemetry_response_t : public upstream_handler_t {
-    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 
   extern controller_base_t * g_controller;

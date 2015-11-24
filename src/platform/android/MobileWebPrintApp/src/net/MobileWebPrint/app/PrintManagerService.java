@@ -70,8 +70,6 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
     mwp_client.setOption("domainName", ".mobiledevprint.net");
     mwp_client.setOption("providerName", "HP_CP");
 
-    mwp_client.setFlag("featurePrinterMissing", true);
-
     mwp_client.setFlag("telemetryGSPL", false);
 
     mwp_client.RegisterPrinterListChangesListener(this);

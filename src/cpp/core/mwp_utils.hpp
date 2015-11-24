@@ -84,6 +84,8 @@ namespace net_mobilewebprint {
   extern string        random_string(size_t length);
   extern bool          _normalize_keys(string & parent, string & key);
 
+  extern string        format(char const * fmt, ...);
+
   //-----------------------------------------------------------------------------
   //
   //  String list building and manipulation

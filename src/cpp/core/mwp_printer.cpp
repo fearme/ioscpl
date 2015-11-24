@@ -1183,13 +1183,13 @@ int net_mobilewebprint::printer_list_t::unknown_is_supported_count()
   return count;
 }
 
-void net_mobilewebprint::printer_list_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+void net_mobilewebprint::printer_list_response_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
 {
   log_v(3, "", "-----------------------------------------------------------response from filterPrinters %d", code);
-  //log_vs(3, "", "-----------------------------------------------------------response from filterPrinters %s", json.stringify());
+  //log_vs(3, "", "-----------------------------------------------------------response from filterPrinters %s", json_array.stringify());
 
   if (g_printer_list) {
-    g_printer_list->handle_filter_printers(code, http_version, headers, json, stats_out);
+    g_printer_list->handle_filter_printers(code, http_version, headers, json_array, stats_out);
   }
 }
 

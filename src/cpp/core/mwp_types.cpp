@@ -767,6 +767,26 @@ std::string const & net_mobilewebprint::json_t::lookup(string const & key) const
   return the_null_string;
 }
 
+std::string         net_mobilewebprint::json_t::lookup(char const * key, char const * def) const
+{
+  strmap::const_iterator it = str_attrs.find(key);
+  if (it != str_attrs.end()) {
+    return it->second;
+  }
+
+  return def;
+}
+
+std::string         net_mobilewebprint::json_t::lookup(string const & key, char const * def) const
+{
+  strmap::const_iterator it = str_attrs.find(key);
+  if (it != str_attrs.end()) {
+    return it->second;
+  }
+
+  return def;
+}
+
 int net_mobilewebprint::json_t::lookup(char const * key_, int def) const
 {
   std::string key(key_);

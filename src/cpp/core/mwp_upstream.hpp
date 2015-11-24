@@ -60,12 +60,16 @@ namespace net_mobilewebprint {
     // The variants that return a string will return the txn_name (to identify the specific response)
 
     string send(string const & mod_name, string const & endpoint, serialization_json_t & json);
-//    string send(string const & mod_name, string const & endpoint,         string const & body);
+//    string send(string const & mod_name, string const & endpoint,         string const & body, stats_t const & stats);
 
     string send(string const & endpoint, serialization_json_t & json,                          string const & message_name, stats_t const & stats);
-
     void   send(string const & endpoint, serialization_json_t & json, string const & txn_name, string const & message_name, stats_t const & stats);
-//    void   send(string const & endpoint,         string const & body, string const & txn_name, string const & message_name);
+
+    string send(string const & endpoint, string const & body, string content_type,                           string const & message_name, stats_t const & stats);
+    void   send(string const & endpoint, string const & body, string content_type, string const & txn_name,  string const & message_name, stats_t const & stats);
+
+    string send_local(string ip, int port, string path, string const & body, string content_type,                          string const & message_name, stats_t const & stats);
+    void   send_local(string ip, int port, string path, string const & body, string content_type, string const & txn_name, string const & message_name, stats_t const & stats);
 
     // All the 'get' variants GET to the server
     // The variants that return a string will return the txn_name (to identify the specific response)
@@ -82,6 +86,8 @@ namespace net_mobilewebprint {
     bool   parse_response(buffer_view_i const & payload, int & code, string & http_version, strmap & headers, json_t & json,           stats_t & stats_out);
     bool   parse_response(buffer_view_i const & payload, int & code, string & http_version, strmap & headers, string & body_str,       stats_t & stats_out);
 
+    std::string   parse_response(buffer_view_i const & payload, int & code, string & http_version, strmap & headers, string & body_str, json_t & json, json_array_t & json_array, stats_t & stats_out);
+
     // ---------- mq_handler_t
     virtual e_handle_result   handle(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
@@ -90,7 +96,7 @@ namespace net_mobilewebprint {
 
   struct upstream_handler_t {
     virtual ~upstream_handler_t() = 0;
-    virtual void handle(int code, string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out) = 0;
+    virtual void handle(int code, string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out) = 0;
   };
   typedef std::map<std::string, upstream_handler_t*> upstream_handler_map_t;
 

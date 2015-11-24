@@ -53,15 +53,36 @@ net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_ser
   return (connections[connection_id] = new curl_connection_t(controller, mcurl, this, json, path, connection_id));
 }
 
-net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_server(string const & json_str, string const & path, uint32 connection_id)
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_server(string const & body, string const & path, string content_type, uint32 connection_id)
 {
-  //log_d(1, "curl_t", "curl_t::POST-JSON %s %d", path.c_str(), connection_id);
-
   if (mcurl == NULL) {
     mcurl = curl_multi_init();
   }
 
-  return (connections[connection_id] = new curl_connection_t(controller, mcurl, this, path, connection_id, json_str));
+  curl_upstream_server_t   server(path);
+  curl_payload_string_t    payload(body, content_type, "POST");
+  return (connections[connection_id] = new curl_connection_t(this, server, payload, connection_id));
+}
+
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::get_local(string ip, int port, string const & path, uint32 connection_id)
+{
+  if (mcurl == NULL) {
+    mcurl = curl_multi_init();
+  }
+
+  curl_local_server_t server(ip, port, path);
+  return (connections[connection_id] = new curl_connection_t(this, server, connection_id));
+}
+
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::fetch_local(string ip, int port, string const & path, string const & body, string content_type, uint32 connection_id, string verb)
+{
+  if (mcurl == NULL) {
+    mcurl = curl_multi_init();
+  }
+
+  curl_local_server_t   server(ip, port, path);
+  curl_payload_string_t payload(body, content_type, verb);
+  return (connections[connection_id] = new curl_connection_t(this, server, payload, connection_id));
 }
 
 int net_mobilewebprint::curl_t::pre_select(mq_pre_select_data_t * data)
@@ -132,16 +153,21 @@ net_mobilewebprint::curl_t::connections_t::iterator net_mobilewebprint::curl_t::
 
 std::string net_mobilewebprint::curl_t::translate_path(string const & path)
 {
-  string full_url = "http://" + server_name + ":" + mwp_itoa(server_port) + path;
+  return translate_path(server_name, server_port, path);
+}
+
+std::string net_mobilewebprint::curl_t::translate_path(string server_name_, int server_port_, string const & path)
+{
+  string full_url = "http://" + server_name_ + ":" + mwp_itoa(server_port_) + path;
 
   if (_starts_with(path, "netapp::/")) {
-    size_t end = server_name.find(".mobile");
+    size_t end = server_name_.find(".mobile");
     if (end != string::npos) {
-      string netapp_server_name = server_name;
+      string netapp_server_name = server_name_;
       netapp_server_name.replace(0, end, netapp_subdomain);
       string netapp_path = path;
       netapp_path.replace(0, ::strlen("netapp::"), "");
-      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(server_port) + netapp_path;
+      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(server_port_) + netapp_path;
     }
   }
 
@@ -194,6 +220,44 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
 /**
  *  curl_connector_t ctor.
  *
+ *  GET path
+ *
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  verb = "GET";
+
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.path);
+  _set_url(full_url);
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
+ *  GET path
+ *
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  verb = "GET";
+
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.ip, server.port, server.path);
+  _set_url(full_url);
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
  *  For JSON POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, serialization_json_t const & json, string const & path_, uint32 connection_id_)
@@ -213,18 +277,98 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
 /**
  *  curl_connector_t ctor.
  *
- *  For JSON_str POST.
+ *  For JSON POST.
  */
-net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, string const & path_, uint32 connection_id_, string const & body_str)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, curl_payload_json_t const & payload, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
     request_payload(NULL), req_headers(NULL)
 {
-  _init();
+  verb = payload.verb;
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.path);
+  _set_url(full_url);
+
+  _set_body(payload.json);
+
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
+ *  For JSON POST.
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, curl_payload_json_t const & payload, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  verb = payload.verb;
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.ip, server.port, server.path);
+  _set_url(full_url);
+
+  _set_body(payload.json);
+
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
+ *  For JSON_str POST.
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, string const & path_, uint32 connection_id_, string verb_, string const & body_str, string content_type, bool use_proxy)
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  _init(use_proxy);
 
   full_url = parent->translate_path(path);
   _set_url(full_url);
 
-  _set_body(body_str);
+  _set_body(body_str, content_type, verb);
+
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
+ *  For JSON_str POST.
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, curl_payload_string_t const & payload, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  verb = payload.verb;
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.path);
+  _set_url(full_url);
+
+  _set_body(payload.body, payload.content_type, payload.verb);
+
+  _go();
+}
+
+/**
+ *  curl_connector_t ctor.
+ *
+ *  For JSON_str POST.
+ */
+net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, curl_payload_string_t const & payload, uint32 connection_id_)
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+    request_payload(NULL), req_headers(NULL)
+{
+  verb = payload.verb;
+  _init(server.use_proxy);
+
+  full_url = parent->translate_path(server.ip, server.port, server.path);
+  _set_url(full_url);
+
+  _set_body(payload.body, payload.content_type, payload.verb);
 
   _go();
 }
@@ -245,7 +389,7 @@ net_mobilewebprint::curl_connection_t::~curl_connection_t()
   curl_easy_cleanup(curl);
 }
 
-net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_init()
+net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_init(bool use_proxy)
 {
   int result = 0;
 
@@ -296,7 +440,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
   return *this;
 }
 
-net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_body(string const & body, bool do_logging)
+net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_body(string const & body, string content_type, string verb, bool do_logging)
 {
   _init_read_fn();
 
@@ -304,27 +448,30 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
     log_v(2 + verbose_adj(), "", "        body: %s", body.c_str());
   }
 
+  string ct_header = format("Content-Type: %s", content_type.c_str());
+
   buffer_t * payload = new buffer_t(body.c_str()); /**/ num_buffer_allocations += 1;
   request_payload = new chunk_t(payload, *payload);
+
+  CURLoption curl_verb = CURLOPT_POST;
+  if (verb == "PUT") {
+    curl_verb = CURLOPT_PUT;
+  }
+
+  curl_easy_setopt(curl, curl_verb, 1);
+
+  req_headers = curl_slist_append(req_headers, "Transfer-Encoding: chunked");
+  req_headers = curl_slist_append(req_headers, ct_header.c_str());
 
   return *this;
 }
 
 net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_set_body(serialization_json_t const & body, char const * verb)
 {
-  int result = 0;
-
   body.sjson_log_v(2 + verbose_adj(), "");
 
   string json_str = body.stringify();
-  _set_body(json_str, false);
-
-  result = curl_easy_setopt(curl, CURLOPT_POST, 1);
-
-  req_headers = curl_slist_append(req_headers, "Transfer-Encoding: chunked");
-  req_headers = curl_slist_append(req_headers, "Content-Type: application/json");
-
-  return *this;
+  return _set_body(json_str, "application/json", verb, false);
 }
 
 net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_go()
@@ -361,6 +508,30 @@ int net_mobilewebprint::curl_connection_t::verbose_adj()
   return parent->verbose_adj(path);
 }
 
+net_mobilewebprint::curl_upstream_server_t::curl_upstream_server_t(string path_, bool use_proxy_)
+  : path(path_), use_proxy(use_proxy_)
+{
+}
+
+net_mobilewebprint::curl_local_server_t::curl_local_server_t(string ip_, int port_, string path_)
+  : curl_upstream_server_t(path_, false), ip(ip_), port(port_)
+{
+}
+
+net_mobilewebprint::curl_payload_t::curl_payload_t(string verb_, string content_type_)
+  : verb(verb_), content_type(content_type_)
+{
+}
+
+net_mobilewebprint::curl_payload_json_t::curl_payload_json_t(serialization_json_t const & json_)
+  : curl_payload_t("POST", "application/json"), json(json_)
+{
+}
+
+net_mobilewebprint::curl_payload_string_t::curl_payload_string_t(string const & body_, string content_type_, string verb_)
+  : curl_payload_t(verb_, content_type_), body(body_)
+{
+}
 
 //---------------------------------------------------------------------------------------------------------------------------
 //

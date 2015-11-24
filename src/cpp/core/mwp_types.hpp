@@ -1516,6 +1516,9 @@ namespace net_mobilewebprint {
     string const & lookup(char const * key) const;
     string const & lookup(string const & key) const;
 
+    string         lookup(char const * key, char const * def) const;
+    string         lookup(string const & key, char const * def) const;
+
     int            lookup(char const * key, int def) const;
     int            lookup(string const & key, int def) const;
     int        lookup_int(char const * key) const;

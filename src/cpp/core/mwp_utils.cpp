@@ -1277,6 +1277,34 @@ uint32 net_mobilewebprint::_time_since(uint32 time, uint32 start)
   return start - time;
 }
 
+std::string net_mobilewebprint::format(char const * format, ...)
+{
+  va_list argList;
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  va_start(argList, format);
+
+  int cch = vsnprintf(buffer, sizeof(buffer), format, argList);
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      vsnprintf(pbuffer, cch + 1, format, argList);
+    }
+  }
+
+  va_end(argList);
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
+}
+
 using net_mobilewebprint::skip_ws;
 using net_mobilewebprint::strmap;
 using net_mobilewebprint::json_t;
