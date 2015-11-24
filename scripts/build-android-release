@@ -34,25 +34,26 @@ cd $START_DIR
 $(dirname $0)/package    --type=release --os=android --platform=device --build-tool=android-ndk --shared
 
 
-if [ -z "$JENKINS_HOME" ]; then
-  cd ${START_DIR}/src/platform/android/MobileWebPrintApp
-  ./prep_for_mk --clean
-  ./prep_for_mk --mwp-zip="${START_DIR}/deliveries/android/mwp_sap_cpl-android-device-release_1.1-${BUILD_NUMBER}.zip"
-  ant release
+cd ${START_DIR}/src/platform/android/MobileWebPrintApp
+./prep_for_mk --clean
+./prep_for_mk --mwp-zip="${START_DIR}/deliveries/android/mwp_sap_cpl-android-device-release_1.1-${BUILD_NUMBER}.zip"
+ant release
 
-  cd $START_DIR
+cd $START_DIR
 
-  set +e          # Stop 'exit on error' for a sec
+set +e          # Stop 'exit on error' for a sec
 
-  # Extra packaging -- copy the APK to the deliveries dir
-  find . -type f | grep -i '\.apk$' | grep -i release | grep -i -v unaligned | grep -v '/deliveries/' | \
-    while read fullname; do
-      f=$(basename "$fullname" .apk)
-      cp $fullname ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
+# Extra packaging -- copy the APK to the deliveries dir
+find . -type f | grep -i '\.apk$' | grep -i release | grep -i -v unaligned | grep -v '/deliveries/' | \
+  while read fullname; do
+    f=$(basename "$fullname" .apk)
+    cp $fullname ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
+
+    if [ -z "$JENKINS_HOME" ]; then
       [ -n "$install" ] && adb -d install -r ${START_DIR}/deliveries/android/${f}_1.1-${BUILD_NUMBER}.apk
-    done
+    fi
+  done
 
-  set $XTRACE     # Restart logging
+set $XTRACE     # Restart logging
 
-fi
 
