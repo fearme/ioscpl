@@ -9,6 +9,7 @@
 #import "HPMetricsSender.h"
 #import "HPProviderNotifier.h"
 #import "HPTokenValidator.h"
+#import "GAIDictionaryBuilder.h"
 
 #include "../Includes/mwp_secure_asset_printing_api.hpp"
 
@@ -90,6 +91,14 @@ BOOL printerScanStarted;
     NSLog(@"%@", [bundle description]);
     
     self.uuidHashed = [self hashUUID];
+    
+    [GAI sharedInstance].dispatchInterval = 20;
+    
+    [GAI sharedInstance].trackUncaughtExceptions = YES;
+//    self.tracker = [[GAI sharedInstance] trackerWithName:@"CuteAnimals"
+//                                              trackingId:@"UA-69772755-5"];
+    
+    id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
     
     return self;
 }
@@ -354,7 +363,17 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-    currentServerStack = stack;    
+    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+
+    NSMutableDictionary *event =
+    [[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
+                                            action:@"Initialized"
+                                             label:@"Harsh"
+                                             value:nil] build];
+    [[GAI sharedInstance].defaultTracker send:event];
+    [[GAI sharedInstance] dispatch];
+    
+    currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
         if (completion){
             completion(status);

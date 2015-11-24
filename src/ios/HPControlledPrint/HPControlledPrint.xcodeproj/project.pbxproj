@@ -20,7 +20,7 @@
 		15C942B91C04EE8C0009DC77 /* libGoogleAnalyticsServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942B81C04EE8C0009DC77 /* libGoogleAnalyticsServices.a */; };
 		15C942BB1C04EEB50009DC77 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BA1C04EEB50009DC77 /* CoreData.framework */; };
 		15C942BD1C04EEDA0009DC77 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */; };
-		15C942C11C04F39B0009DC77 /* HPControlledPrint-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */; };
+		15C942C21C04F78D0009DC77 /* HPControlledPrint-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */; };
 		3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3705A2901BF6B5BB00C291CB /* UIKit.framework */; };
 		3715A2491B4343ED004CB3D4 /* HPAsyncHttp.h in Headers */ = {isa = PBXBuildFile; fileRef = 3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */; };
 		372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 372E9E011BAA304200F2796E /* libOCMock.a */; };
@@ -437,7 +437,7 @@
 				15C942B31C04EDE40009DC77 /* GAIFields.h in Headers */,
 				3755309D1B39D4CC00659D37 /* HPControlledPrintManager.h in Headers */,
 				37B8D9441B4DE38F00CCA7DD /* HPMetricsSender.h in Headers */,
-				15C942C11C04F39B0009DC77 /* HPControlledPrint-Prefix.pch in Headers */,
+				15C942C21C04F78D0009DC77 /* HPControlledPrint-Prefix.pch in Headers */,
 				375530A11B39D4CC00659D37 /* HPPrinterAttributes.h in Headers */,
 				3755306D1B39D42500659D37 /* HPControlledPrint.h in Headers */,
 			);

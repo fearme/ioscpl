@@ -3,7 +3,6 @@
 #import "HPPrinterAttributes.h"
 #import "HPPrintJobRequest.h"
 #import "HPPrinter.h"
-
 @interface HPControlledPrintManager : NSObject
 
 typedef enum {
@@ -35,6 +34,7 @@ typedef enum {
 - (BOOL)print:(HPPrinter *)selectedPrinter withJobRequest:(HPPrintJobRequest *)printJobRequest;
 
 - (BOOL)exit;
+
 
 
 @end
