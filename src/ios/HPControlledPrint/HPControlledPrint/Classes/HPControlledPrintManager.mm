@@ -94,6 +94,7 @@ BOOL printerScanStarted;
     self.uuidHashed = [self hashUUID];
     
     [GoogleAnalyticsService setUpGoogleAnalyticsService];
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"initConstructor" andLabel:@"ReplaceHwId"];
     
     return self;
 }
@@ -248,6 +249,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     NSLog(@"userVisibleStatus: %@", userVisibleStatus);
     NSLog(@"printerStatus: %@", printerStatus);
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"NotifyProvider" andLabel:@"ReplaceHwId"];
     
     
     //IMPORTANT: The order of the if conditions matters. Do not change.
@@ -348,6 +350,8 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         return stack;
     }
     @catch (NSException *exception) {
+        // by default google analytics will log any unhandled exceptions
+        // but the following will be left in the code as a guide on on how manually handle exceptions
         NSLog(@"Exception: %@", exception.reason);
         [GoogleAnalyticsService trackException:exception withHwId:@"HarshHwId"];
     }
@@ -363,9 +367,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen955pm" withHwId:@"HarshHwId955pm"];
-    
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos955pm" withAction:@"Initialized955pm" andLabel:@"TestLabel955pm"];
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Initialized" andLabel:@"ReplaceHwId"];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
@@ -429,6 +431,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             completion(valid);
         }
     }];
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Validate" andLabel:@"ReplaceHwId"];
 }
 
 #pragma mark - scanForPrinters()
@@ -507,6 +510,8 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
     [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forHardwarId:self.uuidHashed forOperation:kOperationPrintRequested forReason:kReasonPrintRequestInitiated forState:kStatePrintRequestInitiated metricsType:kMetricTypeUserData];
     
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Print" andLabel:@"ReplaceHwId"];
+    
     return YES;
 }
 
@@ -522,6 +527,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 - (BOOL)exit
 {
     //we currently do nothing except log this function call
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Exit" andLabel:@"ReplaceHwId"];
     NSLog(@"exit() called");
     
     return YES;
