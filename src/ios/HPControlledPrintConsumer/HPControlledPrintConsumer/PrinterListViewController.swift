@@ -82,7 +82,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     // MARK: - ControlledPrintDelegate protocol - implementation
     
     func printersFound(printersDictionary: Dictionary<String, HPPrinterAttributes>) {
-        //NSLog("Printer count: %d", printersDictionary.count)
+        NSLog("Number of printers received from SDK: %i", printersDictionary.count)
         self.printers.removeAll(keepCapacity: true)
         for (_, printer) in printersDictionary {
             self.printers.append(printer)

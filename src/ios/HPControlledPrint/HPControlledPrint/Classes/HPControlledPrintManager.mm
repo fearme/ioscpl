@@ -186,7 +186,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         NSString *property = [NSString stringWithUTF8String:p2];
         NSString *value = [NSString stringWithUTF8String:p3];
-        NSLog(@"%@ - %@: %@", printerIp, property, value);
+        NSLog(@"'%@' - '%@': '%@'", printerIp, property, value);
         
         if ([property isEqualToString:@"name"]) {
             attributes.name = value;
@@ -238,7 +238,17 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         [self notifyProviderOfPrintStatus:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
     } else if ([stringMessage isEqualToString:@"begin_new_printer_list"]) {
+        NSLog(@"Removing all printers.");
+        NSLog(@"Number of printers before: '%lu'.", (unsigned long)printers.count);
         [printers removeAllObjects];
+        NSLog(@"Number of printers after:  '%lu'.", (unsigned long)printers.count);
+        
+    } else if ([stringMessage isEqualToString:@"rm_printer"]) {
+        NSString *printerIp = [NSString stringWithUTF8String:p1];
+        NSLog(@"Removing IP: '%@'.", printerIp);
+        NSLog(@"Number of printers before: '%lu'.", (unsigned long)printers.count);
+        [printers removeObjectForKey:printerIp];
+        NSLog(@"Number of printers after:  '%lu'.", (unsigned long)printers.count);
     }
 }
 
@@ -320,6 +330,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
                 [printersToSend.printers setObject:printer forKey:ip];
             }
         }
+        NSLog(@"Number of printers sent to consuming app: %lu", (unsigned long)printersToSend.printers.count);
         [self.printerAttributesDelegate didReceivePrinters:printersToSend];
     }
 }
