@@ -354,8 +354,13 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         } else {
             stack = @"PROD";
         }
-        
         return stack;
+//        
+//        NSException* myException = [NSException
+//                                    exceptionWithName:@"FileNotFoundException"
+//                                    reason:@"File Not Found on System"
+//                                    userInfo:nil];
+//        @throw myException;
     }
     @catch (NSException *exception) {
         NSLog(@"Exception: %@", exception.reason);
@@ -390,9 +395,9 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 //                                                           label:@"NotDefaultTracker2"
 //                                                           value:nil] build]];
     
-    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen" withHwId:@"HarshHwId"];
+    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen" withHwId:@"HarshHwIdAfterThrowingException"];
     
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Initialized" andLabel:@"NotDefaultWithGaServiceClass"];
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"InitializedAfterThrowingException" andLabel:@"NotDefaultWithGaServiceClassAfterThrowingException"];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
