@@ -47,6 +47,7 @@
     NSLog(@"Tracking Analytics Screen: %@", screenName);
     //TODO: NEED TO ADD HWID AS CUSTOM DIMENSION
     id<GAITracker> tracker = [GoogleAnalyticsService getGoogleAnalyticsTracker];
+    [tracker set:[GAIFields customDimensionForIndex:1] value:hwId];
     [tracker set:kGAIScreenName
            value:screenName];
     [tracker send:[[GAIDictionaryBuilder createScreenView] build]];
@@ -64,6 +65,7 @@
                               version,
                               exception.description,
                               backtrace];
+    [tracker set:[GAIFields customDimensionForIndex:2] value:hwId];
     
     [tracker send:[[GAIDictionaryBuilder
                     createExceptionWithDescription:description  // Exception description. May be truncated to 100 chars.
