@@ -21,6 +21,8 @@
 		15C942BB1C04EEB50009DC77 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BA1C04EEB50009DC77 /* CoreData.framework */; };
 		15C942BD1C04EEDA0009DC77 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */; };
 		15C942C21C04F78D0009DC77 /* HPControlledPrint-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */; };
+		15C942E91C0531E80009DC77 /* GoogleAnalyticsService.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */; };
+		15C942EA1C0531E80009DC77 /* GoogleAnalyticsService.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */; };
 		3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3705A2901BF6B5BB00C291CB /* UIKit.framework */; };
 		3715A2491B4343ED004CB3D4 /* HPAsyncHttp.h in Headers */ = {isa = PBXBuildFile; fileRef = 3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */; };
 		372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 372E9E011BAA304200F2796E /* libOCMock.a */; };
@@ -109,6 +111,8 @@
 		15C942BA1C04EEB50009DC77 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "HPControlledPrint-Prefix.pch"; sourceTree = "<group>"; };
+		15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleAnalyticsService.h; sourceTree = "<group>"; };
+		15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleAnalyticsService.m; sourceTree = "<group>"; };
 		3705A2901BF6B5BB00C291CB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPAsyncHttp.h; sourceTree = "<group>"; };
 		3715A2481B4343ED004CB3D4 /* HPAsyncHttp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPAsyncHttp.m; sourceTree = "<group>"; };
@@ -219,6 +223,7 @@
 		15C942A21C04ED6F0009DC77 /* google_analytics */ = {
 			isa = PBXGroup;
 			children = (
+				15C942DE1C0525D50009DC77 /* services */,
 				15C942A31C04EDE40009DC77 /* GAI.h */,
 				15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */,
 				15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */,
@@ -241,6 +246,15 @@
 				15C942B81C04EE8C0009DC77 /* libGoogleAnalyticsServices.a */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		15C942DE1C0525D50009DC77 /* services */ = {
+			isa = PBXGroup;
+			children = (
+				15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */,
+				15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */,
+			);
+			name = services;
 			sourceTree = "<group>";
 		};
 		372E9DFF1BAA302000F2796E /* Includes */ = {
@@ -413,6 +427,7 @@
 				37C23FB81B98D918009F0065 /* hp_cpl.h in Headers */,
 				3755309F1B39D4CC00659D37 /* HPDiscoveredPrinters.h in Headers */,
 				377D08521B4B496900D8AEB6 /* HPServices.h in Headers */,
+				15C942E91C0531E80009DC77 /* GoogleAnalyticsService.h in Headers */,
 				15C942AD1C04EDE40009DC77 /* GAI.h in Headers */,
 				37B8D9401B4DE0A100CCA7DD /* HPAsyncHttpPost.h in Headers */,
 				37DF03DA1BEC229900883A88 /* HPControlledPrintManagerUtil.h in Headers */,
@@ -552,6 +567,7 @@
 				37633B6C1B7176C1000BF381 /* HPPrinter.m in Sources */,
 				37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */,
 				37633B6B1B7176BB000BF381 /* HPPrintJobRequest.m in Sources */,
+				15C942EA1C0531E80009DC77 /* GoogleAnalyticsService.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

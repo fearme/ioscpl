@@ -95,6 +95,7 @@ BOOL printerScanStarted;
     [GAI sharedInstance].dispatchInterval = 20;
     
     [GAI sharedInstance].trackUncaughtExceptions = YES;
+    [[GAI sharedInstance].logger setLogLevel:kGAILogLevelVerbose];
 //    self.tracker = [[GAI sharedInstance] trackerWithName:@"CuteAnimals"
 //                                              trackingId:@"UA-69772755-5"];
     
@@ -363,15 +364,22 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
+//    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
 
-    NSMutableDictionary *event =
-    [[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
-                                            action:@"Initialized"
-                                             label:@"Harsh"
-                                             value:nil] build];
-    [[GAI sharedInstance].defaultTracker send:event];
-    [[GAI sharedInstance] dispatch];
+//    NSMutableDictionary *event =
+//    [[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
+//                                            action:@"Initialized"
+//                                             label:@"DefaultTracker2"
+//                                             value:nil] build];
+//    [[GAI sharedInstance].defaultTracker send:event];
+//    [[GAI sharedInstance] dispatch];
+    
+     id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
+    
+    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
+                                                          action:@"Initialized"
+                                                           label:@"NotDefaultTracker2"
+                                                           value:nil] build]];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
