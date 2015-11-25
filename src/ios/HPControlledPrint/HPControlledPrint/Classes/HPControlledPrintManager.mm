@@ -10,6 +10,7 @@
 #import "HPProviderNotifier.h"
 #import "HPTokenValidator.h"
 #import "GAIDictionaryBuilder.h"
+#import "GoogleAnalyticsService.h"
 
 #include "../Includes/mwp_secure_asset_printing_api.hpp"
 
@@ -92,14 +93,16 @@ BOOL printerScanStarted;
     
     self.uuidHashed = [self hashUUID];
     
-    [GAI sharedInstance].dispatchInterval = 20;
+    [GoogleAnalyticsService setUpGoogleAnalyticsService];
     
-    [GAI sharedInstance].trackUncaughtExceptions = YES;
-    [[GAI sharedInstance].logger setLogLevel:kGAILogLevelVerbose];
-//    self.tracker = [[GAI sharedInstance] trackerWithName:@"CuteAnimals"
-//                                              trackingId:@"UA-69772755-5"];
-    
-    id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
+//    [GAI sharedInstance].dispatchInterval = 20;
+//    
+//    [GAI sharedInstance].trackUncaughtExceptions = YES;
+//    [[GAI sharedInstance].logger setLogLevel:kGAILogLevelVerbose];
+////    self.tracker = [[GAI sharedInstance] trackerWithName:@"CuteAnimals"
+////                                              trackingId:@"UA-69772755-5"];
+//    
+//    id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
     
     return self;
 }

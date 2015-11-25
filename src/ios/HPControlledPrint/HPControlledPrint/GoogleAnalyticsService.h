@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 @interface GoogleAnalyticsService : NSObject
-
 +(void) setUpGoogleAnalyticsService;
 +(id<GAITracker>) getGoogleAnalyticsTracker;
 +(void) trackEventCategory:(NSString *)category withAction:(NSString *)action andLabel:(NSString *)label;
