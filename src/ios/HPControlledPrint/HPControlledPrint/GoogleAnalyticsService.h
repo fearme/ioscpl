@@ -10,7 +10,9 @@
 
 @interface GoogleAnalyticsService : NSObject
 
--(void) setUpGoogleAnalyticsService;
--(id<GAITracker>) getGoogleAnalyticsTracker;
--(void) trackEventCategory:(NSString *)category withAction:(NSString *)action andLabel:(NSString *)label;
++(void) setUpGoogleAnalyticsService;
++(id<GAITracker>) getGoogleAnalyticsTracker;
++(void) trackEventCategory:(NSString *)category withAction:(NSString *)action andLabel:(NSString *)label;
++(void) trackScreenView:(NSString *)screenName withHwId:(NSString *)hwId;
++(void) trackException:(NSException *)exception withHwId:(NSString *)hwId;
 @end
