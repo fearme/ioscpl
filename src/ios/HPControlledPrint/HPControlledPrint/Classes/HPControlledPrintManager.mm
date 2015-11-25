@@ -227,11 +227,18 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         //NSString *_p5 = [NSString stringWithCString:p5 encoding:NSASCIIStringEncoding];
         //NSString *_p2 = [NSString stringWithUTF8String:p2];
         
+        //concatenate a message if necessary
         if (!([_p3 isEqualToString:kPrinterStatusPrinting] || [_p3 isEqualToString:kPrinterStatusIdle] || [_p3 isEqualToString:kPrinterStatusCanceling])) {
             _p2 = [NSString stringWithFormat:@"%@ %@", _p2, _p3];// [_p2 stringByAppendingString:_p3];
         }
         
-        [self sendPrinterStatus:_p2];
+        //send the print status to consuming app
+        if ([_p3 isEqualToString:kPrinterStatusUpstreamError]) {
+            [self sendPrinterStatus:_p3];
+        } else {
+            [self sendPrinterStatus:_p2];
+        }
+        
        
         [self sendFinalPrintJobMetrics:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
