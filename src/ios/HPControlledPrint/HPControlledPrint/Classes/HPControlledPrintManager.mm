@@ -343,18 +343,24 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (NSString *)serverStackAsString
 {
-    NSString *stack;
-    if (currentServerStack == ServerStackDevelopment) {
-        stack = @"DEV";
-    } else if (currentServerStack == ServerStackQa) {
-        stack = @"QA";
-    } else if (currentServerStack == ServerStackStaging) {
-        stack = @"STG";
-    } else {
-        stack = @"PROD";
+    @try {
+        NSString *stack;
+        if (currentServerStack == ServerStackDevelopment) {
+            stack = @"DEV";
+        } else if (currentServerStack == ServerStackQa) {
+            stack = @"QA";
+        } else if (currentServerStack == ServerStackStaging) {
+            stack = @"STG";
+        } else {
+            stack = @"PROD";
+        }
+        
+        return stack;
     }
-    
-    return stack;
+    @catch (NSException *exception) {
+        NSLog(@"Exception: %@", exception.reason);
+        [GoogleAnalyticsService trackException:exception withHwId:@"HarshHwId"];
+    }
 }
 
 - (void)proxy:(NSString *)host onPort:(NSString *)port
@@ -377,7 +383,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 //    [[GAI sharedInstance].defaultTracker send:event];
 //    [[GAI sharedInstance] dispatch];
     
-     id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
+//     id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
 //
 //    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
 //                                                          action:@"Initialized"
