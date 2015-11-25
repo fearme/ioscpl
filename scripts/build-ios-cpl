@@ -5,6 +5,14 @@ test -n "$WORKSPACE" || export WORKSPACE="$(pwd)/.."
 test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
 test -n "$USER"         || export USER="none"
 
+for arg in "$@"; do
+  case $arg in
+
+    --skip-tests)   SKIP_TESTS="1";     shift;;
+
+  esac
+done
+
 echo "Workspace dir: $WORKSPACE"
 echo "Build Number: $BUILD_NUMBER"
 
@@ -14,7 +22,11 @@ rm -rf ${OUTPUT_DIR}
 mkdir -p ${OUTPUT_DIR}
 echo "Output Dir: $OUTPUT_DIR"
 
-xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPrint.xcodeproj -scheme HPControlledPrint ARCHS="i386 x86_64" VALID_ARCHS="i386 x86_64 armv7 arm64" -configuration Release ONLY_ACTIVE_ARCH=NO CONFIGURATION_BUILD_DIR="${OUTPUT_DIR}/simulator" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO clean build test
+if [ -z "$SKIP_TESTS" ]; then
+  xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPrint.xcodeproj -scheme HPControlledPrint ARCHS="i386 x86_64" VALID_ARCHS="i386 x86_64 armv7 arm64" -configuration Release ONLY_ACTIVE_ARCH=NO CONFIGURATION_BUILD_DIR="${OUTPUT_DIR}/simulator" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO clean build test
+else
+  xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPrint.xcodeproj -scheme HPControlledPrint ARCHS="i386 x86_64" VALID_ARCHS="i386 x86_64 armv7 arm64" -configuration Release ONLY_ACTIVE_ARCH=NO CONFIGURATION_BUILD_DIR="${OUTPUT_DIR}/simulator" CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO clean build
+fi
 
 xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPrint.xcodeproj -scheme HPControlledPrint -sdk iphoneos8.4 ARCHS="armv7 arm64" VALID_ARCHS="i386 x86_64 armv7 arm64" -configuration Release ONLY_ACTIVE_ARCH=NO CONFIGURATION_BUILD_DIR="${OUTPUT_DIR}/device" clean build
 
