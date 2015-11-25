@@ -378,11 +378,15 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 //    [[GAI sharedInstance] dispatch];
     
      id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
+//
+//    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
+//                                                          action:@"Initialized"
+//                                                           label:@"NotDefaultTracker2"
+//                                                           value:nil] build]];
     
-    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
-                                                          action:@"Initialized"
-                                                           label:@"NotDefaultTracker2"
-                                                           value:nil] build]];
+    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen" withHwId:@"HarshHwId"];
+    
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Initialized" andLabel:@"NotDefaultWithGaServiceClass"];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
