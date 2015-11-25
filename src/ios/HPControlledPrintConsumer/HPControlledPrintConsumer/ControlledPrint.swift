@@ -19,12 +19,19 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         self.controlledPrintDelegate = controlledPrintDelegate
         super.init()
         ControlledPrint.cpl.printerAttributesDelegate = self
+        var analyticsModel = GoogleAnalyticsModel();
+        analyticsModel.screenName = "ConsumerAppDelegateScreenWithandand";
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Screen, withParams: analyticsModel);
     }
     
     func initialize(stack: ServerStack, completion: ((InitStatus) -> ())) {
         ControlledPrint.cpl.initialize(stack, withCompletion:{(status: InitStatus) in
             completion(status)
         })
+        var analyticsModel = GoogleAnalyticsModel();
+        analyticsModel.eventCategory = "ConsumerAppControlledPrint";
+        analyticsModel.eventAction = "ConsumerAppInitializeWithandand";
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Event, withParams: analyticsModel)
     }
     
     func validateToken(token: String, completion: ((Bool) -> ())) {
@@ -38,6 +45,11 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     }
     
     func scanForPrinters() -> Bool {
+        
+        var analyticsModel = GoogleAnalyticsModel();
+        analyticsModel.eventCategory = "ConsumerAppScan";
+        analyticsModel.eventAction = "ConsumerAppPrinters";
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Event, withParams: analyticsModel)
         return ControlledPrint.cpl.scanForPrinters()
     }
     

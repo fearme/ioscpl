@@ -13,6 +13,7 @@ class PrintViewController: UIViewController, ControlledPrintDelegate {
     
     override func viewDidLoad() {
         self.cpl = ControlledPrint(controlledPrintDelegate: self)
+        
         dispatch_async(dispatch_get_main_queue()) {
             self.printerNameLabel.text = self.printJob!.printerName
             self.printerIpLabel.text = self.printJob!.printerIp

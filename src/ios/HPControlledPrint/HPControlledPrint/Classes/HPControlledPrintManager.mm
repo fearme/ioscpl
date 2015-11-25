@@ -458,13 +458,18 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     switch (analyticsType) {
         case Event:
-            [GoogleAnalyticsService trackEventCategory:[analyticsModel eventCategory] withAction:[analyticsModel eventAction] andLabel:@"Switch with Hardware Id"];
+            if ([[analyticsModel eventCategory] length] > 0 && [[analyticsModel eventAction] length] > 0) {
+                [GoogleAnalyticsService trackEventCategory:[analyticsModel eventCategory] withAction:[analyticsModel eventAction] andLabel:@"Switch with Hardware Id"];
+            }
             break;
         case Crash:
-            [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:@"Switch with Hardware Id"];
+            // swift doesn't support exception handling so Consumer app doesn't need to do anything.
+//            [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:@"Switch with Hardware Id"];
             break;
         case Screen:
-            [GoogleAnalyticsService trackScreenView:[analyticsModel screenName] withHwId:@"Switch with Hardware Id"];
+            if ([[analyticsModel screenName] length] > 0) {
+                [GoogleAnalyticsService trackScreenView:[analyticsModel screenName] withHwId:@"Switch with Hardware Id"];
+            }
             break;
     }
 }
