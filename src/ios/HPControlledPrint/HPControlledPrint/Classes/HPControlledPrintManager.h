@@ -3,6 +3,8 @@
 #import "HPPrinterAttributes.h"
 #import "HPPrintJobRequest.h"
 #import "HPPrinter.h"
+#import "GoogleAnalyticsModel.h"
+
 @interface HPControlledPrintManager : NSObject
 
 typedef enum {
@@ -16,6 +18,12 @@ typedef enum {
     InitStatusServerStackNotAvailable,
     InitStatusServerStackAvailable
 } InitStatus;
+
+typedef enum {
+    Event,
+    Crash,
+    Screen
+} GoogleAnalyticsType;
 
 
 @property (strong, nonatomic) id <HPPrinterAttributesDelegate> printerAttributesDelegate;
@@ -33,8 +41,8 @@ typedef enum {
 
 - (BOOL)print:(HPPrinter *)selectedPrinter withJobRequest:(HPPrintJobRequest *)printJobRequest;
 
+- (void)postGoogleAnalyticsMetrics: (GoogleAnalyticsType)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
+
 - (BOOL)exit;
-
-
 
 @end

@@ -25,7 +25,6 @@
 
 +(id<GAITracker>)getGoogleAnalyticsTracker;
 {
-//    id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
     id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
     return tracker;
 }
@@ -70,19 +69,4 @@
                     createExceptionWithDescription:description  // Exception description. May be truncated to 100 chars.
                     withFatal:@NO] build]];
 }
-
-
-// create object like this
-//Person *person = [[Person alloc] init];
-// invoke method like this
-//[talkingiPhone speak];
-// set var like this
-// talkingiPhone.phoneName = @"Harsh";
-// read only
-// @property (readonly) NSString *lastName;
-// instance and not accessible outside of class objects
-//@interface Coffee : NSObject {
-//    NSNumber *_temperature;
-//}
-//@end
 @end

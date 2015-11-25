@@ -95,15 +95,6 @@ BOOL printerScanStarted;
     
     [GoogleAnalyticsService setUpGoogleAnalyticsService];
     
-//    [GAI sharedInstance].dispatchInterval = 20;
-//    
-//    [GAI sharedInstance].trackUncaughtExceptions = YES;
-//    [[GAI sharedInstance].logger setLogLevel:kGAILogLevelVerbose];
-////    self.tracker = [[GAI sharedInstance] trackerWithName:@"CuteAnimals"
-////                                              trackingId:@"UA-69772755-5"];
-//    
-//    id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
-    
     return self;
 }
 
@@ -355,12 +346,6 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             stack = @"PROD";
         }
         return stack;
-//        
-//        NSException* myException = [NSException
-//                                    exceptionWithName:@"FileNotFoundException"
-//                                    reason:@"File Not Found on System"
-//                                    userInfo:nil];
-//        @throw myException;
     }
     @catch (NSException *exception) {
         NSLog(@"Exception: %@", exception.reason);
@@ -378,26 +363,9 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-//    id<GAITracker> tracker = [[GAI sharedInstance] defaultTracker];
-
-//    NSMutableDictionary *event =
-//    [[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
-//                                            action:@"Initialized"
-//                                             label:@"DefaultTracker2"
-//                                             value:nil] build];
-//    [[GAI sharedInstance].defaultTracker send:event];
-//    [[GAI sharedInstance] dispatch];
+    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen955pm" withHwId:@"HarshHwId955pm"];
     
-//     id<GAITracker> tracker = [[GAI sharedInstance] trackerWithTrackingId:@"UA-69772755-5"];
-//
-//    [tracker send:[[GAIDictionaryBuilder createEventWithCategory:@"ControlledPrintIos"
-//                                                          action:@"Initialized"
-//                                                           label:@"NotDefaultTracker2"
-//                                                           value:nil] build]];
-    
-    [GoogleAnalyticsService trackScreenView:@"ControlledPrintIosScreen" withHwId:@"HarshHwIdAfterThrowingException"];
-    
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"InitializedAfterThrowingException" andLabel:@"NotDefaultWithGaServiceClassAfterThrowingException"];
+    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos955pm" withAction:@"Initialized955pm" andLabel:@"TestLabel955pm"];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
@@ -484,6 +452,21 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         printerScanStarted = secureAssetPrinter->net_mobilewebprint::core_api_t::start(YES, NO);
     }
     return printerScanStarted;
+}
+
+- (void)postGoogleAnalyticsMetrics:(GoogleAnalyticsType)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
+{
+    switch (analyticsType) {
+        case Event:
+            [GoogleAnalyticsService trackEventCategory:[analyticsModel eventCategory] withAction:[analyticsModel eventAction] andLabel:@"Switch with Hardware Id"];
+            break;
+        case Crash:
+            [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:@"Switch with Hardware Id"];
+            break;
+        case Screen:
+            [GoogleAnalyticsService trackScreenView:[analyticsModel screenName] withHwId:@"Switch with Hardware Id"];
+            break;
+    }
 }
 
 #pragma mark - print()

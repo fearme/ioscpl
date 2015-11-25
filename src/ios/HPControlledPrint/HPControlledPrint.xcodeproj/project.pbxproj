@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		150675B21C058B0900016915 /* GoogleAnalyticsModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 150675B01C058B0900016915 /* GoogleAnalyticsModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		150675B31C058B0900016915 /* GoogleAnalyticsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 150675B11C058B0900016915 /* GoogleAnalyticsModel.m */; };
 		15C942AD1C04EDE40009DC77 /* GAI.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A31C04EDE40009DC77 /* GAI.h */; };
 		15C942AE1C04EDE40009DC77 /* GAIDictionaryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */; };
 		15C942AF1C04EDE40009DC77 /* GAIEcommerceFields.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */; };
@@ -97,6 +99,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		150675B01C058B0900016915 /* GoogleAnalyticsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleAnalyticsModel.h; sourceTree = "<group>"; };
+		150675B11C058B0900016915 /* GoogleAnalyticsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleAnalyticsModel.m; sourceTree = "<group>"; };
 		15C942A31C04EDE40009DC77 /* GAI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAI.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAI.h; sourceTree = "<group>"; };
 		15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIDictionaryBuilder.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIDictionaryBuilder.h; sourceTree = "<group>"; };
 		15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceFields.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIEcommerceFields.h; sourceTree = "<group>"; };
@@ -253,6 +257,8 @@
 			children = (
 				15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */,
 				15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */,
+				150675B01C058B0900016915 /* GoogleAnalyticsModel.h */,
+				150675B11C058B0900016915 /* GoogleAnalyticsModel.m */,
 			);
 			name = services;
 			sourceTree = "<group>";
@@ -442,6 +448,7 @@
 				37B8D93C1B4DDEBF00CCA7DD /* HPAsyncHttpGet.h in Headers */,
 				15C942B01C04EDE40009DC77 /* GAIEcommerceProduct.h in Headers */,
 				37C23FB71B98D918009F0065 /* cpl_controlled_print_api.hpp in Headers */,
+				150675B21C058B0900016915 /* GoogleAnalyticsModel.h in Headers */,
 				37C23FBA1B98D918009F0065 /* hp_sap.h in Headers */,
 				377D08561B4B541B00D8AEB6 /* HPPrintJobRequest.h in Headers */,
 				37C23FB91B98D918009F0065 /* hp_mwp.h in Headers */,
@@ -565,6 +572,7 @@
 				37633B641B71768A000BF381 /* HPControlledPrintManager.mm in Sources */,
 				37633B6A1B7176B6000BF381 /* HPServices.m in Sources */,
 				37633B6C1B7176C1000BF381 /* HPPrinter.m in Sources */,
+				150675B31C058B0900016915 /* GoogleAnalyticsModel.m in Sources */,
 				37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */,
 				37633B6B1B7176BB000BF381 /* HPPrintJobRequest.m in Sources */,
 				15C942EA1C0531E80009DC77 /* GoogleAnalyticsService.m in Sources */,
