@@ -3,6 +3,8 @@
 die() { echo "$@"; exit 1; }
 die_quiet() { exit 1; }
 
+START_DIR=$(pwd)
+
 DEB_REL="release"
 BRANCH="develop"
 
@@ -28,9 +30,6 @@ case $BRANCH in
      prod)    pso_jenkins_url="http://jenkins.hp10.us/view/mario-builds/job/mario-client-ios-build-prod/api/json" ;;
 esac
 
-XTRACE="-x"
-shopt -u -o | grep -q xtrace && XTRACE="+x"
-
 if [ -n "$record" ]; then
   echo "" > "${HOME}/.prep_ios_cpl_${BRANCH}"
   test -n "$BUILD" || BUILD="latest"
@@ -39,33 +38,33 @@ fi
 test -n "$check_for_new" && BUILD="latest"
 
 if [ "$BUILD" == "latest" ]; then
-  test -n "$verbose" && set -x
   BUILD="$(curl -sL "$pso_jenkins_url" | underscore select '.lastSuccessfulBuild .number' --outfmt text)"
-  set $XTRACE
 fi
 
+# Check to see if the latest 'recorded' prep is what is currently the latest
 if [ -n "$check_for_new" ]; then
-  test -n "$verbose" && set -x
-  test -f "${HOME}/.prep_ios_cpl_${BRANCH}" || die_quiet
+
+  # If we have not ever run prep, then the latest must be new
+  test -f "${HOME}/.prep_ios_cpl_${BRANCH}" || exit 0
+
+  # If the last call to prep is the same as the latest, we return 1 (false)
   old_ver="$(cat ${HOME}/.prep_ios_cpl_${BRANCH})"
   [ "$old_ver" == "$BUILD" ] && die_quiet
-  set $XTRACE
+
+  # We have both versions (old and latest), and they are different.
   exit 0
 fi
 
 test -z "$BUILD" && die "Need --build=x or --build=latest"
 test -d "/tmp/"  || die "No /tmp dir???"
 
-START_DIR=$(pwd)
 zip_name="mwp_sap_cpl-ios-fat-${DEB_REL}_1.1-${BUILD}.zip"
 
 cd /tmp/ && rm -rf prep-ios-cpl
 mkdir -p prep-ios-cpl && cd $_
 
-test -n "$verbose" && set -x
 curl -sOL "http://pso-artifactory.hp10.us/artifactory/mario-local/ios/mario_1.1/${BRANCH}/${BUILD}/${zip_name}"
 unzip "${zip_name}"
-set $XTRACE
 
 if [ -n "$verbose" ]; then
   tree
@@ -76,10 +75,8 @@ fi
 mkdir -p $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes \
          $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries
 
-test -n "$verbose" && set -x
 cp -Rf include/*    $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Includes
 cp -Rf libs/*       $START_DIR/src/ios/HPControlledPrint/HPControlledPrint/Libraries
-set $XTRACE
 
 if [ -n "$record" ]; then
   echo -n "$BUILD" > "${HOME}/.prep_ios_cpl_${BRANCH}"
