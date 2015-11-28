@@ -31,7 +31,7 @@ case $BRANCH in
 esac
 
 if [ -n "$record" ]; then
-  echo "" > "${HOME}/.prep_ios_cpl_${BRANCH}"
+#  echo -n "0" > "${HOME}/.prep_ios_cpl_${BRANCH}"
   test -n "$BUILD" || BUILD="latest"
 fi
 
