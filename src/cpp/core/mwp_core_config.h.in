@@ -5,6 +5,7 @@
 #cmakedefine HAVE_IF_ETHER_H      1
 #cmakedefine HAVE_IF_ARP_H        1
 #cmakedefine HAVE_PROC_NET_ARP    1
+#cmakedefine HAVE_SIOCGARP        1
 
 #define BUILD_NUMBER      "@BUILD_NUMBER@"
 #define BUILD_USER        "@BUILD_USER@"

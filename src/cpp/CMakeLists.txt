@@ -71,6 +71,7 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
   set(MARIO_PLATFORM_DIR platform/darwin)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP False)
+  set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (${MARIO_PLATFORM} STREQUAL "android")
   set(MARIO_PLATFORM_DIR platform/android)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
@@ -84,6 +85,7 @@ set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario
 if(${MARIO_PLATFORM} STREQUAL "ios")
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/ios/platform_name.cpp)
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/macosx/mario_sys.cpp)
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
 endif()
 
@@ -99,13 +101,20 @@ if(${MARIO_PLATFORM} STREQUAL "ios")
 
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
 
+  find_package(CURL REQUIRED)
+
   # "mariocli" is a command-line tool to drive functionality during development
   add_executable(mwpcli
                  ${MARIO_PLATFORM_SOURCES}
                  ${MARIO_CURL_CPP}
                  platform/stdio_out_err/mario_cli.cpp)
 
-  target_link_libraries(mwpcli mwpcore mwpcoreprotos)
+  #target_link_libraries(mwpcli mwpcore mwpcoreprotos cpl mwpobjcinterop)
+  target_link_libraries(mwpcli mwpcore mwpcoreprotos
+                          ${CURL_LIBRARIES}
+                          "-framework AppKit"
+                          "-framework SystemConfiguration")
+
 
 
 elseif (${MARIO_PLATFORM} STREQUAL "android")

@@ -33,9 +33,17 @@ net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_ser
   return NULL;
 }
 
-net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_server(string const & json, string const & path, uint32 connection_id)
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::post_mwp_server(string const & body, string const & path, string content_type, uint32 connection_id)
 {
   return NULL;
+}
+
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::get_local(string ip, int port, string const & path, uint32 connection_id)
+{
+}
+
+net_mobilewebprint::curl_connection_t * net_mobilewebprint::curl_t::fetch_local(string ip, int port, string const & path, string const & body, string content_type, uint32 connection_id, string verb)
+{
 }
 
 int net_mobilewebprint::curl_t::pre_select(mq_pre_select_data_t * data)

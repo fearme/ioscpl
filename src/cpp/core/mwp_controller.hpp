@@ -438,6 +438,7 @@ namespace net_mobilewebprint {
   extern string const & get_option(char const * key, string const & def);
   extern int            get_option(char const * key, int def);
   extern bool             get_flag(string const & key);
+  extern bool         get_flag_def(string const & key, bool def);
 
   // Send a message to the app, takes the same args as the message that is sent
   int  send_to_app(char const * name, int id, int32 transaction_id, uint8 const * p1 = NULL, mwp_params const * params = NULL);

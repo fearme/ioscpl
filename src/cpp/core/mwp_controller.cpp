@@ -80,8 +80,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -114,8 +112,6 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -368,6 +364,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
  */
 bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool block)
 {
+  // The app wants to control the verbosity?
+  if (!flag("app_verbosity", false)) {
+    set_flag("log_api", true);
+    set_flag("vvverbose", true);
+  }
+
   // Seed the PRNG
   uint32 tm = 0;
   uint32 hash = tm = (int)time(NULL);
@@ -1560,6 +1562,20 @@ bool net_mobilewebprint::get_flag(string const & key)
 
   /* otherwise */
   bool result = g_controller->flag(key.c_str());
+  return result;
+}
+
+/**
+*  Free function to get a flag (true or false) for the key.
+*
+*  @return a bool for the key (false if the key is not present.)
+*/
+bool net_mobilewebprint::get_flag_def(string const & key, bool def)
+{
+  if (g_controller == NULL) { return def; }
+
+  /* otherwise */
+  bool result = g_controller->flag(key.c_str(), def);
   return result;
 }
 

@@ -44,7 +44,6 @@
 
 #ifdef HAVE_IF_ETHER_H
 #include <netinet/if_ether.h>
-#define HAVE_SIOCGARP 1
 #endif
 
 #ifdef HAVE_IF_ARP_H
