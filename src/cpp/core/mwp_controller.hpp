@@ -120,6 +120,8 @@ namespace net_mobilewebprint {
 
     // Send a print job
     bool                    send_job(string const & url, string const & printer_ip);
+    bool                       print(string const & url);
+
     e_handle_result _allocate_job_id(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
     e_handle_result        _send_job(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 

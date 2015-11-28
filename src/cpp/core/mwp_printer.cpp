@@ -1653,7 +1653,7 @@ int net_mobilewebprint::printer_list_t::send_list_to_app()
     }
   }
 
-  controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+  //controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
 
   return result;
 }

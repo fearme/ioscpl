@@ -23,6 +23,11 @@ bool net_mobilewebprint::controlled_print_library_api_t::send_job(char const * u
   return sap->send_job(url, printer_ip);
 }
 
+bool net_mobilewebprint::controlled_print_library_api_t::print(char const * url)
+{
+  return sap->print(url);
+}
+
 // TODO: Intercept the call to app_send(), when the app is sending a message into mq
 bool net_mobilewebprint::controlled_print_library_api_t::app_send(char const * name, char const * payload)
 {
@@ -69,6 +74,11 @@ bool net_mobilewebprint::controlled_print_library_api_t::mq_is_done()
   return sap->mq_is_done();
 }
 
+bool net_mobilewebprint::controlled_print_library_api_t::re_scan()
+{
+  return sap->re_scan();
+}
+
 std::string const & net_mobilewebprint::controlled_print_library_api_t::get_option(char const *name, char const *def)
 {
   return sap->get_option(name, def);
@@ -79,9 +89,9 @@ int net_mobilewebprint::controlled_print_library_api_t::get_int_option(char cons
   return sap->get_int_option(name, def);
 }
 
-bool net_mobilewebprint::controlled_print_library_api_t::get_bool_option(char const *name)
+bool net_mobilewebprint::controlled_print_library_api_t::get_bool_option(char const *name, bool def)
 {
-  return sap->get_bool_option(name);
+  return sap->get_bool_option(name, def);
 }
 
 void net_mobilewebprint::controlled_print_library_api_t::set_option(char const *name, char const *value)

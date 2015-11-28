@@ -29,7 +29,7 @@ namespace net_mobilewebprint {
     // ---------- Options within the app ----------
     virtual std::string const &    get_option          (char const * name, char const *def = "");
     virtual int                    get_int_option      (char const * name, int def = 0);
-    virtual bool                   get_bool_option     (char const * name);
+    virtual bool                   get_bool_option     (char const * name, bool def = false);
 
     virtual void                   set_option          (char const * name, char const *value);
     virtual void                   set_option          (char const * name, int value);

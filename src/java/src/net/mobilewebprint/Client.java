@@ -178,24 +178,31 @@ public class Client {
 
   }
 
-  public native boolean startUp();
-  public native boolean reScan();
-  public native boolean sendJob(String url, String printer_ip);
-
-  public native boolean sendImmediately(String msgName, String payload);
+  public native void        getOption(String name, String def /* default */);
+  public native void     getIntOption(String name, int value);
+  public native void          getFlag(String name, boolean value);
 
   public native void        setOption(String name, String value);
   public native void     setIntOption(String name, int value);
   public native void          setFlag(String name, boolean value);
   public native void        clearFlag(String name);
 
+  public native boolean startUp();
+  public native boolean mqIsDone();
+  public native boolean reScan();
+  public native boolean sendFullPrinterList();
+
+  public native boolean sendJob(String url, String printer_ip);
+  public native boolean print(String url);
+
+  public native boolean send(String msgName, String payload);
+  public native boolean sendImmediately(String msgName, String payload);
+
   public static native void    logD(String tag, String message);
   public static native void    logV(String tag, String message);
   public static native void    logW(String tag, String message);
   public static native void    logE(String tag, String message);
 
-  // -----------------------------------------------------------------------------
-  protected native void setSecureMode();
 
   // -----------------------------------------------------------------------------
   protected net.mobilewebprint.Application application;
@@ -210,5 +217,9 @@ public class Client {
       if (System.getProperty("java.vm.name").equals("Dalvik")) { throw e; }
     }
   }
+
+  // -----------------------------------------------------------------------------
+  public native void setSecureMode();
+
 }
 

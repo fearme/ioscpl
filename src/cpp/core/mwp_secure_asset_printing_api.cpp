@@ -71,9 +71,9 @@ int net_mobilewebprint::secure_asset_printing_api_t::get_int_option(char const *
   return core_api_t::get_int_option(name, def);
 }
 
-bool net_mobilewebprint::secure_asset_printing_api_t::get_bool_option(char const *name)
+bool net_mobilewebprint::secure_asset_printing_api_t::get_bool_option(char const *name, bool def)
 {
-  return core_api_t::get_bool_option(name);
+  return core_api_t::get_bool_option(name, def);
 }
 
 void net_mobilewebprint::secure_asset_printing_api_t::set_option(char const *name, char const *value)
