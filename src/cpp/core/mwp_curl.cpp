@@ -12,7 +12,7 @@ using namespace net_mobilewebprint;
  *  curl_t ctor.
  */
 net_mobilewebprint::curl_t::curl_t(controller_base_t & controller_, string server_name_, uint16 server_port_)
-  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), netapp_subdomain("netapp"), mcurl(NULL)
+  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), mcurl(NULL)
 {
   mq.on(this);
   mq.on_selected(this);
@@ -150,6 +150,16 @@ net_mobilewebprint::curl_t::connections_t::iterator net_mobilewebprint::curl_t::
 
   return connections.end();
 }
+std::string net_mobilewebprint::curl_t::_pcl_server_name()
+{
+  string pcl_server_name = controller.arg("pcl.servername", "");
+  if (pcl_server_name.length() > 0) {
+    return pcl_server_name;
+  }
+
+  /* otherwise */
+  return server_name;
+}
 
 std::string net_mobilewebprint::curl_t::translate_path(string const & path)
 {
@@ -164,11 +174,23 @@ std::string net_mobilewebprint::curl_t::translate_path(string server_name_, int 
     size_t end = server_name_.find(".mobile");
     if (end != string::npos) {
       string netapp_server_name = server_name_;
-      netapp_server_name.replace(0, end, netapp_subdomain);
+      netapp_server_name.replace(0, end, "netapp");
+      netapp_server_name = controller.arg("netapp.servername", netapp_server_name);
+
       string netapp_path = path;
       netapp_path.replace(0, ::strlen("netapp::"), "");
-      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(server_port_) + netapp_path;
+
+      string prefix = controller.arg("netapp.prefix", "");
+      if (prefix.length() > 0) {
+        netapp_path = string("/") + prefix + netapp_path;
+      }
+
+      int netapp_port = controller.arg("netapp.port", server_port_);
+
+      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(netapp_port) + netapp_path;
     }
+  } else if (_starts_with(path, "/pcl/")) {
+    full_url = "http://" + _pcl_server_name() + ":" + mwp_itoa(server_port_) + path;
   }
 
   return full_url;

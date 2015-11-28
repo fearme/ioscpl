@@ -695,21 +695,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
       }
     }
 
-    if (json.lookup_bool("ok")) {
+    if (json.lookup_bool("ok") || json.lookup_bool("final")) {
 
       // singleNodeName means to stop looking, and just use it
       if (json.has("pclHost.singleNodeName")) {
-        curl.server_name = json.lookup("pclHost.singleNodeName");
+        curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        set_arg("pcl.servername", json.lookup("pclHost.singleNodeName"));
 
       // pclServerName means to ask that server permission
       } else if (json.has("pclHost.pclServerName")) {
-        string new_server_name = json.lookup("pclHost.pclServerName");
 
-        if (curl.server_name != new_server_name) {
-          curl.server_name = new_server_name;
-          serialization_json_t json;
-          client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
-          return handled;
+        if (json.lookup_bool("final")) {
+          curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        } else {
+
+          string new_server_name = json.lookup("pclHost.pclServerName");
+
+          if (curl.server_name != new_server_name) {
+            curl.server_name = new_server_name;
+            serialization_json_t json;
+            client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+            return handled;
+          }
         }
       }
 
@@ -925,10 +934,12 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
   }
 
   /* otherwise - wait before the next one */
-  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ <400, handle_server_command");
+  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ >= 400, handle_server_command");
   if (!next_has_been_scheduled) {
-    server_command_timer.time = get_tick_count();
-    next_has_been_scheduled = true;
+    if (code != 403) {
+      server_command_timer.time = get_tick_count();
+      next_has_been_scheduled = true;
+    }
   }
 }
 
