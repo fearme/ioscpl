@@ -1062,6 +1062,14 @@ bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url_, 
 }
 
 /**
+ *
+ */
+bool net_mobilewebprint::controller_base_t::print(string const & asset_url)
+{
+  return false;
+}
+
+/**
  *  Sends an HTTP request to /allocateJobId, to get a job id.
  *
  *

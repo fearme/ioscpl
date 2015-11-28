@@ -89,6 +89,11 @@ extern "C" bool hp_mwp_mq_is_done()
   return core_api()->mq_is_done();
 }
 
+extern "C" bool hp_mwp_re_scan()
+{
+  return core_api()->re_scan();
+}
+
 extern "C" bool hp_mwp_send_job(char const * url, char const * printer_ip)
 {
   return core_api()->send_job(url, printer_ip);
@@ -123,6 +128,11 @@ extern "C" int hp_mwp_get_int_option_def(char const *name, int def)
 extern "C" bool hp_mwp_get_flag(char const *name)
 {
   return started_api()->get_bool_option(name);
+}
+
+extern "C" bool hp_mwp_get_flag_def(char const *name, bool def)
+{
+  return started_api()->get_bool_option(name, def);
 }
 
 extern "C" int hp_mwp_set_option(char const *name, char const *value)
@@ -236,6 +246,11 @@ extern "C" bool hp_sap_mq_is_done()
   return sap_api()->mq_is_done();
 }
 
+extern "C" bool hp_sap_re_scan()
+{
+  return sap_api()->re_scan();
+}
+
 extern "C" bool hp_sap_send_job(char const * url, char const * printer_ip)
 {
   return sap_api()->send_job(url, printer_ip);
@@ -270,6 +285,11 @@ extern "C" int hp_sap_get_int_option_def(char const *name, int def)
 extern "C" bool hp_sap_get_flag(char const *name)
 {
   return sap_api()->get_bool_option(name);
+}
+
+extern "C" bool hp_sap_get_flag_def(char const *name, bool def)
+{
+  return sap_api()->get_bool_option(name, def);
 }
 
 extern "C" int hp_sap_set_option(char const *name, char const *value)

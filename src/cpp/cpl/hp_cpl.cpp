@@ -58,6 +58,11 @@ extern "C" bool hp_cpl_mq_is_done()
   return cpl_api()->mq_is_done();
 }
 
+extern "C" bool hp_cpl_re_scan()
+{
+  return cpl_api()->re_scan();
+}
+
 extern "C" bool hp_cpl_send_job(char const * url, char const * printer_ip)
 {
   return cpl_api()->send_job(url, printer_ip);
@@ -88,6 +93,11 @@ extern "C" int hp_cpl_get_int_option_def(char const *name, int def)
 extern "C" bool hp_cpl_get_flag(char const *name)
 {
   return cpl_api()->get_bool_option(name);
+}
+
+extern "C" bool hp_cpl_get_flag_def(char const *name, bool def = false)
+{
+  return cpl_api()->get_bool_option(name, def);
 }
 
 extern "C" int hp_cpl_set_option(char const *name, char const *value)
@@ -139,7 +149,7 @@ extern "C" int hp_cpl_set_timeout(char const * message_to_send, int msecs_to_wai
 
 extern "C" bool hp_cpl_print(char const * url)
 {
-  return hp_cpl_print(url);
+  cpl_api()->print(url);
 }
 
 extern "C" void hp_cpl_stop()

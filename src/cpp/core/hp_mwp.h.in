@@ -16,7 +16,7 @@
 #define HP_@MWP_INTERFACE_NAME_UC@_START_LOCAL    HP_@MWP_INTERFACE_NAME_UC@_NON_SAP & 0x01000000
 
 /* Default startup flags: 1) start the scanner, 2) do not return from start function 'cuz
- * the app called the start function from a thread dedicated for @MWP_INTERFACE_NAME_UC@ 
+ * the app called the start function from a thread dedicated for @MWP_INTERFACE_NAME_UC@
  */
 #define HP_@MWP_INTERFACE_NAME_UC@_START_APP_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING /*| HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN*/)
 #define HP_@MWP_INTERFACE_NAME_UC@_START_CLI_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING | HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN)
@@ -111,6 +111,7 @@ extern "C" {
   int           hp_@MWP_INTERFACE_NAME@_get_int_option      (char const *name);
   int           hp_@MWP_INTERFACE_NAME@_get_int_option_def  (char const *name, int def);
   bool          hp_@MWP_INTERFACE_NAME@_get_flag            (char const *name);
+  bool          hp_@MWP_INTERFACE_NAME@_get_flag_def        (char const *name, bool def);
 
   int           hp_@MWP_INTERFACE_NAME@_set_option(char const *name, char const *value);
   int           hp_@MWP_INTERFACE_NAME@_set_int_option(char const *name, int value);
@@ -125,6 +126,7 @@ extern "C" {
 
   // Is the event queue done?
   bool hp_@MWP_INTERFACE_NAME@_mq_is_done();
+  bool hp_@MWP_INTERFACE_NAME@_re_scan();
 
   /* 4. ---------- Do various other things (optional) ---------- */
   /* See "other things" below */
@@ -135,7 +137,7 @@ extern "C" {
    *  Print the asset given by url to the printer at printer_ip.
    *
    *  This is the main API for printing, when the app shows the printer
-   *  list.  Returns true if the print was started, not that it 
+   *  list.  Returns true if the print was started, not that it
    *  completes.
    *
    *  This function returns immediately.
@@ -161,7 +163,7 @@ extern "C" {
   /* Send a message through the event queue */
   int  hp_@MWP_INTERFACE_NAME@_send(char const *message, char const *payload); // payload may be NULL
   bool hp_@MWP_INTERFACE_NAME@_send_immediately(char const *message, char const *payload); // payload may be NULL
-  int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);
+  /*int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);*/
 
 #ifdef __cplusplus
 }
