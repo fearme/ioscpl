@@ -84,6 +84,11 @@ extern "C" bool hp_mwp_deregister_handler(char const * name)
   return core_api()->deregister_handler(name);
 }
 
+extern "C" bool hp_mwp_register_hf_handler(char const * name, void * app_data, hp_mwp_hf_callback_t callback)
+{
+  return core_api()->register_hf_handler(name, app_data, callback);
+}
+
 extern "C" bool hp_mwp_mq_is_done()
 {
   return core_api()->mq_is_done();
@@ -239,6 +244,11 @@ extern "C" bool hp_sap_register_handler(char const * name, void * app_data, hp_s
 extern "C" bool hp_sap_deregister_handler(char const * name)
 {
   return sap_api()->deregister_handler(name);
+}
+
+extern "C" bool hp_sap_register_hf_handler(char const * name, void * app_data, hp_sap_hf_callback_t callback)
+{
+  return sap_api()->register_hf_handler(name, app_data, callback);
 }
 
 extern "C" bool hp_sap_mq_is_done()

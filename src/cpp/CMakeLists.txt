@@ -62,14 +62,14 @@ set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
 
 # What platform are we on?
 if(${MARIO_PLATFORM} STREQUAL "ios")
-  set(MARIO_PLATFORM_DIR platform/darwin)
-  set(MARIO_PLATFORM_LOG platform/ios)
+  set(MARIO_PLATFORM_DIR platform/ios)
+  set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP True)
   set(MARIO_APP_SHARED False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
-  set(MARIO_PLATFORM_DIR platform/darwin)
-  set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
+  set(MARIO_PLATFORM_DIR platform/macosx)
+  set(MARIO_PLATFORM_LOG platform/darwin)
   set(MARIO_APP False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (${MARIO_PLATFORM} STREQUAL "android")
@@ -83,9 +83,10 @@ endif()
 set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario_sys.cpp)
 
 if(${MARIO_PLATFORM} STREQUAL "ios")
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/mario_sys.cpp)
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/ios/platform_name.cpp)
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
-  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/macosx/mario_sys.cpp)
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/mario_sys.cpp)
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
 endif()
 
@@ -110,8 +111,10 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
                  platform/stdio_out_err/mario_cli.cpp)
 
   #target_link_libraries(mwpcli mwpcore mwpcoreprotos cpl mwpobjcinterop)
-  target_link_libraries(mwpcli mwpcore mwpcoreprotos
+  target_link_libraries(mwpcli mwpcore mwpcoreprotos cpl mwpobjcinterop
                           ${CURL_LIBRARIES}
+                          "-framework CoreFoundation"
+                          "-framework IOKit"
                           "-framework AppKit"
                           "-framework SystemConfiguration")
 

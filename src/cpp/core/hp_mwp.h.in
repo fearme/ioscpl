@@ -31,6 +31,12 @@
 
 #define TELEMETRY_DEFAULT                 false
 
+/* A string to use for undefined */
+#define HP_@MWP_INTERFACE_NAME_UC@_UNDEFINED "~~undefined~~"
+#ifndef cundefined
+  #define cundefined HP_@MWP_INTERFACE_NAME_UC@_UNDEFINED
+#endif
+
 /**
  *  Messages that the app can listen for.
  */
@@ -98,12 +104,16 @@ extern "C" {
   } @MWP_INTERFACE_NAME@_params;
 
   typedef int(*hp_@MWP_INTERFACE_NAME@_callback_t)(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, @MWP_INTERFACE_NAME@_params const * params);
+  typedef int(*hp_@MWP_INTERFACE_NAME@_hf_callback_t)(void * app_data, char const * name, int loop_num, uint32 tick_count, uint8 const * p1);
 
   /* 1. ---------- Register your callback fn ---------- */
   bool hp_@MWP_INTERFACE_NAME@_register_bootstrap(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
 
   bool hp_@MWP_INTERFACE_NAME@_register_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
   bool hp_@MWP_INTERFACE_NAME@_deregister_handler(char const * name);
+
+  /* A high-frequency handler */
+  bool hp_@MWP_INTERFACE_NAME@_register_hf_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_hf_callback_t callback);
 
   /* 2. ---------- get/set options ---------- */
   char const *  hp_@MWP_INTERFACE_NAME@_get_option          (char const *name, char * buffer_out, uint32 buf_size);

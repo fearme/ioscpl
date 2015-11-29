@@ -1,6 +1,7 @@
 
+#import <Foundation/Foundation.h>
 #import <SystemConfiguration/SystemConfiguration.h>
-//#import <UIKit/UIKit.h>
+#import <UIKit/UIKit.h>
 #import <CommonCrypto/CommonHMAC.h>
 #include "hp_mwp.h"
 

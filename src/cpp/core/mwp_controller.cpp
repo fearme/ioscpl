@@ -56,6 +56,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -72,8 +73,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     telemetry_report(0, 15000),
     heartbeat_timer(0, 20000)
 {
-  mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  //sap_app_callbacks_ = new sap_app_cb_list_t();
+  mwp_app_callbacks_   = new mwp_app_cb_list_t();
+  mwp_app_hf_callbacks = new mwp_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
@@ -89,6 +90,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -104,8 +106,8 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     telemetry_report(0, 15000),
     heartbeat_timer(0, 20000)
 {
-  //mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  sap_app_callbacks_ = new sap_app_cb_list_t();
+  sap_app_callbacks_   = new sap_app_cb_list_t();
+  sap_app_hf_callbacks = new sap_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
@@ -162,6 +164,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   printers.on_select_loop_start(loop_start_data);
   if (cleanup_time.has_elapsed(loop_start_data.current_loop_start)) {
     printers.cleanup();
+  }
+
+  if (mwp_app_hf_callbacks) {
+    for (mwp_app_hf_cb_list_t::const_iterator it = mwp_app_hf_callbacks->begin(); it != mwp_app_hf_callbacks->end(); ++it) {
+      hp_mwp_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_start, NULL);
+      }
+    }
+  }
+
+  if (sap_app_hf_callbacks) {
+    for (sap_app_hf_cb_list_t::const_iterator it = sap_app_hf_callbacks->begin(); it != sap_app_hf_callbacks->end(); ++it) {
+      hp_sap_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_num, NULL);
+      }
+    }
   }
 
   if (delayed_http_requests != NULL) {
@@ -1506,6 +1532,16 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::c
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::parse_cli(int argc, void const * argv[])
 {
   ARGS.merge(args_t(argc, argv));
+
+  // Must special-process some args
+  if (_has(ARGS.args, "stackName")) {
+    set_arg("stackName", _lookup(ARGS.args, "stackName"));
+  }
+
+  if (_has(ARGS.args, "serverName")) {
+    set_arg("serverName", _lookup(ARGS.args, "serverName"));
+  }
+
   return *this;
 }
 
@@ -1709,6 +1745,32 @@ bool net_mobilewebprint::controller_base_t::deregister_handler(char const * name
   } else {
     result = send_to_app("recd_deregister_handler", 1, 1, (uint8 const *)name, (sap_params const *)NULL) != 0;
   }
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_mwp_hf_callback_t callback)
+{
+  (*mwp_app_hf_callbacks)[name] = mwp_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (mwp_params*)NULL) != 0;
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_sap_hf_callback_t callback, bool)
+{
+  (*sap_app_hf_callbacks)[name] = sap_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (sap_params*)NULL) != 0;
   return result;
 }
 
@@ -2124,6 +2186,26 @@ net_mobilewebprint::sap_app_callback_t::sap_app_callback_t(std::string name_, vo
 }
 
 net_mobilewebprint::sap_app_callback_t::sap_app_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t(std::string name_, void * app_data_, hp_mwp_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t(std::string name_, void * app_data_, hp_sap_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t()
   : app_data(NULL), callback(NULL)
 {
 }

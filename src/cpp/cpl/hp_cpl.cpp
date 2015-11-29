@@ -53,6 +53,11 @@ extern "C" bool hp_cpl_deregister_handler(char const * name)
   return cpl_api()->deregister_handler(name);
 }
 
+extern "C" bool hp_cpl_register_hf_handler(char const * name, void * app_data, hp_cpl_hf_callback_t callback)
+{
+  return cpl_api()->register_hf_handler(name, app_data, callback);
+}
+
 extern "C" bool hp_cpl_mq_is_done()
 {
   return cpl_api()->mq_is_done();

@@ -71,9 +71,34 @@ namespace net_mobilewebprint {
     typedef sap_app_callback_t type_t;
   };
 
+  struct mwp_app_hf_callback_t {
+    typedef hp_mwp_hf_callback_t callback_t;
+
+    std::string        name;
+    void *             app_data;
+    callback_t         callback;
+
+    mwp_app_hf_callback_t();
+    mwp_app_hf_callback_t(std::string name, void * app_data, hp_mwp_hf_callback_t callback);
+  };
+
+  struct sap_app_hf_callback_t {
+    typedef hp_sap_hf_callback_t callback_t;
+
+    std::string        name;
+    void *             app_data;
+    callback_t         callback;
+
+    sap_app_hf_callback_t();
+    sap_app_hf_callback_t(std::string name, void * app_data, hp_sap_hf_callback_t callback);
+  };
+
   typedef std::map<std::string, mwp_app_callback_t>  mwp_app_cb_list_t;
   typedef std::map<std::string, sap_app_callback_t>  sap_app_cb_list_t;
   typedef std::map<int, std::string>                 app_timer_table_t;
+
+  typedef std::map<std::string, mwp_app_hf_callback_t>  mwp_app_hf_cb_list_t;
+  typedef std::map<std::string, sap_app_hf_callback_t>  sap_app_hf_cb_list_t;
 
   struct controller_http_request_t
   {
@@ -155,6 +180,9 @@ namespace net_mobilewebprint {
     bool register_handler(char const * name, void * app_data, hp_mwp_callback_t callback);
     bool register_handler(char const * name, void * app_data, hp_sap_callback_t callback);
     bool deregister_handler(char const * name);
+
+    bool register_hf_handler(char const * name, void * app_data, hp_mwp_hf_callback_t callback);
+    bool register_hf_handler(char const * name, void * app_data, hp_sap_hf_callback_t callback, bool);
 
     // The app sending a message
     int app_send(char const * name, char const * payload = NULL);
@@ -319,6 +347,9 @@ namespace net_mobilewebprint {
 
     mwp_app_cb_list_t &       mwp_app_callbacks();
     sap_app_cb_list_t &       sap_app_callbacks();
+
+    mwp_app_hf_cb_list_t *    mwp_app_hf_callbacks;
+    sap_app_hf_cb_list_t *    sap_app_hf_callbacks;
 
     args_t                    ARGS;
 
