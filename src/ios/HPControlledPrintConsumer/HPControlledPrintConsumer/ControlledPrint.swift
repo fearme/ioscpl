@@ -19,9 +19,6 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         self.controlledPrintDelegate = controlledPrintDelegate
         super.init()
         ControlledPrint.cpl.printerAttributesDelegate = self
-        var analyticsModel = GoogleAnalyticsModel();
-        analyticsModel.screenName = "ConsumerAppDelegateScreenWithandand";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumScreen, withParams: analyticsModel);
     }
     
     func initialize(stack: ServerStack, completion: ((InitStatus) -> ())) {
@@ -30,8 +27,8 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         })
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppControlledPrint";
-        analyticsModel.eventAction = "ConsumerAppInitializeWithandand";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsModel)
+        analyticsModel.eventAction = "ConsumerAppInitializeTestWrapper";
+        postGoogleMetrics("event", analyticsMdl: analyticsModel)
     }
     
     func validateToken(token: String, completion: ((Bool) -> ())) {
@@ -48,8 +45,8 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppScan";
-        analyticsModel.eventAction = "ConsumerAppPrinters";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsModel)
+        analyticsModel.eventAction = "ConsumerAppPrintersTestWrapper";
+        postGoogleMetrics("event", analyticsMdl: analyticsModel)
         return ControlledPrint.cpl.scanForPrinters()
     }
     
@@ -88,8 +85,22 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     // MARK: - Implement GoogleAnalyticsFunctions
     // DONE: Move variables to GAModel, and make them constant
     // Add functions to this file so screen views can call them
-    // Enum change the name to be more descriptive
+    // DONE: Enum change the name to be more descriptive
     
+    func postGoogleMetrics(type: String, analyticsMdl: GoogleAnalyticsModel){
+        switch type{
+            case "event":
+                NSLog("Logging Analytics Event from ControlledPrint.swift")
+                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsMdl)
 
+            case "screen":
+                NSLog("Logging Analytics Screen from ControlledPrint.swift")
+                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumScreen, withParams: analyticsMdl);
+            case "crash":
+                // Crashes are uploaded automatically
+                NSLog("Logging Analytics Crash from ControlledPrint.swift")
+            default:
+                NSLog("Default")
+        }
+    }
 }
-

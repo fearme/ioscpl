@@ -27,8 +27,8 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         self.cpl?.setProxy("proxy.vcd.hp.com", port: "8080")
         //self.cpl?.setProxy("web-proxy", port: "8088")
         var analyticsModel = GoogleAnalyticsModel();
-        analyticsModel.screenName = "ConsumerAppDelegateScreenWithandand";
-//        self.cpl?.postGoogleAnalyticsMetrics(Screen, withParams: analyticsModel);
+        analyticsModel.screenName = "PrinterListViewControllerLoaded";
+        self.cpl?.postGoogleMetrics("screen", analyticsMdl: analyticsModel)
         
 
         showSpinner()
