@@ -20,6 +20,7 @@ typedef enum {
 } InitStatus;
 
 typedef enum {
+    // rename: GoogleAnalyticsTypeEvent
     Event,
     Crash,
     Screen

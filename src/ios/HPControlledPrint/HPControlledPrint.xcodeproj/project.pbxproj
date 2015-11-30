@@ -7,24 +7,24 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		150675B21C058B0900016915 /* GoogleAnalyticsModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 150675B01C058B0900016915 /* GoogleAnalyticsModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		150675B31C058B0900016915 /* GoogleAnalyticsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 150675B11C058B0900016915 /* GoogleAnalyticsModel.m */; };
-		15C942AD1C04EDE40009DC77 /* GAI.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A31C04EDE40009DC77 /* GAI.h */; };
-		15C942AE1C04EDE40009DC77 /* GAIDictionaryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */; };
-		15C942AF1C04EDE40009DC77 /* GAIEcommerceFields.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */; };
-		15C942B01C04EDE40009DC77 /* GAIEcommerceProduct.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A61C04EDE40009DC77 /* GAIEcommerceProduct.h */; };
-		15C942B11C04EDE40009DC77 /* GAIEcommerceProductAction.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A71C04EDE40009DC77 /* GAIEcommerceProductAction.h */; };
-		15C942B21C04EDE40009DC77 /* GAIEcommercePromotion.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A81C04EDE40009DC77 /* GAIEcommercePromotion.h */; };
-		15C942B31C04EDE40009DC77 /* GAIFields.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942A91C04EDE40009DC77 /* GAIFields.h */; };
-		15C942B41C04EDE40009DC77 /* GAILogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942AA1C04EDE40009DC77 /* GAILogger.h */; };
-		15C942B51C04EDE40009DC77 /* GAITrackedViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942AB1C04EDE40009DC77 /* GAITrackedViewController.h */; };
-		15C942B61C04EDE40009DC77 /* GAITracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942AC1C04EDE40009DC77 /* GAITracker.h */; };
-		15C942B91C04EE8C0009DC77 /* libGoogleAnalyticsServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942B81C04EE8C0009DC77 /* libGoogleAnalyticsServices.a */; };
-		15C942BB1C04EEB50009DC77 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BA1C04EEB50009DC77 /* CoreData.framework */; };
-		15C942BD1C04EEDA0009DC77 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */; };
 		15C942C21C04F78D0009DC77 /* HPControlledPrint-Prefix.pch in Headers */ = {isa = PBXBuildFile; fileRef = 15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */; };
-		15C942E91C0531E80009DC77 /* GoogleAnalyticsService.h in Headers */ = {isa = PBXBuildFile; fileRef = 15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */; };
-		15C942EA1C0531E80009DC77 /* GoogleAnalyticsService.m in Sources */ = {isa = PBXBuildFile; fileRef = 15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */; };
+		15EED00F1C0657FF00ADA7C6 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 15EED00E1C0657FF00ADA7C6 /* CoreData.framework */; };
+		15EED0121C06586D00ADA7C6 /* libGoogleAnalyticsServices.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 15EED0101C06586D00ADA7C6 /* libGoogleAnalyticsServices.a */; };
+		15EED0151C06591200ADA7C6 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 15EED0141C06591200ADA7C6 /* libsqlite3.dylib */; };
+		15EED0271C065BD700ADA7C6 /* GAI.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0181C065BD700ADA7C6 /* GAI.h */; };
+		15EED0281C065BD700ADA7C6 /* GAIDictionaryBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0191C065BD700ADA7C6 /* GAIDictionaryBuilder.h */; };
+		15EED0291C065BD700ADA7C6 /* GAIEcommerceFields.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01A1C065BD700ADA7C6 /* GAIEcommerceFields.h */; };
+		15EED02A1C065BD700ADA7C6 /* GAIEcommerceProduct.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01B1C065BD700ADA7C6 /* GAIEcommerceProduct.h */; };
+		15EED02B1C065BD700ADA7C6 /* GAIEcommerceProductAction.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01C1C065BD700ADA7C6 /* GAIEcommerceProductAction.h */; };
+		15EED02C1C065BD700ADA7C6 /* GAIEcommercePromotion.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01D1C065BD700ADA7C6 /* GAIEcommercePromotion.h */; };
+		15EED02D1C065BD700ADA7C6 /* GAIFields.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01E1C065BD700ADA7C6 /* GAIFields.h */; };
+		15EED02E1C065BD700ADA7C6 /* GAILogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED01F1C065BD700ADA7C6 /* GAILogger.h */; };
+		15EED02F1C065BD700ADA7C6 /* GAITrackedViewController.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0201C065BD700ADA7C6 /* GAITrackedViewController.h */; };
+		15EED0301C065BD700ADA7C6 /* GAITracker.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0211C065BD700ADA7C6 /* GAITracker.h */; };
+		15EED0311C065BD700ADA7C6 /* GoogleAnalyticsModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0221C065BD700ADA7C6 /* GoogleAnalyticsModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		15EED0321C065BD700ADA7C6 /* GoogleAnalyticsModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EED0231C065BD700ADA7C6 /* GoogleAnalyticsModel.m */; };
+		15EED0331C065BD700ADA7C6 /* GoogleAnalyticsService.h in Headers */ = {isa = PBXBuildFile; fileRef = 15EED0241C065BD700ADA7C6 /* GoogleAnalyticsService.h */; };
+		15EED0341C065BD700ADA7C6 /* GoogleAnalyticsService.m in Sources */ = {isa = PBXBuildFile; fileRef = 15EED0251C065BD700ADA7C6 /* GoogleAnalyticsService.m */; };
 		3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3705A2901BF6B5BB00C291CB /* UIKit.framework */; };
 		3715A2491B4343ED004CB3D4 /* HPAsyncHttp.h in Headers */ = {isa = PBXBuildFile; fileRef = 3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */; };
 		372E9E021BAA304200F2796E /* libOCMock.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 372E9E011BAA304200F2796E /* libOCMock.a */; };
@@ -99,24 +99,24 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		150675B01C058B0900016915 /* GoogleAnalyticsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleAnalyticsModel.h; sourceTree = "<group>"; };
-		150675B11C058B0900016915 /* GoogleAnalyticsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleAnalyticsModel.m; sourceTree = "<group>"; };
-		15C942A31C04EDE40009DC77 /* GAI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAI.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAI.h; sourceTree = "<group>"; };
-		15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIDictionaryBuilder.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIDictionaryBuilder.h; sourceTree = "<group>"; };
-		15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceFields.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIEcommerceFields.h; sourceTree = "<group>"; };
-		15C942A61C04EDE40009DC77 /* GAIEcommerceProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceProduct.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIEcommerceProduct.h; sourceTree = "<group>"; };
-		15C942A71C04EDE40009DC77 /* GAIEcommerceProductAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceProductAction.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIEcommerceProductAction.h; sourceTree = "<group>"; };
-		15C942A81C04EDE40009DC77 /* GAIEcommercePromotion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommercePromotion.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIEcommercePromotion.h; sourceTree = "<group>"; };
-		15C942A91C04EDE40009DC77 /* GAIFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIFields.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAIFields.h; sourceTree = "<group>"; };
-		15C942AA1C04EDE40009DC77 /* GAILogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAILogger.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAILogger.h; sourceTree = "<group>"; };
-		15C942AB1C04EDE40009DC77 /* GAITrackedViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAITrackedViewController.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAITrackedViewController.h; sourceTree = "<group>"; };
-		15C942AC1C04EDE40009DC77 /* GAITracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAITracker.h; path = ../../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/GoogleAnalytics/Library/GAITracker.h; sourceTree = "<group>"; };
-		15C942B81C04EE8C0009DC77 /* libGoogleAnalyticsServices.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libGoogleAnalyticsServices.a; path = ../../../../../../../../Downloads/GoogleAnalyticsServicesiOS_3.13/libGoogleAnalyticsServices.a; sourceTree = "<group>"; };
-		15C942BA1C04EEB50009DC77 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
-		15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		15C942C01C04F39B0009DC77 /* HPControlledPrint-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "HPControlledPrint-Prefix.pch"; sourceTree = "<group>"; };
-		15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GoogleAnalyticsService.h; sourceTree = "<group>"; };
-		15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GoogleAnalyticsService.m; sourceTree = "<group>"; };
+		15EED00E1C0657FF00ADA7C6 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		15EED0101C06586D00ADA7C6 /* libGoogleAnalyticsServices.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libGoogleAnalyticsServices.a; sourceTree = "<group>"; };
+		15EED0141C06591200ADA7C6 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
+		15EED0181C065BD700ADA7C6 /* GAI.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAI.h; path = Includes/GoogleAnalytics/GAI.h; sourceTree = "<group>"; };
+		15EED0191C065BD700ADA7C6 /* GAIDictionaryBuilder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIDictionaryBuilder.h; path = Includes/GoogleAnalytics/GAIDictionaryBuilder.h; sourceTree = "<group>"; };
+		15EED01A1C065BD700ADA7C6 /* GAIEcommerceFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceFields.h; path = Includes/GoogleAnalytics/GAIEcommerceFields.h; sourceTree = "<group>"; };
+		15EED01B1C065BD700ADA7C6 /* GAIEcommerceProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceProduct.h; path = Includes/GoogleAnalytics/GAIEcommerceProduct.h; sourceTree = "<group>"; };
+		15EED01C1C065BD700ADA7C6 /* GAIEcommerceProductAction.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommerceProductAction.h; path = Includes/GoogleAnalytics/GAIEcommerceProductAction.h; sourceTree = "<group>"; };
+		15EED01D1C065BD700ADA7C6 /* GAIEcommercePromotion.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIEcommercePromotion.h; path = Includes/GoogleAnalytics/GAIEcommercePromotion.h; sourceTree = "<group>"; };
+		15EED01E1C065BD700ADA7C6 /* GAIFields.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAIFields.h; path = Includes/GoogleAnalytics/GAIFields.h; sourceTree = "<group>"; };
+		15EED01F1C065BD700ADA7C6 /* GAILogger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAILogger.h; path = Includes/GoogleAnalytics/GAILogger.h; sourceTree = "<group>"; };
+		15EED0201C065BD700ADA7C6 /* GAITrackedViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAITrackedViewController.h; path = Includes/GoogleAnalytics/GAITrackedViewController.h; sourceTree = "<group>"; };
+		15EED0211C065BD700ADA7C6 /* GAITracker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GAITracker.h; path = Includes/GoogleAnalytics/GAITracker.h; sourceTree = "<group>"; };
+		15EED0221C065BD700ADA7C6 /* GoogleAnalyticsModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GoogleAnalyticsModel.h; path = Includes/GoogleAnalytics/GoogleAnalyticsModel.h; sourceTree = "<group>"; };
+		15EED0231C065BD700ADA7C6 /* GoogleAnalyticsModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GoogleAnalyticsModel.m; path = Includes/GoogleAnalytics/GoogleAnalyticsModel.m; sourceTree = "<group>"; };
+		15EED0241C065BD700ADA7C6 /* GoogleAnalyticsService.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GoogleAnalyticsService.h; path = Includes/GoogleAnalytics/GoogleAnalyticsService.h; sourceTree = "<group>"; };
+		15EED0251C065BD700ADA7C6 /* GoogleAnalyticsService.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GoogleAnalyticsService.m; path = Includes/GoogleAnalytics/GoogleAnalyticsService.m; sourceTree = "<group>"; };
 		3705A2901BF6B5BB00C291CB /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		3715A2471B4343ED004CB3D4 /* HPAsyncHttp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HPAsyncHttp.h; sourceTree = "<group>"; };
 		3715A2481B4343ED004CB3D4 /* HPAsyncHttp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HPAsyncHttp.m; sourceTree = "<group>"; };
@@ -185,10 +185,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15C942BD1C04EEDA0009DC77 /* libsqlite3.dylib in Frameworks */,
-				15C942BB1C04EEB50009DC77 /* CoreData.framework in Frameworks */,
+				15EED0151C06591200ADA7C6 /* libsqlite3.dylib in Frameworks */,
+				15EED00F1C0657FF00ADA7C6 /* CoreData.framework in Frameworks */,
 				BF58DB171C0152D200314B85 /* SystemConfiguration.framework in Frameworks */,
 				BF61540F1C010D010011366D /* libmwpobjcinterop.a in Frameworks */,
+				15EED0121C06586D00ADA7C6 /* libGoogleAnalyticsServices.a in Frameworks */,
 				3705A2911BF6B5BB00C291CB /* UIKit.framework in Frameworks */,
 				37C23FAC1B98D90A009F0065 /* libcurl.a in Frameworks */,
 				37C23FAE1B98D90A009F0065 /* libmwpcore.a in Frameworks */,
@@ -198,7 +199,6 @@
 				37C23FAB1B98D90A009F0065 /* libcpl.a in Frameworks */,
 				375530B01B39D51F00659D37 /* Foundation.framework in Frameworks */,
 				375530AE1B39D51500659D37 /* Security.framework in Frameworks */,
-				15C942B91C04EE8C0009DC77 /* libGoogleAnalyticsServices.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -224,43 +224,33 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		15C942A21C04ED6F0009DC77 /* google_analytics */ = {
-			isa = PBXGroup;
-			children = (
-				15C942DE1C0525D50009DC77 /* services */,
-				15C942A31C04EDE40009DC77 /* GAI.h */,
-				15C942A41C04EDE40009DC77 /* GAIDictionaryBuilder.h */,
-				15C942A51C04EDE40009DC77 /* GAIEcommerceFields.h */,
-				15C942A61C04EDE40009DC77 /* GAIEcommerceProduct.h */,
-				15C942A71C04EDE40009DC77 /* GAIEcommerceProductAction.h */,
-				15C942A81C04EDE40009DC77 /* GAIEcommercePromotion.h */,
-				15C942A91C04EDE40009DC77 /* GAIFields.h */,
-				15C942AA1C04EDE40009DC77 /* GAILogger.h */,
-				15C942AB1C04EDE40009DC77 /* GAITrackedViewController.h */,
-				15C942AC1C04EDE40009DC77 /* GAITracker.h */,
-			);
-			name = google_analytics;
-			sourceTree = "<group>";
-		};
 		15C942B71C04EE670009DC77 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				15C942BC1C04EEDA0009DC77 /* libsqlite3.dylib */,
-				15C942BA1C04EEB50009DC77 /* CoreData.framework */,
-				15C942B81C04EE8C0009DC77 /* libGoogleAnalyticsServices.a */,
+				15EED00E1C0657FF00ADA7C6 /* CoreData.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
-		15C942DE1C0525D50009DC77 /* services */ = {
+		15EED0161C065BBE00ADA7C6 /* GoogleAnalytics */ = {
 			isa = PBXGroup;
 			children = (
-				15C942E71C0531E80009DC77 /* GoogleAnalyticsService.h */,
-				15C942E81C0531E80009DC77 /* GoogleAnalyticsService.m */,
-				150675B01C058B0900016915 /* GoogleAnalyticsModel.h */,
-				150675B11C058B0900016915 /* GoogleAnalyticsModel.m */,
+				15EED0181C065BD700ADA7C6 /* GAI.h */,
+				15EED0191C065BD700ADA7C6 /* GAIDictionaryBuilder.h */,
+				15EED01A1C065BD700ADA7C6 /* GAIEcommerceFields.h */,
+				15EED01B1C065BD700ADA7C6 /* GAIEcommerceProduct.h */,
+				15EED01C1C065BD700ADA7C6 /* GAIEcommerceProductAction.h */,
+				15EED01D1C065BD700ADA7C6 /* GAIEcommercePromotion.h */,
+				15EED01E1C065BD700ADA7C6 /* GAIFields.h */,
+				15EED01F1C065BD700ADA7C6 /* GAILogger.h */,
+				15EED0201C065BD700ADA7C6 /* GAITrackedViewController.h */,
+				15EED0211C065BD700ADA7C6 /* GAITracker.h */,
+				15EED0221C065BD700ADA7C6 /* GoogleAnalyticsModel.h */,
+				15EED0231C065BD700ADA7C6 /* GoogleAnalyticsModel.m */,
+				15EED0241C065BD700ADA7C6 /* GoogleAnalyticsService.h */,
+				15EED0251C065BD700ADA7C6 /* GoogleAnalyticsService.m */,
 			);
-			name = services;
+			name = GoogleAnalytics;
 			sourceTree = "<group>";
 		};
 		372E9DFF1BAA302000F2796E /* Includes */ = {
@@ -302,7 +292,6 @@
 				15C942B71C04EE670009DC77 /* Frameworks */,
 				BF58DB161C0152D200314B85 /* SystemConfiguration.framework */,
 				3705A2901BF6B5BB00C291CB /* UIKit.framework */,
-				375530B11B39D52900659D37 /* libz.dylib */,
 				375530AF1B39D51F00659D37 /* Foundation.framework */,
 				375530AD1B39D51500659D37 /* Security.framework */,
 				375530691B39D42500659D37 /* HPControlledPrint */,
@@ -323,7 +312,7 @@
 		375530691B39D42500659D37 /* HPControlledPrint */ = {
 			isa = PBXGroup;
 			children = (
-				15C942A21C04ED6F0009DC77 /* google_analytics */,
+				15EED0161C065BBE00ADA7C6 /* GoogleAnalytics */,
 				3755306C1B39D42500659D37 /* HPControlledPrint.h */,
 				375530861B39D4CC00659D37 /* Classes */,
 				3755308E1B39D4CC00659D37 /* Includes */,
@@ -412,6 +401,9 @@
 		375530951B39D4CC00659D37 /* Libraries */ = {
 			isa = PBXGroup;
 			children = (
+				15EED0141C06591200ADA7C6 /* libsqlite3.dylib */,
+				375530B11B39D52900659D37 /* libz.dylib */,
+				15EED0101C06586D00ADA7C6 /* libGoogleAnalyticsServices.a */,
 				37C23FA61B98D90A009F0065 /* libcpl.a */,
 				37C23FA71B98D90A009F0065 /* libcurl.a */,
 				37C23FA81B98D90A009F0065 /* libmwp.a */,
@@ -429,39 +421,39 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				15C942AF1C04EDE40009DC77 /* GAIEcommerceFields.h in Headers */,
+				15EED0271C065BD700ADA7C6 /* GAI.h in Headers */,
 				37C23FB81B98D918009F0065 /* hp_cpl.h in Headers */,
+				15EED0311C065BD700ADA7C6 /* GoogleAnalyticsModel.h in Headers */,
 				3755309F1B39D4CC00659D37 /* HPDiscoveredPrinters.h in Headers */,
+				15EED02A1C065BD700ADA7C6 /* GAIEcommerceProduct.h in Headers */,
 				377D08521B4B496900D8AEB6 /* HPServices.h in Headers */,
-				15C942E91C0531E80009DC77 /* GoogleAnalyticsService.h in Headers */,
-				15C942AD1C04EDE40009DC77 /* GAI.h in Headers */,
+				15EED02D1C065BD700ADA7C6 /* GAIFields.h in Headers */,
 				37B8D9401B4DE0A100CCA7DD /* HPAsyncHttpPost.h in Headers */,
 				37DF03DA1BEC229900883A88 /* HPControlledPrintManagerUtil.h in Headers */,
-				15C942B21C04EDE40009DC77 /* GAIEcommercePromotion.h in Headers */,
 				37C23FBD1B98D918009F0065 /* mwp_secure_asset_printing_api.hpp in Headers */,
 				377D085A1B4B614F00D8AEB6 /* HPPrinter.h in Headers */,
-				15C942B11C04EDE40009DC77 /* GAIEcommerceProductAction.h in Headers */,
-				15C942AE1C04EDE40009DC77 /* GAIDictionaryBuilder.h in Headers */,
-				15C942B51C04EDE40009DC77 /* GAITrackedViewController.h in Headers */,
 				374268AA1B8BCB31004D0DD1 /* HPTokenValidator.h in Headers */,
+				15EED0301C065BD700ADA7C6 /* GAITracker.h in Headers */,
 				3715A2491B4343ED004CB3D4 /* HPAsyncHttp.h in Headers */,
+				15EED0291C065BD700ADA7C6 /* GAIEcommerceFields.h in Headers */,
 				37B8D93C1B4DDEBF00CCA7DD /* HPAsyncHttpGet.h in Headers */,
-				15C942B01C04EDE40009DC77 /* GAIEcommerceProduct.h in Headers */,
+				15EED02F1C065BD700ADA7C6 /* GAITrackedViewController.h in Headers */,
 				37C23FB71B98D918009F0065 /* cpl_controlled_print_api.hpp in Headers */,
-				150675B21C058B0900016915 /* GoogleAnalyticsModel.h in Headers */,
 				37C23FBA1B98D918009F0065 /* hp_sap.h in Headers */,
+				15EED02B1C065BD700ADA7C6 /* GAIEcommerceProductAction.h in Headers */,
+				15EED0331C065BD700ADA7C6 /* GoogleAnalyticsService.h in Headers */,
 				377D08561B4B541B00D8AEB6 /* HPPrintJobRequest.h in Headers */,
 				37C23FB91B98D918009F0065 /* hp_mwp.h in Headers */,
 				37C23FBB1B98D918009F0065 /* mwp_core_api.hpp in Headers */,
+				15EED02C1C065BD700ADA7C6 /* GAIEcommercePromotion.h in Headers */,
 				37DF03D31BE00EF400883A88 /* HPProviderNotifier.h in Headers */,
-				15C942B61C04EDE40009DC77 /* GAITracker.h in Headers */,
-				15C942B41C04EDE40009DC77 /* GAILogger.h in Headers */,
-				15C942B31C04EDE40009DC77 /* GAIFields.h in Headers */,
 				3755309D1B39D4CC00659D37 /* HPControlledPrintManager.h in Headers */,
 				37B8D9441B4DE38F00CCA7DD /* HPMetricsSender.h in Headers */,
 				15C942C21C04F78D0009DC77 /* HPControlledPrint-Prefix.pch in Headers */,
 				375530A11B39D4CC00659D37 /* HPPrinterAttributes.h in Headers */,
+				15EED02E1C065BD700ADA7C6 /* GAILogger.h in Headers */,
 				3755306D1B39D42500659D37 /* HPControlledPrint.h in Headers */,
+				15EED0281C065BD700ADA7C6 /* GAIDictionaryBuilder.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -567,15 +559,15 @@
 				37633B6D1B7176C7000BF381 /* HPMetricsSender.m in Sources */,
 				37633B651B717698000BF381 /* HPDiscoveredPrinters.m in Sources */,
 				37633B681B7176AC000BF381 /* HPAsyncHttpGet.m in Sources */,
+				15EED0341C065BD700ADA7C6 /* GoogleAnalyticsService.m in Sources */,
 				37633B671B7176A3000BF381 /* HPAsyncHttp.m in Sources */,
 				37DF03DB1BEC229900883A88 /* HPControlledPrintManagerUtil.mm in Sources */,
 				37633B641B71768A000BF381 /* HPControlledPrintManager.mm in Sources */,
 				37633B6A1B7176B6000BF381 /* HPServices.m in Sources */,
 				37633B6C1B7176C1000BF381 /* HPPrinter.m in Sources */,
-				150675B31C058B0900016915 /* GoogleAnalyticsModel.m in Sources */,
+				15EED0321C065BD700ADA7C6 /* GoogleAnalyticsModel.m in Sources */,
 				37DF03D41BE00EF400883A88 /* HPProviderNotifier.m in Sources */,
 				37633B6B1B7176BB000BF381 /* HPPrintJobRequest.m in Sources */,
-				15C942EA1C0531E80009DC77 /* GoogleAnalyticsService.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

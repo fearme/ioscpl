@@ -63,6 +63,7 @@ NSString *const kCaymanRootUrlStaging        = @"https://cayman-stg.cloudpublish
 NSString *const kCaymanRootUrlProduction     = @"https://cayman-prod.cloudpublish.com";
 
 
+
 static net_mobilewebprint::secure_asset_printing_api_t *secureAssetPrinter;
 
 HPServices *services;
@@ -94,7 +95,7 @@ BOOL printerScanStarted;
     self.uuidHashed = [self hashUUID];
     
     [GoogleAnalyticsService setUpGoogleAnalyticsService];
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"initConstructor" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:kGAInitConstructor andLabel:self.uuidHashed];
     
     return self;
 }
@@ -467,7 +468,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             break;
         case Crash:
             // swift doesn't support exception handling so Consumer app doesn't need to do anything.
-//            [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:self.uuidHashed];
+            [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:self.uuidHashed];
             break;
         case Screen:
             if ([[analyticsModel screenName] length] > 0) {

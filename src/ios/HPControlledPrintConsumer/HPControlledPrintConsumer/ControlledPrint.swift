@@ -84,6 +84,12 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         }
         controlledPrintDelegate?.printersFound(self.foundPrinters);
     }
+    
+    // MARK: - Implement GoogleAnalyticsFunctions
+    // Move variables to GAModel, and make them constant
+    // Add functions to this file so screen views can call them
+    // Enum change the name to be more descriptive
+    
 
 }
 
