@@ -250,7 +250,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 {
     NSLog(@"userVisibleStatus: %@", userVisibleStatus);
     NSLog(@"printerStatus: %@", printerStatus);
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"NotifyProvider" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:kGANotifyProvider andLabel:self.uuidHashed];
     
     
     //IMPORTANT: The order of the if conditions matters. Do not change.
@@ -368,7 +368,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 
 - (void)initialize: (ServerStack)stack withCompletion:(void (^)(InitStatus status))completion
 {
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Initialized" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:kGAInitialized andLabel:self.uuidHashed];
     
     currentServerStack = stack;
     [self setEnvironment: ^(InitStatus status){
@@ -432,7 +432,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
             completion(valid);
         }
     }];
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Validate" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:kGAValidate andLabel:self.uuidHashed];
 }
 
 #pragma mark - scanForPrinters()
@@ -511,7 +511,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
     [metricsSender send:services.postMetricsUrl withPrintJobRequest:printJobRequest forHardwarId:self.uuidHashed forOperation:kOperationPrintRequested forReason:kReasonPrintRequestInitiated forState:kStatePrintRequestInitiated metricsType:kMetricTypeUserData];
     
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Print" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:kGAPrint andLabel:self.uuidHashed];
     
     return YES;
 }
@@ -528,7 +528,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
 - (BOOL)exit
 {
     //we currently do nothing except log this function call
-    [GoogleAnalyticsService trackEventCategory:@"ControlledPrintIos" withAction:@"Exit" andLabel:self.uuidHashed];
+    [GoogleAnalyticsService trackEventCategory:kGAControlledPrintIosSdk withAction:KGAExit andLabel:self.uuidHashed];
     NSLog(@"exit() called");
     
     return YES;

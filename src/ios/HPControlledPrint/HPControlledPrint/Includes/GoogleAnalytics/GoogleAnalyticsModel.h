@@ -13,6 +13,11 @@ NSString *const kGAControlledPrintIosSdk     = @"ControlledPrintIosSdk";
 
 // Actions
 NSString *const kGAInitConstructor     = @"InitConstructor";
+NSString *const kGANotifyProvider      = @"NotifyProvider";
+NSString *const kGAInitialized         = @"Initialized";
+NSString *const kGAValidate            = @"Validate";
+NSString *const kGAPrint               = @"PrintIssued";
+NSString *const KGAExit                = @"Exit";
 
 @interface GoogleAnalyticsModel : NSObject
 @property NSString *eventCategory;
