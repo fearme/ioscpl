@@ -20,11 +20,10 @@ typedef enum {
 } InitStatus;
 
 typedef enum {
-    // rename: GoogleAnalyticsTypeEvent
-    Event,
-    Crash,
-    Screen
-} GoogleAnalyticsType;
+    GoogleAnalyticsTypeEnumEvent,
+    GoogleAnalyticsTypeEnumCrash,
+    GoogleAnalyticsTypeEnumScreen
+} GoogleAnalyticsTypeEnum;
 
 
 @property (strong, nonatomic) id <HPPrinterAttributesDelegate> printerAttributesDelegate;
@@ -42,7 +41,7 @@ typedef enum {
 
 - (BOOL)print:(HPPrinter *)selectedPrinter withJobRequest:(HPPrintJobRequest *)printJobRequest;
 
-- (void)postGoogleAnalyticsMetrics: (GoogleAnalyticsType)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
+- (void)postGoogleAnalyticsMetrics: (GoogleAnalyticsTypeEnum)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
 
 - (BOOL)exit;
 

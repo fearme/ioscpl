@@ -24,7 +24,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         super.viewDidLoad()
         self.cpl = ControlledPrint(controlledPrintDelegate: self)
         self.cpl?.printerListUpdateInterval(3)
-//        self.cpl?.setProxy("proxy.atlanta.hp.com", port: "8080")
+        self.cpl?.setProxy("proxy.vcd.hp.com", port: "8080")
         //self.cpl?.setProxy("web-proxy", port: "8088")
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.screenName = "ConsumerAppDelegateScreenWithandand";

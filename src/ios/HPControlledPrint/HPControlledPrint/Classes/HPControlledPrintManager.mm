@@ -458,19 +458,19 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     return printerScanStarted;
 }
 
-- (void)postGoogleAnalyticsMetrics:(GoogleAnalyticsType)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
+- (void)postGoogleAnalyticsMetrics:(GoogleAnalyticsTypeEnum)analyticsType withParams:(GoogleAnalyticsModel *)analyticsModel;
 {
     switch (analyticsType) {
-        case Event:
+        case GoogleAnalyticsTypeEnumEvent:
             if ([[analyticsModel eventCategory] length] > 0 && [[analyticsModel eventAction] length] > 0) {
                 [GoogleAnalyticsService trackEventCategory:[analyticsModel eventCategory] withAction:[analyticsModel eventAction] andLabel:self.uuidHashed];
             }
             break;
-        case Crash:
+        case GoogleAnalyticsTypeEnumCrash:
             // swift doesn't support exception handling so Consumer app doesn't need to do anything.
             [GoogleAnalyticsService trackException:[analyticsModel exception] withHwId:self.uuidHashed];
             break;
-        case Screen:
+        case GoogleAnalyticsTypeEnumScreen:
             if ([[analyticsModel screenName] length] > 0) {
                 [GoogleAnalyticsService trackScreenView:[analyticsModel screenName] withHwId:self.uuidHashed];
             }

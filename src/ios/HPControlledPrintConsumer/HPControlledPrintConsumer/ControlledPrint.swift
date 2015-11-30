@@ -21,7 +21,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         ControlledPrint.cpl.printerAttributesDelegate = self
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.screenName = "ConsumerAppDelegateScreenWithandand";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Screen, withParams: analyticsModel);
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumScreen, withParams: analyticsModel);
     }
     
     func initialize(stack: ServerStack, completion: ((InitStatus) -> ())) {
@@ -31,7 +31,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppControlledPrint";
         analyticsModel.eventAction = "ConsumerAppInitializeWithandand";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Event, withParams: analyticsModel)
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsModel)
     }
     
     func validateToken(token: String, completion: ((Bool) -> ())) {
@@ -49,7 +49,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppScan";
         analyticsModel.eventAction = "ConsumerAppPrinters";
-        ControlledPrint.cpl.postGoogleAnalyticsMetrics(Event, withParams: analyticsModel)
+        ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsModel)
         return ControlledPrint.cpl.scanForPrinters()
     }
     
@@ -86,7 +86,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     }
     
     // MARK: - Implement GoogleAnalyticsFunctions
-    // Move variables to GAModel, and make them constant
+    // DONE: Move variables to GAModel, and make them constant
     // Add functions to this file so screen views can call them
     // Enum change the name to be more descriptive
     
