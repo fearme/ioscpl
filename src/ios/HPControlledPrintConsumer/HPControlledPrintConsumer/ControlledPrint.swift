@@ -27,7 +27,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         })
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppControlledPrint";
-        analyticsModel.eventAction = "ConsumerAppInitializeTestWrapper";
+        analyticsModel.eventAction = "ConsumerAppInitialize";
         postGoogleMetrics("event", analyticsMdl: analyticsModel)
     }
     
@@ -44,8 +44,8 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     func scanForPrinters() -> Bool {
         
         var analyticsModel = GoogleAnalyticsModel();
-        analyticsModel.eventCategory = "ConsumerAppScan";
-        analyticsModel.eventAction = "ConsumerAppPrintersTestWrapper";
+        analyticsModel.eventCategory = "ConsumerAppControlledPrint";
+        analyticsModel.eventAction = "ConsumerAppScanForPrinters";
         postGoogleMetrics("event", analyticsMdl: analyticsModel)
         return ControlledPrint.cpl.scanForPrinters()
     }
