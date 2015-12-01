@@ -5,9 +5,23 @@
 #cmakedefine HAVE_IF_ETHER_H      1
 #cmakedefine HAVE_IF_ARP_H        1
 #cmakedefine HAVE_PROC_NET_ARP    1
+#cmakedefine HAVE_SIOCGARP        1
 
-#define BUILD_NUMBER      "@BUILD_NUMBER@"
-#define BUILD_USER        "@BUILD_USER@"
-#define MARIO_PLATFORM    "@MARIO_PLATFORM@"
+#define BUILD_NUMBER              @BUILD_NUMBER@
+#define DATA_FORMAT               @MARIO_DATA_FORMAT@
+
+#define BUILD_NUMBER_STR          "@BUILD_NUMBER@"
+#define BUILD_USER                "@BUILD_USER@"
+#define MARIO_PLATFORM            "@MARIO_PLATFORM@"
+#define SOURCE_GIT_SHA1           "@MARIO_GIT_SHA1@"
+#define SOURCE_GIT_SHA1_SHORT     "@MARIO_GIT_SHA1_SHORT@"
+#define SOURCE_GIT_BRANCH_NAME    "@MARIO_GIT_BRANCH_NAME@"
+
+#define VERSION                   "@MARIO_VERSION@"
+#define MAJOR_VERSION             "@MARIO_MAJOR_VERSION@"
+
+#define MWP_CURL_AGENT            "@MARIO_CURL_AGENT@"
+
+#define MWP_DEFAULT_FQDN          "@MARIO_DEFAULT_FQDN@"
 
 #endif  // __MWP_CORE_CONFIG_H__

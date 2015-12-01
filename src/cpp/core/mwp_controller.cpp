@@ -56,6 +56,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -70,18 +71,17 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
+    telemetry_send_time(0),
     heartbeat_timer(0, 20000)
 {
-  mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  //sap_app_callbacks_ = new sap_app_cb_list_t();
+  mwp_app_callbacks_   = new mwp_app_cb_list_t();
+  mwp_app_hf_callbacks = new mwp_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -91,6 +91,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -104,18 +105,17 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
+    telemetry_send_time(0),
     heartbeat_timer(0, 20000)
 {
-  //mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  sap_app_callbacks_ = new sap_app_cb_list_t();
+  sap_app_callbacks_   = new sap_app_cb_list_t();
+  sap_app_hf_callbacks = new sap_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
 
   mq.on(this);
 }
@@ -166,6 +166,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   printers.on_select_loop_start(loop_start_data);
   if (cleanup_time.has_elapsed(loop_start_data.current_loop_start)) {
     printers.cleanup();
+  }
+
+  if (mwp_app_hf_callbacks) {
+    for (mwp_app_hf_cb_list_t::const_iterator it = mwp_app_hf_callbacks->begin(); it != mwp_app_hf_callbacks->end(); ++it) {
+      hp_mwp_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_start, NULL);
+      }
+    }
+  }
+
+  if (sap_app_hf_callbacks) {
+    for (sap_app_hf_cb_list_t::const_iterator it = sap_app_hf_callbacks->begin(); it != sap_app_hf_callbacks->end(); ++it) {
+      hp_sap_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_num, NULL);
+      }
+    }
   }
 
   if (delayed_http_requests != NULL) {
@@ -277,8 +301,11 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
       if (flag("telemetry", TELEMETRY_DEFAULT)) {
+
+        telemetry_send_time = get_tick_count();
+
         string pathname = string("/telemetry?count=") + mwp_itoa(count) + "&uptime=" + mwp_itoa(loop_start_data.current_loop_start) /* + "&clientId=" + clientId() */;
-        send_upstream("telemetry", pathname, json, new telemetry_response_t());
+        send_upstream("telemetry", pathname, json, new telemetry_response_t(*this));
       }
 
       // We have sent it, now reset the data
@@ -368,6 +395,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
  */
 bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool block)
 {
+  // The app wants to control the verbosity?
+  if (!flag("app_verbosity", false)) {
+    set_flag("log_api", true);
+    set_flag("vvverbose", true);
+  }
+
   // Seed the PRNG
   uint32 tm = 0;
   uint32 hash = tm = (int)time(NULL);
@@ -472,7 +505,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_up_a
   log_d(1, "controller_t", "Controller is up and running");
 
   serialization_json_t json;
-  client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+  client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
   return handled;
 }
 
@@ -546,10 +579,13 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_req
     // TODO: this does not belong on every POST, move it to those that make sense
     json.set("provider", arg("providerName", "HP_CP"));
 
-    json.set("meta.platform", platform_name());
-    json.set("meta.version", "1.1");
-    json.set("meta.build", BUILD_NUMBER);
-    json.set("meta.dataFormat", 11);
+    json.set("meta.platform",   platform_name());
+    json.set("meta.version",    MAJOR_VERSION);
+    json.set("meta.build",      BUILD_NUMBER);
+    json.set("meta.sha1",       SOURCE_GIT_SHA1);
+    json.set("meta.sha1_short", SOURCE_GIT_SHA1_SHORT);
+    json.set("meta.branch",     SOURCE_GIT_BRANCH_NAME);
+    json.set("meta.dataFormat", DATA_FORMAT);
 
     if (arg("username", "").length() > 0) {
       json.set("meta.username", arg("username", "noname@example.com"));
@@ -695,21 +731,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
       }
     }
 
-    if (json.lookup_bool("ok")) {
+    if (json.lookup_bool("ok") || json.lookup_bool("final")) {
 
       // singleNodeName means to stop looking, and just use it
       if (json.has("pclHost.singleNodeName")) {
-        curl.server_name = json.lookup("pclHost.singleNodeName");
+        curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        set_arg("pcl.servername", json.lookup("pclHost.singleNodeName"));
 
       // pclServerName means to ask that server permission
       } else if (json.has("pclHost.pclServerName")) {
-        string new_server_name = json.lookup("pclHost.pclServerName");
 
-        if (curl.server_name != new_server_name) {
-          curl.server_name = new_server_name;
-          serialization_json_t json;
-          client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
-          return handled;
+        if (json.lookup_bool("final")) {
+          curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        } else {
+
+          string new_server_name = json.lookup("pclHost.pclServerName");
+
+          if (curl.server_name != new_server_name) {
+            curl.server_name = new_server_name;
+            serialization_json_t json;
+            client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
+            return handled;
+          }
         }
       }
 
@@ -752,7 +797,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
       if (new_server_name.length() > 0) {
         curl.server_name = new_server_name;
         serialization_json_t json;
-        client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+        client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
         return handled;
       }
     }
@@ -800,6 +845,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::proce
   string content_type;
 
   content_type = upstream.parse_response(payload, http_resp_code, http_version, headers, body, json, json_array, stats);
+  log_vs(4, "", "upstream response type: |%s|, version: |%s|", content_type, http_version);
   if (content_type.length() > 0) {
 
     upstream_handler_map_t::iterator it = upstream_messages.find(extra.txn_name);
@@ -925,10 +971,12 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
   }
 
   /* otherwise - wait before the next one */
-  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ <400, handle_server_command");
+  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ >= 400 (%d), handle_server_command, next_has_been_scheduled? %d", code, (int)next_has_been_scheduled);
   if (!next_has_been_scheduled) {
-    server_command_timer.time = get_tick_count();
-    next_has_been_scheduled = true;
+    if (code != 403) {
+      server_command_timer.trigger();
+      next_has_been_scheduled = true;
+    }
   }
 }
 
@@ -993,12 +1041,27 @@ void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint3
   common.set("bucketId", random_string(32));
 }
 
+net_mobilewebprint::telemetry_response_t::telemetry_response_t(controller_base_t & controller_)
+  : controller(controller_)
+{
+}
+
+net_mobilewebprint::telemetry_response_t::~telemetry_response_t()
+{
+}
+
 void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
 {
-  log_v(3, "", "telemetry response: %d", code);
-  if (g_controller) {
-    g_controller->sendTelemetry("telemetry", "serverResponse", "code", code);
+  uint32 latency = _time_since(g_controller->telemetry_send_time);
+
+  log_v(2, "", "telemetry response: %d, latency: %d", code, latency);
+
+  controller.sendTelemetry("telemetry", "serverResponse", "code", code, "latency", latency);
+
+  if (latency > 1200) {
+    controller.sendTelemetry("anomaly", latency > 3000 ? "ERROR_LATENCY" : "WARNING_LATENCY", "latency", latency, "path", "/telemetry");
   }
+  return;
 }
 
 bool net_mobilewebprint::controller_base_t::mq_is_done()
@@ -1493,6 +1556,16 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::c
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::parse_cli(int argc, void const * argv[])
 {
   ARGS.merge(args_t(argc, argv));
+
+  // Must special-process some args
+  if (_has(ARGS.args, "stackName")) {
+    set_arg("stackName", _lookup(ARGS.args, "stackName"));
+  }
+
+  if (_has(ARGS.args, "serverName")) {
+    set_arg("serverName", _lookup(ARGS.args, "serverName"));
+  }
+
   return *this;
 }
 
@@ -1549,6 +1622,20 @@ bool net_mobilewebprint::get_flag(string const & key)
 
   /* otherwise */
   bool result = g_controller->flag(key.c_str());
+  return result;
+}
+
+/**
+*  Free function to get a flag (true or false) for the key.
+*
+*  @return a bool for the key (false if the key is not present.)
+*/
+bool net_mobilewebprint::get_flag_def(string const & key, bool def)
+{
+  if (g_controller == NULL) { return def; }
+
+  /* otherwise */
+  bool result = g_controller->flag(key.c_str(), def);
   return result;
 }
 
@@ -1682,6 +1769,32 @@ bool net_mobilewebprint::controller_base_t::deregister_handler(char const * name
   } else {
     result = send_to_app("recd_deregister_handler", 1, 1, (uint8 const *)name, (sap_params const *)NULL) != 0;
   }
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_mwp_hf_callback_t callback)
+{
+  (*mwp_app_hf_callbacks)[name] = mwp_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (mwp_params*)NULL) != 0;
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_sap_hf_callback_t callback, bool)
+{
+  (*sap_app_hf_callbacks)[name] = sap_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (sap_params*)NULL) != 0;
   return result;
 }
 
@@ -2097,6 +2210,26 @@ net_mobilewebprint::sap_app_callback_t::sap_app_callback_t(std::string name_, vo
 }
 
 net_mobilewebprint::sap_app_callback_t::sap_app_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t(std::string name_, void * app_data_, hp_mwp_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t(std::string name_, void * app_data_, hp_sap_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t()
   : app_data(NULL), callback(NULL)
 {
 }

@@ -395,6 +395,17 @@ bool net_mobilewebprint::_starts_with(char const * sz, char const * sz_start)
   return true;
 }
 
+bool net_mobilewebprint::_contains(string const & str, char const * sub_str)
+{
+  return str.find(sub_str) != string::npos;
+}
+
+bool net_mobilewebprint::_contains(char const *    sz, char const * sub_str)
+{
+  return ::strstr(sz, sub_str) != NULL;
+}
+
+
 static char blank[] = "";
 char const *  net_mobilewebprint::or_blank(uint8 const * p)
 {

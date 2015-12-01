@@ -64,6 +64,11 @@ bool net_mobilewebprint::core_api_t::deregister_handler(char const * name)
   return controller->deregister_handler(name);
 }
 
+bool net_mobilewebprint::core_api_t::register_hf_handler(char const * name, void * app_data, hp_mwp_hf_callback_t callback)
+{
+  return controller->register_hf_handler(name, app_data, callback);
+}
+
 bool net_mobilewebprint::core_api_t::app_send(char const * name, char const * payload)
 {
   return controller->app_send(name, payload) != 0;

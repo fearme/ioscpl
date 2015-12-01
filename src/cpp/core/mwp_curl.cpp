@@ -12,7 +12,7 @@ using namespace net_mobilewebprint;
  *  curl_t ctor.
  */
 net_mobilewebprint::curl_t::curl_t(controller_base_t & controller_, string server_name_, uint16 server_port_)
-  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), netapp_subdomain("netapp"), mcurl(NULL)
+  : controller(controller_), mq(controller_.mq), server_name(server_name_), server_port(server_port_), mcurl(NULL)
 {
   mq.on(this);
   mq.on_selected(this);
@@ -150,6 +150,16 @@ net_mobilewebprint::curl_t::connections_t::iterator net_mobilewebprint::curl_t::
 
   return connections.end();
 }
+std::string net_mobilewebprint::curl_t::_pcl_server_name()
+{
+  string pcl_server_name = controller.arg("pcl.servername", "");
+  if (pcl_server_name.length() > 0) {
+    return pcl_server_name;
+  }
+
+  /* otherwise */
+  return server_name;
+}
 
 std::string net_mobilewebprint::curl_t::translate_path(string const & path)
 {
@@ -164,11 +174,23 @@ std::string net_mobilewebprint::curl_t::translate_path(string server_name_, int 
     size_t end = server_name_.find(".mobile");
     if (end != string::npos) {
       string netapp_server_name = server_name_;
-      netapp_server_name.replace(0, end, netapp_subdomain);
+      netapp_server_name.replace(0, end, "netapp");
+      netapp_server_name = controller.arg("netapp.servername", netapp_server_name);
+
       string netapp_path = path;
       netapp_path.replace(0, ::strlen("netapp::"), "");
-      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(server_port_) + netapp_path;
+
+      string prefix = controller.arg("netapp.prefix", "");
+      if (prefix.length() > 0) {
+        netapp_path = string("/") + prefix + netapp_path;
+      }
+
+      int netapp_port = controller.arg("netapp.port", server_port_);
+
+      full_url = "http://" + netapp_server_name + ":" + mwp_itoa(netapp_port) + netapp_path;
     }
+  } else if (_starts_with(path, "/pcl/")) {
+    full_url = "http://" + _pcl_server_name() + ":" + mwp_itoa(server_port_) + path;
   }
 
   return full_url;
@@ -207,7 +229,7 @@ static size_t _conn_read_data(void * buffer, size_t size, size_t nmemb, void *us
  *
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, char const * verb_, string const & path_, uint32 connection_id_)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   _init();
@@ -224,7 +246,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
  *
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = "GET";
@@ -243,7 +265,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_
  *
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = "GET";
@@ -261,7 +283,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_
  *  For JSON POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, serialization_json_t const & json, string const & path_, uint32 connection_id_)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb("POST"), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   _init();
@@ -280,7 +302,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
  *  For JSON POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, curl_payload_json_t const & payload, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = payload.verb;
@@ -300,7 +322,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_
  *  For JSON POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, curl_payload_json_t const & payload, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = payload.verb;
@@ -320,7 +342,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_
  *  For JSON_str POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & controller_, CURLM * mcurl_, curl_t * parent_, string const & path_, uint32 connection_id_, string verb_, string const & body_str, string content_type, bool use_proxy)
-  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(controller_), mq(controller_.mq), parent(parent_), connection_id(connection_id_), verb(verb_), path(path_), full_url(path_), mcurl(mcurl_), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   _init(use_proxy);
@@ -339,7 +361,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(controller_base_t & con
  *  For JSON_str POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_upstream_server_t const & server, curl_payload_string_t const & payload, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = payload.verb;
@@ -359,7 +381,7 @@ net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_
  *  For JSON_str POST.
  */
 net_mobilewebprint::curl_connection_t::curl_connection_t(curl_t * parent_, curl_local_server_t const & server, curl_payload_string_t const & payload, uint32 connection_id_)
-  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0),
+  : controller(parent_->controller), mq(parent_->controller.mq), parent(parent_), connection_id(connection_id_), mcurl(parent_->mcurl), curl(NULL), packet_num(-1), num_recieved(0), parsed_http_code(-1),
     request_payload(NULL), req_headers(NULL)
 {
   verb = payload.verb;
@@ -482,7 +504,7 @@ net_mobilewebprint::curl_connection_t & net_mobilewebprint::curl_connection_t::_
     result  = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, req_headers);
   }
 
-  result = curl_easy_setopt(curl, CURLOPT_USERAGENT, "Mario-" BUILD_USER "-" MARIO_PLATFORM " 1.1." BUILD_NUMBER " libcurl");
+  result = curl_easy_setopt(curl, CURLOPT_USERAGENT, MWP_CURL_AGENT);
 
   result = curl_multi_add_handle(mcurl, curl);
   return *this;
@@ -538,20 +560,6 @@ net_mobilewebprint::curl_payload_string_t::curl_payload_string_t(string const & 
 // Helper functions
 //
 //---------------------------------------------------------------------------------------------------------------------------
-size_t net_mobilewebprint::curl_connection_t::conn_write_data(void * buffer_, size_t size, size_t nmemb)
-{
-  byte * buffer = (byte*)buffer_;
-
-  buffer_t * packet = mq.message("_on_http_payload", 0, connection_id);
-
-  packet->append(buffer, size * nmemb);
-
-  log_v(4, "curl_t", "Sending HTTP: %d (%d * %d)", (int)(size * nmemb), (int)size, (int)nmemb);
-  mq.send(packet);
-
-  return size * nmemb;
-}
-
 size_t net_mobilewebprint::curl_connection_t::conn_header_data(void * buffer_, size_t size, size_t nmemb)
 {
   byte * buffer = (byte*)buffer_;
@@ -560,12 +568,70 @@ size_t net_mobilewebprint::curl_connection_t::conn_header_data(void * buffer_, s
 
   packet->append(buffer, size * nmemb);
 
-  log_v(4, "curl_t", "Sending HTTP headers: %d (%d * %d)", (int)(size * nmemb), (int)size, (int)nmemb);
+  strvlist parts;
+  string   header = string((char const *)buffer, size * nmemb);
+
+  header = rtrim(header, 0x0a);
+  header = rtrim(header, 0x0d);
+
+  log_vs(4, "curl_t", "sending along (received) headers: |%s|: |%s|", path, header);
+
+  // First line is the response code
+  if (parsed_http_code == -1 || parsed_http_code == 100 /* continue */) {
+
+    if (splitv(parts, header, ' ') > 2) {
+      int code = mwp_atoi(parts[1]);
+      if (code > 99 && code <= 999) {   // Three digits
+        parsed_http_code = code;
+        log_v(4, "curl_t", "sending along (received) http code: |%s|: %d", path.c_str(), parsed_http_code);
+      }
+    }
+  } else {
+
+    if (splitv(parts, header, ':') > 1) {
+      string key    = _lower(parts[0]);
+      string value  = _lower(ltrim(parts[1], ' '));
+
+      if (key == "content-type") {
+        response_content_type = value;
+        log_vs(4, "curl_t", "sending along (received) http Content-Type: |%s|: |%s|", path, response_content_type);
+      }
+    }
+  }
+
+  headers.push_back(header);
+
   mq.send(packet);
 
   return size * nmemb;
 }
 
+/**
+ *  cUrl calls this function when it gets body data from a request.
+ */
+size_t net_mobilewebprint::curl_connection_t::conn_write_data(void * buffer_, size_t size, size_t nmemb)
+{
+  byte * buffer = (byte*)buffer_;
+
+  buffer_t * packet = mq.message("_on_http_payload", 0, connection_id);
+
+  packet->append(buffer, size * nmemb);
+
+  string ct = response_content_type;
+  if (size * nmemb > 2048) {
+    log_v(4, "curl_t", "Sending along (received) HTTP: %d (%d * %d)", (int)(size * nmemb), (int)size, (int)nmemb);
+  } else if (_contains(ct, "json") || _contains(ct, "html") || _contains(ct, "xml")) {
+    log_vs(4, "curl_t", "sending along (received): |%s|: |%s|", path, string((char const *)buffer, size * nmemb));
+  }
+
+  mq.send(packet);
+
+  return size * nmemb;
+}
+
+/**
+ *  cUrl calls this function to get the body of the request.
+ */
 size_t net_mobilewebprint::curl_connection_t::conn_read_data(void * buffer, size_t size, size_t nmemb)
 {
   if (request_payload == NULL) { return 0; }
@@ -573,7 +639,7 @@ size_t net_mobilewebprint::curl_connection_t::conn_read_data(void * buffer, size
   size_t num_to_send = min(size*nmemb, request_payload->view.dsize() - 1);    // Dont include terminating NULL
   if (num_to_send == 0) { return 0; }
 
-  log_vs(4, "curl_t", "Sending %d\n%s", (int)num_to_send, string((char*)request_payload->view.begin(), request_payload->view.dsize()));
+  log_vs(4 - (request_payload->view.dsize() <= 2048), "curl_t", "Sending %d -- %s", (int)num_to_send, string((char*)request_payload->view.begin(), request_payload->view.dsize()));
   ::memcpy(buffer, request_payload->view.begin(), num_to_send);
   request_payload->view._begin += num_to_send;
   return num_to_send;

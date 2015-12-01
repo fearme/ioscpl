@@ -69,6 +69,13 @@ bool net_mobilewebprint::controlled_print_library_api_t::deregister_handler(char
   return sap->deregister_handler(name);
 }
 
+bool net_mobilewebprint::controlled_print_library_api_t::register_hf_handler(char const * name, void * app_data, hp_cpl_hf_callback_t callback)
+{
+  // TODO: Convert callback to sap-style callback and call it
+  //return sap->register_hf_handler(name, app_data, callback);
+  return false;
+}
+
 bool net_mobilewebprint::controlled_print_library_api_t::mq_is_done()
 {
   return sap->mq_is_done();

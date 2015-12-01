@@ -61,7 +61,6 @@ namespace net_mobilewebprint {
 
     string                 server_name;
     uint16                 server_port;
-    string                 netapp_subdomain;
 
     CURLM *                mcurl;
     uint32                 connection_id;
@@ -70,6 +69,8 @@ namespace net_mobilewebprint {
     virtual ~curl_t();
 
     virtual string      mod_name();
+
+    string              _pcl_server_name();
 
     curl_connection_t * fetch_from_mwp_server(char const * verb, string const & path, uint32 connection_id);
     curl_connection_t * post_mwp_server(serialization_json_t const & json, string const & path, uint32 connection_id);
@@ -113,6 +114,8 @@ namespace net_mobilewebprint {
     size_t              num_recieved;
 
     strlist             headers;
+    int                 parsed_http_code;
+    string              response_content_type;
 
     chunk_t *           request_payload;
     struct curl_slist * req_headers;

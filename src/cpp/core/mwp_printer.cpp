@@ -943,6 +943,7 @@ void net_mobilewebprint::printer_list_t::re_scan()
     log_v(2, "", "!!!!!!!!!!!!!! %s", "Error -- reScan called during scan -- ignoring");
     log_v(2, "", "!!!!!!!!!!!!!! %s", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     controller.sendTelemetry("printerScan", "invalidReScan");
+    controller.sendTelemetry("anomaly", "ERROR_API", "fn", "re_scan", "reason", "already_scanning");
     return;
   }
 
@@ -1262,6 +1263,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 //  return;
 
   controller.sendTelemetry("network", "softNetworkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("anomaly", "WARNING_NETWORK", "errno", error_number, "reason", "soft_network_error");
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
@@ -1285,6 +1287,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 void net_mobilewebprint::printer_list_t::network_error(string const & ip, int error_number)
 {
   controller.sendTelemetry("network", "networkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("anomaly", "ERROR_NETWORK", "errno", error_number, "reason", "network_error");
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {

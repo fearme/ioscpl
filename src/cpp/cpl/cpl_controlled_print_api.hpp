@@ -29,6 +29,7 @@ namespace net_mobilewebprint {
 
     virtual bool register_handler(char const * name, void * app_data, hp_cpl_callback_t callback);
     virtual bool deregister_handler(char const * name);
+    virtual bool register_hf_handler(char const * name, void * app_data, hp_cpl_hf_callback_t callback);
     virtual bool app_send(char const * name, char const * payload = NULL);
     virtual int  app_set_timeout(char const * message_to_send, int msecs_to_wait);
 

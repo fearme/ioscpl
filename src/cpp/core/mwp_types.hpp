@@ -44,7 +44,6 @@
 
 #ifdef HAVE_IF_ETHER_H
 #include <netinet/if_ether.h>
-#define HAVE_SIOCGARP 1
 #endif
 
 #ifdef HAVE_IF_ARP_H
@@ -71,7 +70,6 @@
 #endif
 
 #define MWP_STRLEN_BUFFER_STRING 31
-#define MWP_DEFAULT_FQDN         "pub.mobilewebprint.net"
 #define MWP_DEFAULT_ROOT_URL     "http://" MWP_DEFAULT_FQDN "/"
 
 namespace net_mobilewebprint {

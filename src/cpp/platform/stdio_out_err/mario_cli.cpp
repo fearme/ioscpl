@@ -11,30 +11,65 @@
 #include <sys/time.h>
 
 using std::string;
-
 using namespace net_mobilewebprint;
 
+static string undefined(HP_MWP_UNDEFINED);
+
+string  ip, url;
+bool    is_print_mode = false;
+bool    have_printed  = false;
+
 bool g_verbose = false;
+bool g_quiet = true;
 
 int callback(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, mwp_params const * params);
+int hf_callback(void * app_data, char const * name, int loop_num, uint32 tick_count, uint8 const * p1);
 
 int main(int argc, char const * argv[])
 {
+  char buffer[2048];
+
   hp_mwp_register_handler("cli", NULL, callback);
+  hp_mwp_register_hf_handler("cli", NULL, hf_callback);
+
+  hp_mwp_set_flag("app_verbosity", true);
   hp_mwp_parse_cli(argc, (void const **)argv);
+  g_quiet = false;
 
-  hp_mwp_set_option("http_proxy_name", "proxy.atlanta.hp.com");
-  hp_mwp_set_option("http_proxy_port", "8080");
+  if (undefined == hp_mwp_get_option_def("stackName", cundefined, buffer, sizeof(buffer))) {
+    hp_mwp_set_option("stackName", "qa");
+  }
 
-  hp_mwp_set_flag("log_api", true);
-
-  printf("Logging: D:%d W:%d V:%d Vl:%s\n", (int)!get_flag("quiet"), (int)!get_flag("no_warn"), (int)get_flag("verbose"), get_option("v_log_level").c_str());
+  // Are we printing?
+  ip  = hp_mwp_get_option_def("ip",  cundefined, buffer, sizeof(buffer));
+  url = hp_mwp_get_option_def("url", cundefined, buffer, sizeof(buffer));
+  if (ip != undefined && url != undefined) {
+    is_print_mode = true;
+  }
 
   hp_mwp_start_ex(HP_MWP_START_SCANNING | HP_MWP_BLOCK_START_FN);
 }
 
 
 using namespace net_mobilewebprint;
+
+typedef std::map<string, strmap> strstrmap;
+
+strstrmap printers;
+
+int hf_callback(void * app_data, char const * name, int loop_num, uint32 tick_count, uint8 const * p1)
+{
+//  if (loop_num % 20 == 0) { printf("hf: %d %d %s\n", loop_num, tick_count, name); }
+
+  if (!is_print_mode) { return 0; }
+
+  /* otherwise */
+  if (!have_printed && _has(printers, ip) && printers[ip]["is_supported"] == "1") {
+    printf("------------- Print it!\n");
+    hp_mwp_send_job(url.c_str(), ip.c_str());
+    have_printed = true;
+  }
+}
 
 int callback(void * app_data, char const * message_, int id, int32 transaction_id, uint8 const * p1_, mwp_params const * params)
 {
@@ -51,10 +86,19 @@ int callback(void * app_data, char const * message_, int id, int32 transaction_i
 
   string message(message_);
   if (message == "printer_attribute") {
-    printf("%s: %s = %s\n", p1, p2, p3);
+    printers[p1][p2] = p3;
+    if (string(p2) == "is_supported" && p3[0] == '1') {
+      printf("---------- supported: %17s   %s\n", p1, _lookup(printers[p1], "name", "no-name").c_str());
+    } else if (string(p2) == "name") {
+      printf("%17s   %s\n", p1, p3);
+    }
+    //printf("%s: %s = %s\n", p1, p2, p3);
   } else if (message == "begin_printer_changes") {
   } else if (message == "end_printer_enum") {
   } else {
+//    if (get_flag_def("quiet", g_quiet)) { return 0; }
+
+    /* otherwise */
     printf("cb: %s id:%d, tid:%d p1:%s p2:%s p3:%s p4:%s p5:%s n1:%d n2:%d n3:%d n4:%d n5:%d params:%x\n", message_, id, (int)transaction_id, p1, p2, p3, p4, p5, n1, n2, n3, n4, n5, params);
   }
   return 1;
@@ -67,9 +111,9 @@ void net_mobilewebprint::log_d(char const * msg, log_param_t x)
 
 void net_mobilewebprint::log_d(char const * msg, char const * tag, log_param_t)
 {
-  if (get_flag("quiet")) { return; }
+  if (get_flag_def("quiet", g_quiet)) { return; }
 
-//  printf("D: %s\n", msg);
+  printf("D: %s\n", msg);
 }
 
 void net_mobilewebprint::log_w(char const * msg, log_param_t)
@@ -86,7 +130,7 @@ void net_mobilewebprint::log_v(char const * msg, log_param_t x)
 
 void net_mobilewebprint::log_v(char const * msg, char const * tag, log_param_t)
 {
-  if (!get_flag("verbose")) { return; }
+  if (!get_flag("verbose"))                   { return; }
 
   printf("V: %s\n", msg);
   //net_mobilewebprint::log_d(msg);
@@ -97,4 +141,5 @@ void net_mobilewebprint::log_e(char const * msg, log_param_t)
   printf("E: %s\n", msg);
   //net_mobilewebprint::log_d(msg);
 }
+
 

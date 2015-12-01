@@ -41,6 +41,11 @@ bool net_mobilewebprint::secure_asset_printing_api_t::deregister_handler(char co
   return core_api_t::deregister_handler(name);
 }
 
+bool net_mobilewebprint::secure_asset_printing_api_t::register_hf_handler(char const * name, void * app_data, hp_sap_hf_callback_t callback)
+{
+  return controller->register_hf_handler(name, app_data, callback, true);
+}
+
 bool net_mobilewebprint::secure_asset_printing_api_t::app_send(char const * name, char const * payload)
 {
   return core_api_t::app_send(name, payload) != 0;
