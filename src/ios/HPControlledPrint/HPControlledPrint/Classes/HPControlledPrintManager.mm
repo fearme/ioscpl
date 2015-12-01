@@ -523,6 +523,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
     if (error != nil) {
         NSLog(@"ERROR in JSON Object containing Cayman services information !!!  - %@", error);
+        //NSLog(@"ERROR in JSON Object containing Cayman services information !!! - json: |%@|", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
         services = nil;
     } else {
         services = [HPControlledPrintManagerUtil parseDiscoveryData:dict secureAssetPrint:secureAssetPrinter caymanRootUrl:[self caymanRootUrl]];

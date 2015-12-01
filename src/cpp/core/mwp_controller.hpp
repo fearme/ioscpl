@@ -385,6 +385,7 @@ namespace net_mobilewebprint {
     // ---------------------- Telemetry ----------------------
     string                    sessionId;
     mq_manual_timer_t         telemetry_report;
+    uint32                    telemetry_send_time;
 
     map<string, serialization_json_t>      buckets;      // Data common to the bucket
     map<string, jsonlist>     bucketData;   // Data items
@@ -457,6 +458,9 @@ namespace net_mobilewebprint {
   };
 
   struct telemetry_response_t : public upstream_handler_t {
+    controller_base_t & controller;
+    telemetry_response_t(controller_base_t & controller);
+    virtual ~telemetry_response_t();
     virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 

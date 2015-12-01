@@ -71,7 +71,10 @@ namespace net_mobilewebprint {
   extern char const *  skip_past_double_newline(char const *sz, char const * end);
 
   extern bool          _starts_with(string const & str, char const * sz_start);
-  extern bool          _starts_with(char const * sz, char const * sz_start);
+  extern bool          _starts_with(char const *    sz, char const * sz_start);
+
+  extern bool          _contains(string const & str, char const * sub_str);
+  extern bool          _contains(char const *    sz, char const * sub_str);
 
   extern bool          eq(char const * sz1, char const * sz2);
   extern bool          eq(string const & s1, char const * sz2);

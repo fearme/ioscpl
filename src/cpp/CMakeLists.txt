@@ -7,6 +7,40 @@ project("mario_client")
 set(BUILD_NUMBER  $ENV{BUILD_NUMBER})
 set(BUILD_USER    $ENV{USER})
 
+set(MARIO_MAJOR_VERSION   "1.1")
+set(MARIO_VERSION         "1.1.${BUILD_NUMBER}")
+set(MARIO_DATA_FORMAT        11)
+
+set(MARIO_CURL_AGENT "Mario")
+if(NOT ${BUILD_USER} STREQUAL "build")
+  if(${BUILD_USER} STREQUAL "sparksb")
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
+  else()
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
+  endif()
+endif()
+
+
+execute_process(COMMAND git rev-parse HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1 OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE MARIO_GIT_BRANCH_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+if (${MARIO_GIT_BRANCH_NAME} STREQUAL "prod")
+  set(MARIO_STACK_NAME "prod")
+  set(MARIO_DOMAIN_NAME "mobilewebprint.net")
+elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "qa")
+  set(MARIO_STACK_NAME "qa")
+  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "stg")
+  set(MARIO_STACK_NAME "ext")
+  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+else()
+  set(MARIO_STACK_NAME "dev")
+  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+endif()
+
+set(MARIO_DEFAULT_FQDN  "${MARIO_STACK_NAME}.${MARIO_DOMAIN_NAME}")
+
 # TODO: move this to the right place (in an 'if' that knows we are building
 # for MacOSX)
 set(CMAKE_MACOSX_RPATH 1)
@@ -20,6 +54,8 @@ elseif (ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH)
 else()
   message(FATAL_ERROR "Unknown platform.  Exiting.")
 endif()
+
+set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${MARIO_PLATFORM}-${MARIO_GIT_BRANCH_NAME} ${MARIO_VERSION} (${MARIO_GIT_SHA1_SHORT}) libcurl")
 
 #enable_testing()
 

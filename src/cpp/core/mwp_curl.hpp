@@ -114,6 +114,8 @@ namespace net_mobilewebprint {
     size_t              num_recieved;
 
     strlist             headers;
+    int                 parsed_http_code;
+    string              response_content_type;
 
     chunk_t *           request_payload;
     struct curl_slist * req_headers;
