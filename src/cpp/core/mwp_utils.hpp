@@ -88,6 +88,8 @@ namespace net_mobilewebprint {
   extern bool          _normalize_keys(string & parent, string & key);
 
   extern string        format(char const * fmt, ...);
+  extern string        formats(char const * fmt, string const & s1);
+  extern string        formats(char const * fmt, string const & s1, string const & s2);
 
   //-----------------------------------------------------------------------------
   //

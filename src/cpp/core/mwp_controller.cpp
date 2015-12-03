@@ -66,7 +66,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     upload_job_stats(0, 500),
     //job_stats_upload_time(0), job_stats_upload_interval(2000),
     cleanup_time(0, 250),
-    server_command_timer(0, 100, false),
+    server_command_timer(0, 10000, false),
     network_ifaces_timer(0, 2000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
@@ -100,7 +100,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     //send_printer_list_time(0), send_printer_list_interval(2000),
     upload_job_stats(0, 500),
     cleanup_time(0, 250),
-    server_command_timer(0, 100, false),
+    server_command_timer(0, 10000, false),
     network_ifaces_timer(0, 2000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
@@ -213,7 +213,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   if (server_command_timer.has_elapsed(loop_start_data.current_loop_start)) {
     serialization_json_t json;
     json.set("stackName", arg("stackName", ""));
-    send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
+    //string url = formats("netapp::/command/clientId-%s", clientId());
+    string url = "netapp::/command";
+    send_upstream("servercommand", url, json, new server_command_response_t());
   }
 
   if (network_ifaces_timer.has_elapsed(loop_start_data.current_loop_start)) {
@@ -823,11 +825,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
 
     client_start_in_flight_txn_id = -1;
 
-    serialization_json_t json;
-    json.set("stackName", arg("stackName", ""));
-    send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
-    return handled;
+    server_command_timer.trigger();
 
+    return handled;
   }
 
   return handled;
@@ -928,6 +928,20 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
       } else if (item->has_int("$retry.in")) {
         server_command_timer.time = get_tick_count() + item->lookup_int("$retry.in");
         next_has_been_scheduled = true;
+
+      } else if (item->has("$addprinter.ip") && item->has_int("$addprinter.port") && item->has("$addprinter.deviceId")) {
+
+        string const & ip         = item->lookup("$addprinter.ip");
+        string const & device_id  = item->lookup("$addprinter.deviceId");
+        int            port       = item->lookup_int("$addprinter.port");
+
+        log_v(2, "", "adding printer: %s %d %s", ip.c_str(), port, device_id.c_str());
+
+        buffer_t * msg = mq.message("_on_slp_payload");
+        msg->append_strs_sans_null("(mwp-sender=", ip.c_str(), ")");
+        msg->append_strs_sans_null("(mwp-port=", mwp_itoa(port).c_str(), ")");
+        msg->append_strs_sans_null("(x-hp-p1=MFG:HP;MDL:", device_id.c_str(), ";)");
+        mq.send(msg);
 
       // Halt the app
       } else if (item->has_int("$halt.in")) {

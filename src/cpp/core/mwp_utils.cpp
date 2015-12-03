@@ -1316,6 +1316,52 @@ std::string net_mobilewebprint::format(char const * format, ...)
   return result;
 }
 
+std::string net_mobilewebprint::formats(char const * format, std::string const & s1)
+{
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  int cch = snprintf(buffer, sizeof(buffer), format, s1.c_str());
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      snprintf(pbuffer, cch + 1, format, s1.c_str());
+    }
+  }
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
+}
+
+std::string net_mobilewebprint::formats(char const * format, std::string const & s1, std::string const & s2)
+{
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  int cch = snprintf(buffer, sizeof(buffer), format, s1.c_str(), s2.c_str());
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      snprintf(pbuffer, cch + 1, format, s1.c_str(), s2.c_str());
+    }
+  }
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
+}
+
 using net_mobilewebprint::skip_ws;
 using net_mobilewebprint::strmap;
 using net_mobilewebprint::json_t;
