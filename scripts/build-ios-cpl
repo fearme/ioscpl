@@ -36,7 +36,12 @@ xcodebuild -project ${WORKSPACE}/client/src/ios/HPControlledPrint/HPControlledPr
 
 cp -R ${OUTPUT_DIR}/device/ ${OUTPUT_DIR}/release
 cd $OUTPUT_DIR
-lipo $OUTPUT_DIR/simulator/HPControlledPrint.framework/HPControlledPrint $OUTPUT_DIR/device/HPControlledPrint.framework/HPControlledPrint -create -output $OUTPUT_DIR/release/HPControlledPrint.framework/HPControlledPrint
+
+if [ -n "$RELEASE_ONLY" ]; then
+  lipo $OUTPUT_DIR/device/HPControlledPrint.framework/HPControlledPrint -create -output $OUTPUT_DIR/release/HPControlledPrint.framework/HPControlledPrint
+else
+  lipo $OUTPUT_DIR/simulator/HPControlledPrint.framework/HPControlledPrint $OUTPUT_DIR/device/HPControlledPrint.framework/HPControlledPrint -create -output $OUTPUT_DIR/release/HPControlledPrint.framework/HPControlledPrint
+fi
 
 cd $OUTPUT_DIR/release
 zip --recurse-paths HPControlledPrint.framework_0.40_$BUILD_NUMBER.zip HPControlledPrint.framework
