@@ -429,6 +429,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSLog(@"\n\nMetrics URL: %@\n\n", services.postMetricsUrl);
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
     HPPrintJobRequest *tempRequest = [[HPPrintJobRequest alloc] init];
+    tempRequest.tokenId = token;
     [metricsSender send:services.postMetricsUrl withPrintJobRequest:tempRequest forHardwarId:self.uuidHashed forOperation:kOperationNewToken forReason:kReasonNewTokenRegistered forState:kStateNewToken metricsType:kMetricTypeUserData];
     
     HPTokenValidator *validator = [[HPTokenValidator alloc] init];    
