@@ -1,5 +1,8 @@
 package net.mobilewebprint;
 
+import android.content.Intent;
+import android.net.Uri;
+
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
@@ -243,6 +246,20 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
     }
   }
 
+  public void reportIssue(String rootUrl, String params)
+  {
+    String url = rootUrl;
+    if (params != null && !params.isEmpty()) {
+      url = url + params;
+    }
+
+    Client.logD("MobileWebPrint", "report_issue in reportIssue " + url);
+
+    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+    browserIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+    mwp_client.context.startActivity(browserIntent);
+  }
+
   public void setDictionaryItems(String items)
   {
     for (String line: items.split("\n")) {
@@ -315,6 +332,12 @@ public class Application implements PrinterAttributeChangesListener, PrintProgre
       Client.logD("MobileWebPrint", "Sayonara " + s1);
       System.exit(n6);
       return true;
+    }
+
+    if (fName.equals("report_issue")) {
+      if (numStrings != 2) { return false; }
+      Client.logD("MobileWebPrint", "report_issue in Java " + s2);
+      reportIssue(s1, s2);
     }
 
     // Log that we got a message we did not handle

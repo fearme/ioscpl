@@ -910,6 +910,24 @@ net_mobilewebprint::boolmap net_mobilewebprint::true_map(strlist const & list)
   return result;
 }
 
+string net_mobilewebprint::make_search_string(strmap const & query)
+{
+  string result;
+  for (strmap::const_iterator it = query.begin(); it != query.end(); ++it) {
+    if (result.length() > 0) {
+      result += "&";
+    }
+
+    result += it->first + "=" + it->second;
+  }
+
+  if (result.length() > 0) {
+    return string("?") + result;
+  }
+
+  return result;
+}
+
 void net_mobilewebprint::dump(strmap const & dict)
 {
   strmap::const_iterator it;

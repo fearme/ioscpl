@@ -25,18 +25,32 @@ execute_process(COMMAND git rev-parse HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1 OUTPUT
 execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE MARIO_GIT_BRANCH_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# If you build on a 'detached' branch, you get HEAD
+if (${MARIO_GIT_BRANCH_NAME} STREQUAL "HEAD")
+  set(MARIO_GIT_BRANCH_NAME    "$ENV{MARIO_BRANCH}")
+endif()
+
 if (${MARIO_GIT_BRANCH_NAME} STREQUAL "prod")
+
   set(MARIO_STACK_NAME "prod")
   set(MARIO_DOMAIN_NAME "mobilewebprint.net")
-elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "qa")
-  set(MARIO_STACK_NAME "qa")
-  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
-elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "stg")
-  set(MARIO_STACK_NAME "ext")
-  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+  set(MARIO_IS_DEBUG    false)
+  set(MARIO_VERBOSITY   "verbose")
+
 else()
-  set(MARIO_STACK_NAME "dev")
+
   set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+  set(MARIO_IS_DEBUG    true)
+  set(MARIO_VERBOSITY   "vverbose")
+
+  if (${MARIO_GIT_BRANCH_NAME} STREQUAL "qa")
+    set(MARIO_STACK_NAME "qa")
+  elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "stg")
+    set(MARIO_STACK_NAME "ext")
+  else()
+    set(MARIO_STACK_NAME "dev")
+    set(MARIO_VERBOSITY   "vvverbose")
+  endif()
 endif()
 
 set(MARIO_DEFAULT_FQDN  "${MARIO_STACK_NAME}.${MARIO_DOMAIN_NAME}")

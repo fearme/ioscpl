@@ -7,8 +7,8 @@
 #cmakedefine HAVE_PROC_NET_ARP    1
 #cmakedefine HAVE_SIOCGARP        1
 
-#define BUILD_NUMBER              @BUILD_NUMBER@
-#define DATA_FORMAT               @MARIO_DATA_FORMAT@
+#define BUILD_NUMBER               @BUILD_NUMBER@
+#define DATA_FORMAT                @MARIO_DATA_FORMAT@
 
 #define BUILD_NUMBER_STR          "@BUILD_NUMBER@"
 #define BUILD_USER                "@BUILD_USER@"
@@ -21,7 +21,8 @@
 #define MAJOR_VERSION             "@MARIO_MAJOR_VERSION@"
 
 #define MWP_CURL_AGENT            "@MARIO_CURL_AGENT@"
-
 #define MWP_DEFAULT_FQDN          "@MARIO_DEFAULT_FQDN@"
+#define MWP_IS_DEBUG               @MARIO_IS_DEBUG@
+#define MWP_VERBOSITY             "@MARIO_VERBOSITY@"
 
 #endif  // __MWP_CORE_CONFIG_H__

@@ -42,6 +42,7 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
   public  static final int    MSG_PRINTER_LIST      = 3;
   public  static final int    MSG_PRINT_PROGRESS    = 4;
   public  static final int    MSG_SEND_JOB          = 5;
+  public  static final int    MSG_SEND_IMMEDIATELY  = 6;
 
   private static final String TAG                   = "MobileWebPrintService";
 
@@ -115,6 +116,10 @@ public class PrintManagerService extends Service implements net.mobilewebprint.P
 
         case MSG_SEND_JOB:
           mwp_client.sendJob(msg.getData().getString("url"), msg.getData().getString("ip"));
+          break;
+
+        case MSG_SEND_IMMEDIATELY:
+          mwp_client.sendImmediately(msg.getData().getString("name"), msg.getData().getString("payload"));
           break;
 
         default:

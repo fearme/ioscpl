@@ -71,7 +71,7 @@ zip --recurse-paths ${WORKSPACE}/client/deliveries/${OS}/${PLATFORM}/${DEBUG_REL
 cd ${WORKSPACE}/client/deliveries/${OS}
 mv ${PLATFORM}/${DEBUG_RELEASE}/mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip ./
 
-cp mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip mwp_sap_cpl-android-device_1.1-latest.zip
+cp mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-${BUILD_NUMBER}.zip mwp_sap_cpl-${OS}-${PLATFORM}-${DEBUG_RELEASE}_1.1-latest.zip
 
 #rm    ${PLATFORM}/${DEBUG_RELEASE}/libs/*
 #rmdir ${PLATFORM}/${DEBUG_RELEASE}/libs

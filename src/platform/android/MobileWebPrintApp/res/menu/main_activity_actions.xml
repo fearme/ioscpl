@@ -4,5 +4,9 @@
 
     <item android:id="@+id/action_death"
           android:title="exit" />
+
+    <item android:id="@+id/action_report_issue"
+          android:title="Report issue" />
+
 </menu>
 

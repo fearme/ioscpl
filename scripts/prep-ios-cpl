@@ -58,7 +58,7 @@ fi
 test -z "$BUILD" && die "Need --build=x or --build=latest"
 test -d "/tmp/"  || die "No /tmp dir???"
 
-zip_name="mwp_sap_cpl-ios-fat-${DEB_REL}_1.1-${BUILD}.zip"
+zip_name="mwp_sap_cpl-ios-device-${DEB_REL}_1.1-${BUILD}.zip"
 
 cd /tmp/ && rm -rf prep-ios-cpl
 mkdir -p prep-ios-cpl && cd $_

@@ -161,6 +161,8 @@ namespace net_mobilewebprint {
 
   extern boolmap    true_map(strlist const & list);
 
+  extern string     make_search_string(strmap const & map);
+
   extern string     JSON_stringify(strmap const & dict, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);
   extern string     JSON_debug_string(strmap const & dict, strlist const & keys, strlist const & key_order, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);
   extern bool       JSON_parse(json_t & out, string const & json);

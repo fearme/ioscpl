@@ -195,6 +195,14 @@ public class MainActivity extends Activity {
         System.exit(1);
         return true;
 
+      case R.id.action_report_issue:
+        Bundle bundle = new Bundle();
+        bundle.putString("name", "report_issue");
+        bundle.putString("payload", "");
+
+        serviceBridge.sendMessageToService(PrintManagerService.MSG_SEND_IMMEDIATELY, bundle);
+        return true;
+
       default:
         return super.onOptionsItemSelected(item);
     }
