@@ -1,35 +1,71 @@
+#
+#
+# This is the root CMakeLists.txt file for Mario-client.
+#
+# It uses the following ENV-vars, if available.
+#   $BUILD_NUMBER
+#                     -- The Build number from Jenkins (or '1' if building locally.)
+#   $USER
+#                     -- The Build user
+#   $MARIO_BRANCH
+#                     -- The git branch name being built
+#
+#
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 #set(CMAKE_USE_RELATIVE_PATHS ON FORCE)
 
 project("mario_client")
 
+# ====================================================================================================
+# Figure out our build variables
+# ====================================================================================================
+
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${BUILD_NUMBER}           -- The Jenkins build number
+#   ${BUILD_USER}             -- The username of the build user ("Build" for jenkins builds, $USER otherwise)
+#
 set(BUILD_NUMBER  $ENV{BUILD_NUMBER})
 set(BUILD_USER    $ENV{USER})
 
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_MAJOR_VERSION}    -- Like "1.1"
+#   ${MARIO_VERSION}          -- Like "1.1.57"
+#   ${MARIO_DATA_FORMAT}
+#       11 -- the version for Mario 1.1
+#
 set(MARIO_MAJOR_VERSION   "1.1")
 set(MARIO_VERSION         "1.1.${BUILD_NUMBER}")
 set(MARIO_DATA_FORMAT        11)
 
-set(MARIO_CURL_AGENT "Mario")
-if(NOT ${BUILD_USER} STREQUAL "build")
-  if(${BUILD_USER} STREQUAL "sparksb")
-    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
-  else()
-    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
-  endif()
-endif()
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_GIT_SHA1}         -- The long SHA1 of the commit that we are building
+#   ${MARIO_GIT_SHA1_SHORT}   -- The short SHA1 of the commit that we are building
+#
+execute_process(COMMAND git rev-parse HEAD                OUTPUT_VARIABLE MARIO_GIT_SHA1          OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git rev-parse --short HEAD        OUTPUT_VARIABLE MARIO_GIT_SHA1_SHORT    OUTPUT_STRIP_TRAILING_WHITESPACE)
 
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_GIT_BRANCH_NAME}  -- The branch name we are building
+#
+execute_process(COMMAND git rev-parse --abbrev-ref HEAD   OUTPUT_VARIABLE MARIO_GIT_BRANCH_NAME   OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-execute_process(COMMAND git rev-parse HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1 OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE MARIO_GIT_BRANCH_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-# If you build on a 'detached' branch, you get HEAD
+# If you build on a 'detached' branch, you get "HEAD", so re-compute, if possible
 if (${MARIO_GIT_BRANCH_NAME} STREQUAL "HEAD")
   set(MARIO_GIT_BRANCH_NAME    "$ENV{MARIO_BRANCH}")
 endif()
 
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_STACK_NAME}     -- The name of the stack that the client will attach to by default
+#   ${MARIO_DOMAIN_NAME}    -- The domain name of the stack that the client will attach to by default
+#   ${MARIO_IS_DEBUG}       -- Is this a 'debug' build?
+#   ${MARIO_VERBOSITY}      -- What is the default verbosity of the output logging
+#
 if (${MARIO_GIT_BRANCH_NAME} STREQUAL "prod")
 
   set(MARIO_STACK_NAME "prod")
@@ -53,12 +89,35 @@ else()
   endif()
 endif()
 
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_DEFAULT_FQDN}     -- The fully-qualified-domain-name that we are attaching to.
+#
 set(MARIO_DEFAULT_FQDN  "${MARIO_STACK_NAME}.${MARIO_DOMAIN_NAME}")
 
-# TODO: move this to the right place (in an 'if' that knows we are building
-# for MacOSX)
-set(CMAKE_MACOSX_RPATH 1)
+# ----------------------------------------------------------------------------------------------------
+# Compute:
+#   ${MARIO_CURL_AGENT}       -- The User-Agent for mario-client requests
+#
+set(MARIO_CURL_AGENT "Mario")
+if(NOT ${BUILD_USER} STREQUAL "build")
+  if(${BUILD_USER} STREQUAL "sparksb")
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
+  else()
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
+  endif()
+endif()
 
+set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${MARIO_PLATFORM}-${MARIO_GIT_BRANCH_NAME} ${MARIO_VERSION} (${MARIO_GIT_SHA1_SHORT}) libcurl")
+
+# ----------------------------------------------------------------------------------------------------
+# Determine which platform we are building for.
+#
+#   ${MARIO_PLATFORM}
+#                       -- 'ios'      == Building for iOS
+#                       -- 'macosx'   == Building for Mac
+#                       -- 'android'  == Building for Android
+#
 if(IOS)
   set(MARIO_PLATFORM "ios")
 elseif (APPLE)
@@ -69,16 +128,26 @@ else()
   message(FATAL_ERROR "Unknown platform.  Exiting.")
 endif()
 
-set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${MARIO_PLATFORM}-${MARIO_GIT_BRANCH_NAME} ${MARIO_VERSION} (${MARIO_GIT_SHA1_SHORT}) libcurl")
-
+# ----------------------------------------------------------------------------------------------------
+# Turn testing on
+#
 #enable_testing()
 
-# Sources and includes are:
-#   1. In a sub-dir of this file -- ./core/
-#   2. In this file's dir
+# ----------------------------------------------------------------------------------------------------
+# Add the directories for the modules:
+#
+#     mario_root/client/src/cpp/core          -- The core of the mario-client implementation
+#     mario_root/client/src/cpp/cpl           -- The controlled-print-library extensions
+#     mario_root/client/src/cpp/aprotocols    -- The 'raw' networking protocols (the 'a' is just to put them at the top of a sorted list)
+#     mario_root/client/src/cpp/objc          -- The Objective-C interoperability layer
+#
+# Also, add includes:
+#     mario_root/client/src/cpp/curl          -- The cUrl header libraries
+#
+# Note: Adding ${PROJECT_BINARY_DIR} versions will also add the CMake-generated files to be found (*.h.in)
+#
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-# ./core/CMakeLists.txt defines the "mwpcore" static library
 include_directories(core)
 include_directories(curl)
 include_directories(cpl)
@@ -96,19 +165,17 @@ include_directories("${PROJECT_BINARY_DIR}/aprotocols")
 add_subdirectory(objc)
 include_directories("${PROJECT_BINARY_DIR}/objc")
 
-# Use the NULL curl implementation, if another better one does not show up
-set(MARIO_CURL_CPP "core/mwp_curl_null.cpp")
-
+# ====================================================================================================
 # Set some key mario-specific variables
 #
-#   MARIO_BASE_CPP      -- The base implementation of the system-specific platform code (like POSIX works for Android and Darwin)
+#   MARIO_CURL_CPP      -- The CPP file to use for controlling curl
 #   MARIO_PLATFORM_DIR  -- The system-specific platform code
 #   MARIO_PLATFORM_LOG  -- A platform-specific implementation of the log_d type functions
 #   MARIO_APP           -- Is this for an app?  (Something that runs on a mobile, as opposed to running on a desktop.)
 #   MARIO_APP_SHARED    -- If it is for an app, do we want static libs, or shared?
-#   MARIO_CURL_CPP      -- The CPP file to use for controlling curl
 
-set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
+# Use the NULL curl implementation, if another better one does not show up
+set(MARIO_CURL_CPP "core/mwp_curl_null.cpp")
 
 # What platform are we on?
 if(${MARIO_PLATFORM} STREQUAL "ios")
@@ -122,6 +189,7 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
   set(MARIO_PLATFORM_LOG platform/darwin)
   set(MARIO_APP False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
+  set(CMAKE_MACOSX_RPATH 1)
 elseif (${MARIO_PLATFORM} STREQUAL "android")
   set(MARIO_PLATFORM_DIR platform/android)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
@@ -130,6 +198,12 @@ elseif (${MARIO_PLATFORM} STREQUAL "android")
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 endif()
 
+# ====================================================================================================
+# Build up the platform-specific list of sources
+#
+#   MARIO_PLATFORM_SOURCES      -- List of source files that are specific for the platform
+#
+set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
 set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario_sys.cpp)
 
 if(${MARIO_PLATFORM} STREQUAL "ios")
@@ -140,7 +214,13 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
 endif()
 
-# Build the main library
+# ====================================================================================================
+# Build the main library and/or the cli utility
+# ====================================================================================================
+
+# ----------------------------------------------------------------------------------------------------
+# Build iOS
+#
 if(${MARIO_PLATFORM} STREQUAL "ios")
 
   add_library(mwp
@@ -150,6 +230,28 @@ if(${MARIO_PLATFORM} STREQUAL "ios")
 
   target_link_libraries(mwp mwpcore mwpcoreprotos cpl mwpobjcinterop)
 
+# ----------------------------------------------------------------------------------------------------
+# Build Android
+#
+elseif (${MARIO_PLATFORM} STREQUAL "android")
+
+  find_package(ZLIB REQUIRED)
+  if (ZLIB_FOUND)
+    include_directories(${ZLIB_INCLUDE_DIRS})
+
+    add_library(mwp SHARED
+                ${MARIO_PLATFORM_SOURCES}
+                ${MARIO_CURL_CPP}
+                ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
+
+    target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
+                ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/${ANDROID_ABI}/libcurl.a
+                ${ZLIB_LIBRARIES})
+  endif()
+
+# ----------------------------------------------------------------------------------------------------
+# Build Mac
+#
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
 
   find_package(CURL REQUIRED)
@@ -167,24 +269,6 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
                           "-framework IOKit"
                           "-framework AppKit"
                           "-framework SystemConfiguration")
-
-
-
-elseif (${MARIO_PLATFORM} STREQUAL "android")
-
-  find_package(ZLIB REQUIRED)
-  if (ZLIB_FOUND)
-    include_directories(${ZLIB_INCLUDE_DIRS})
-
-    add_library(mwp SHARED
-                ${MARIO_PLATFORM_SOURCES}
-                ${MARIO_CURL_CPP}
-                ${MARIO_PLATFORM_LOG}/mario_logging.cpp)
-
-    target_link_libraries(mwp mwpcore mwpcoreprotos cpl log
-                ${CMAKE_CURRENT_SOURCE_DIR}/platform/android/libs/${ANDROID_ABI}/libcurl.a
-                ${ZLIB_LIBRARIES})
-  endif()
 
 endif()
 
