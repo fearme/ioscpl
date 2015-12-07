@@ -85,43 +85,24 @@ extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setSecureMode(J
   secure = true;
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_startUp(JNIEnv *env, jobject self)
+// ----------------------------------------------------------------------------------------------
+// hp_mwp_get_option() et. al.
+// ----------------------------------------------------------------------------------------------
+extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_getOption(JNIEnv *env, jobject self, jstring name, jstring def)
 {
-  log_d("Client::start");
-  storeClient(env, self, NULL);
-
-  //get_api()->set_option("quiet", false);
-  //get_api()->set_option("vvverbose", true);
-  //get_api()->set_option("fast-fail", true);
-
-  if (!secure) {
-    core_api()->register_handler("printer_list", NULL, mwp_app_callback);
-  } else {
-    sap_api()->register_handler("printer_list", NULL, sap_app_callback);
-  }
-
-  return get_api()->start(/* start_scanning= */ true, /* block= */ false);
+  get_api()->get_option(to_string(env, name).c_str(), to_string(env, def).c_str());
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_reScan(JNIEnv *env, jobject self)
+extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_getIntOption(JNIEnv *env, jobject self, jstring name, jint def)
 {
-  log_d("Client::reScan");
-
-  return get_api()->reScan();
+  get_api()->get_int_option(to_string(env, name).c_str(), def);
 }
 
-extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendJob(JNIEnv *env, jobject self, jstring url, jstring printer_ip)
+extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_getFlag(JNIEnv *env, jobject self, jstring name, jboolean jdef)
 {
-  return get_api()->send_job(to_string(env, url).c_str(), to_string(env, printer_ip).c_str());
+  bool def = (bool)jdef;
+  get_api()->get_bool_option(to_string(env, name).c_str(), def);
 }
-
-
-extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendImmediately(JNIEnv *env, jobject self, jstring msg_name, jstring payload)
-{
-  return get_api()->send_immediately(to_string(env, msg_name).c_str(), to_string(env, payload).c_str());
-}
-
-
 
 extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_setOption(JNIEnv *env, jobject self, jstring name, jstring value)
 {
@@ -143,6 +124,66 @@ extern "C" JNIEXPORT void JNICALL Java_net_mobilewebprint_Client_clearFlag(JNIEn
 {
   get_api()->set_option(to_string(env, name).c_str(), false);
 }
+
+// ----------------------------------------------------------------------------------------------
+// hp_mwp_start()
+// ----------------------------------------------------------------------------------------------
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_startUp(JNIEnv *env, jobject self)
+{
+  log_d("Client::start");
+  storeClient(env, self, NULL);
+
+  //get_api()->set_option("quiet", false);
+  //get_api()->set_option("vvverbose", true);
+  //get_api()->set_option("fast-fail", true);
+
+  if (!secure) {
+    core_api()->register_handler("printer_list", NULL, mwp_app_callback);
+  } else {
+    sap_api()->register_handler("printer_list", NULL, sap_app_callback);
+  }
+
+  return get_api()->start(/* start_scanning= */ true, /* block= */ false);
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_mqIsDone(JNIEnv *env, jobject self)
+{
+  return get_api()->mq_is_done();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_reScan(JNIEnv *env, jobject self)
+{
+  log_d("Client::reScan");
+
+  return get_api()->re_scan();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendFullPrinterList(JNIEnv *env, jobject self)
+{
+  return get_api()->send_full_printer_list();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendJob(JNIEnv *env, jobject self, jstring url, jstring printer_ip)
+{
+  return get_api()->send_job(to_string(env, url).c_str(), to_string(env, printer_ip).c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_print(JNIEnv *env, jobject self, jstring url)
+{
+  return get_api()->print(to_string(env, url).c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_send(JNIEnv *env, jobject self, jstring msg_name, jstring payload)
+{
+  return get_api()->app_send(to_string(env, msg_name).c_str(), to_string(env, payload).c_str());
+}
+
+extern "C" JNIEXPORT jboolean JNICALL Java_net_mobilewebprint_Client_sendImmediately(JNIEnv *env, jobject self, jstring msg_name, jstring payload)
+{
+  return get_api()->send_immediately(to_string(env, msg_name).c_str(), to_string(env, payload).c_str());
+}
+
+
 
 // ===================================================================================================================================
 //             End Client JNI methods
@@ -280,6 +321,38 @@ int app_callback(void * app_data, char const * msg, int ident, int32 transaction
         getEnv()->DeleteLocalRef(jdiffs);
       }
     }
+
+  } else if (strcmp(msg, "report_issue") == 0) {
+
+    // Any message that takes 2 strings and no ints
+    if (setDictionaryItemsId != NULL && sendMessageId != NULL) {
+      string diffs;
+      int num_diffs = 0;
+
+      int n_msg = ensure_is_in(msg, diffs, num_diffs);
+      int n1    = ensure_is_in((char const *)p1, diffs, num_diffs);
+      int n2    = ensure_is_in((char const *)(params != NULL && params->p2 != NULL ? (char const *)params->p2 : ""), diffs, num_diffs);
+      int n3    = 0;
+
+      int n4    = 0;
+      int n5    = 0;
+      int n6    = 0;
+      int n7    = 0;
+
+
+      jstring jdiffs;
+      if (num_diffs > 0) {
+        jdiffs = to_jstring(diffs);
+        getEnv()->CallVoidMethod(jApplication, setDictionaryItemsId, jdiffs);
+      }
+
+      getEnv()->CallBooleanMethod(jApplication, sendMessageId, n_msg, 2, n1, n2, n3, n4, n5, n6, n7);
+
+      if (num_diffs > 0) {
+        getEnv()->DeleteLocalRef(jdiffs);
+      }
+    }
+
   } else if (strcmp(msg, "Halt_Mario") == 0) {
     string diffs;
     int num_diffs = 0;

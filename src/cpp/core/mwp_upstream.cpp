@@ -28,12 +28,12 @@ std::string net_mobilewebprint::upstream_t::send(string const & mod_name, string
 }
 
 #if 0
-std::string net_mobilewebprint::upstream_t::send(string const & mod_name, string const & endpoint, string const & body)
+std::string net_mobilewebprint::upstream_t::send(string const & mod_name, string const & endpoint, string const & body, stats_t const & stats)
 {
   uint32 txn_id    = controller._unique();
   string txn_name  = mod_name + ":" + mwp_itoa(txn_id);
 
-  send(endpoint, body, txn_name, "_upstream_response");
+  send(endpoint, body, txn_name, "_upstream_response", stats);
 
   return txn_name;
 }
@@ -54,14 +54,35 @@ void net_mobilewebprint::upstream_t::send(string const & endpoint, serialization
   responses[txn_id] = new upstream_response_t(txn_name, message_name, stats);
 }
 
-#if 0
-void net_mobilewebprint::upstream_t::send(string const & endpoint, string const & body, string const & txn_name, string const & message_name)
+std::string net_mobilewebprint::upstream_t::send(string const & endpoint, string const & body, string content_type, string const & message_name, stats_t const & stats)
 {
-  uint32 txn_id = controller.curl_http_post(endpoint, body);
-
-  responses[txn_id] = new upstream_response_t(txn_name, message_name, stats_t());
+  uint32 txn_id    = controller._unique();
+  string txn_name = message_name + "/" + mwp_itoa(txn_id);
+  send(endpoint, body, content_type, txn_name, message_name, stats);
+  return txn_name;
 }
-#endif
+
+void net_mobilewebprint::upstream_t::send(string const & endpoint, string const & body, string content_type, string const & txn_name, string const & message_name, stats_t const & stats)
+{
+  uint32 txn_id = controller.curl_http_post(endpoint, body, content_type);
+
+  responses[txn_id] = new upstream_response_t(txn_name, message_name, stats);
+}
+
+std::string net_mobilewebprint::upstream_t::send_local(string ip, int port, string path, string const & body, string content_type, string const & message_name, stats_t const & stats)
+{
+  uint32 txn_id    = controller._unique();
+  string txn_name = message_name + "/" + mwp_itoa(txn_id);
+  send_local(ip, port, path, body, content_type, txn_name, message_name, stats);
+  return txn_name;
+}
+
+void net_mobilewebprint::upstream_t::send_local(string ip, int port, string path, string const & body, string content_type, string const & txn_name, string const & message_name, stats_t const & stats)
+{
+  uint32 txn_id = controller.curl_local_send(ip, port, path, body, content_type, "POST");
+
+  responses[txn_id] = new upstream_response_t(txn_name, message_name, stats);
+}
 
 std::string net_mobilewebprint::upstream_t::get(string const & endpoint, string const & message_name, stats_t const & stats)
 {
@@ -207,6 +228,24 @@ bool net_mobilewebprint::upstream_t::parse_response(buffer_view_i const & payloa
   }
 
   return true;
+}
+
+std::string net_mobilewebprint::upstream_t::parse_response(buffer_view_i const & payload, int & code, string & http_version, strmap & headers, string & body_str, json_t & json, json_array_t & json_array, stats_t & stats_out)
+{
+  if (!parse_response(payload, code, http_version, headers, body_str, stats_out)) { return ""; }
+
+  /* otherwise */
+  string content_type("");
+  if (_has(headers, "content-type")) {
+    content_type = headers["content-type"];
+  }
+
+  if (content_type == "application/json") {
+    JSON_parse(json, body_str);
+    JSON_parse_array(json_array, body_str);
+  }
+
+  return content_type;
 }
 
 bool net_mobilewebprint::upstream_t::parse_response(buffer_view_i const & payload, int & code, string & http_version, strmap & headers, json_t & json, stats_t & stats_out)

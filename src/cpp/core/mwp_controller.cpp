@@ -56,6 +56,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -65,23 +66,23 @@ net_mobilewebprint::controller_base_t::controller_base_t(mwp_app_callback_t *)
     upload_job_stats(0, 500),
     //job_stats_upload_time(0), job_stats_upload_interval(2000),
     cleanup_time(0, 250),
-    server_command_timer(0, 100, false),
-    network_ifaces_timer(0, 6000),
+    server_command_timer(0, 10000, false),
+    network_ifaces_timer(0, 2000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
+    telemetry_send_time(0),
     heartbeat_timer(0, 20000)
 {
-  mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  //sap_app_callbacks_ = new sap_app_cb_list_t();
+  mwp_app_callbacks_   = new mwp_app_cb_list_t();
+  mwp_app_hf_callbacks = new mwp_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
+  set_flag("is_debug", MWP_IS_DEBUG);
 
   mq.on(this);
 }
@@ -91,6 +92,7 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     printers(*this), upstream(*this), unique_number(1000),
     client_start_in_flight_txn_id(0),
     mwp_app_callbacks_(NULL), sap_app_callbacks_(NULL),
+    mwp_app_hf_callbacks(NULL), sap_app_hf_callbacks(NULL),
     mwp_app_bootstraps_(new mwp_app_cb_list_t()), sap_app_bootstraps_(new sap_app_cb_list_t()),
     mq_report(0, 1000),
     //alloc_report(0, 500),
@@ -99,23 +101,23 @@ net_mobilewebprint::controller_base_t::controller_base_t(sap_app_callback_t *)
     //send_printer_list_time(0), send_printer_list_interval(2000),
     upload_job_stats(0, 500),
     cleanup_time(0, 250),
-    server_command_timer(0, 100, false),
-    network_ifaces_timer(0, 6000),
+    server_command_timer(0, 10000, false),
+    network_ifaces_timer(0, 2000),
     delayed_http_requests(new std::deque<controller_http_request_t>()),
     scan_start_time(0),
     telemetry_report(0, 15000),
+    telemetry_send_time(0),
     heartbeat_timer(0, 20000)
 {
-  //mwp_app_callbacks_ = new mwp_app_cb_list_t();
-  sap_app_callbacks_ = new sap_app_cb_list_t();
+  sap_app_callbacks_   = new sap_app_cb_list_t();
+  sap_app_hf_callbacks = new sap_app_hf_cb_list_t();
 
   // I'm here!
   g_controller = this;
   log_d(1, "", "%d controllers", ++num_controllers);
 
   get_tick_count();     // Starts the clock
-  set_flag("log_api", true);
-  set_flag("vvverbose", true);
+  set_flag("is_debug", MWP_IS_DEBUG);
 
   mq.on(this);
 }
@@ -168,6 +170,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     printers.cleanup();
   }
 
+  if (mwp_app_hf_callbacks) {
+    for (mwp_app_hf_cb_list_t::const_iterator it = mwp_app_hf_callbacks->begin(); it != mwp_app_hf_callbacks->end(); ++it) {
+      hp_mwp_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_start, NULL);
+      }
+    }
+  }
+
+  if (sap_app_hf_callbacks) {
+    for (sap_app_hf_cb_list_t::const_iterator it = sap_app_hf_callbacks->begin(); it != sap_app_hf_callbacks->end(); ++it) {
+      hp_sap_hf_callback_t app_cb   = it->second.callback;
+      void *               app_data = it->second.app_data;
+      string const &       app_name = it->second.name;
+
+      if (app_cb) {
+        app_cb(app_data, app_name.c_str(), loop_start_data.current_loop_num, loop_start_data.current_loop_num, NULL);
+      }
+    }
+  }
+
   if (delayed_http_requests != NULL) {
     if (client_start_in_flight_txn_id == -1) {
       // Flush all delayed jobs
@@ -189,7 +215,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
   if (server_command_timer.has_elapsed(loop_start_data.current_loop_start)) {
     serialization_json_t json;
     json.set("stackName", arg("stackName", ""));
-    send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
+    //string url = formats("netapp::/command/clientId-%s", clientId());
+    string url = "netapp::/command";
+    send_upstream("servercommand", url, json, new server_command_response_t());
   }
 
   if (network_ifaces_timer.has_elapsed(loop_start_data.current_loop_start)) {
@@ -277,8 +305,11 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::on_se
     //log_v(2, "", "Sending telemetry? size: %d", sent.size());
     if (sent.size() > 0) {
       if (flag("telemetry", TELEMETRY_DEFAULT)) {
+
+        telemetry_send_time = get_tick_count();
+
         string pathname = string("/telemetry?count=") + mwp_itoa(count) + "&uptime=" + mwp_itoa(loop_start_data.current_loop_start) /* + "&clientId=" + clientId() */;
-        send_upstream("telemetry", pathname, json, new telemetry_response_t());
+        send_upstream("telemetry", pathname, json, new telemetry_response_t(*this));
       }
 
       // We have sent it, now reset the data
@@ -368,6 +399,12 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::handl
  */
 bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool block)
 {
+  // The app wants to control the verbosity?
+  if (!flag("app_verbosity", false)) {
+    set_flag("log_api", true);
+    set_flag(MWP_VERBOSITY, true);
+  }
+
   // Seed the PRNG
   uint32 tm = 0;
   uint32 hash = tm = (int)time(NULL);
@@ -453,16 +490,16 @@ bool net_mobilewebprint::controller_base_t::start(bool start_scanning, bool bloc
 void net_mobilewebprint::controller_base_t::show_options()
 {
 
-  log_d("Starting; options:");
+  log_v(3, "", "Starting; options:");
   for (strmap::const_iterator it = ARGS.args.begin(); it != ARGS.args.end(); ++it) {
-    log_d("    %s: |%s|", it->first.c_str(), it->second.c_str());
+    log_v(3, "", "    %s: |%s|", it->first.c_str(), it->second.c_str());
   }
-  log_d("            flags:");
+  log_v(3, "", "            flags:");
   for (set<string>::const_iterator it = ARGS.flags.begin(); it != ARGS.flags.end(); ++it) {
-    log_d("    %s", (*it).c_str());
+    log_v(3, "", "    %s", (*it).c_str());
   }
   for (set<string>::const_iterator it = ARGS.antiFlags.begin(); it != ARGS.antiFlags.end(); ++it) {
-    log_d("   !%s", (*it).c_str());
+    log_v(3, "", "   !%s", (*it).c_str());
   }
 
 }
@@ -472,7 +509,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_up_a
   log_d(1, "controller_t", "Controller is up and running");
 
   serialization_json_t json;
-  client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+  client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
   return handled;
 }
 
@@ -481,6 +518,13 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url,
   uint32 txn_id = _unique();
 
   return curl_http_post(url, json, txn_id);
+}
+
+uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url, string const & body, string content_type)
+{
+  uint32 txn_id = _unique();
+
+  return curl_http_post(url, body, content_type, txn_id);
 }
 
 uint32 net_mobilewebprint::controller_base_t::curl_http_get(string const & url)
@@ -507,38 +551,74 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url,
   return txn_id;
 }
 
+uint32 net_mobilewebprint::controller_base_t::curl_http_post(string const & url, string const & body, string content_type, uint32 txn_id)
+{
+  //log_v(4, "controller_t", "Controller POSTING to %s", url.c_str());
+
+  // If we are still resolving /clientStart, then just remember this request
+  if (delayed_http_requests == NULL) {
+    log_v(4, "", "Not Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
+    return curl_http_post(controller_http_request_t(txn_id, "POST", url, body, content_type));
+  }
+
+  /* otherwise */
+  log_v(4, "", "Queueing request %d - %s |%s|", txn_id, "POST", url.c_str());
+  delayed_http_requests->push_back(controller_http_request_t(txn_id, "POST", url, body, content_type));
+  return txn_id;
+}
+
+uint32 net_mobilewebprint::controller_base_t::curl_local_send(string ip, int port, string path, string const & body, string content_type, string verb)
+{
+  curl.fetch_local(ip, port, path, body, content_type, _unique(), verb);
+}
+
 uint32 net_mobilewebprint::controller_base_t::curl_http_post(controller_http_request_t const & request)
 {
-  serialization_json_t json(request.json_body);
+  if (request.body.length() == 0) {
+    serialization_json_t json(request.json_body);
 
-  json.set("clientId", clientId());
-  json.set("sessionId", sessionId);
+    json.set("clientId", clientId());
+    json.set("sessionId", sessionId);
 
-  // TODO: this does not belong on every POST, move it to those that make sense
-  json.set("provider", arg("providerName", "HP_CP"));
+    // TODO: this does not belong on every POST, move it to those that make sense
+    json.set("provider", arg("providerName", "HP_CP"));
 
-  json.set("meta.platform", platform_name());
-  json.set("meta.version", "1.1");
-  json.set("meta.build", BUILD_NUMBER);
-  json.set("meta.dataFormat", 11);
+    json.set("meta.platform",   platform_name());
+    json.set("meta.version",    MAJOR_VERSION);
+    json.set("meta.build",      BUILD_NUMBER);
+    json.set("meta.sha1",       SOURCE_GIT_SHA1);
+    json.set("meta.sha1_short", SOURCE_GIT_SHA1_SHORT);
+    json.set("meta.branch",     SOURCE_GIT_BRANCH_NAME);
+    json.set("meta.dataFormat", DATA_FORMAT);
 
-  if (arg("username", "").length() > 0) {
-    json.set("meta.username", arg("username", "noname@example.com"));
+    if (arg("stackName", "").length() > 0) {
+      json.set("meta.stackName",  arg("stackName"));
+    }
+
+    if (arg("username", "").length() > 0) {
+      json.set("meta.username", arg("username", "noname@example.com"));
+    }
+
+    if (flag("zdebug", false)) {
+      json.set("meta.zdebug", true);
+    }
+
+    // TODO: Remove this after netapp_command.js recognizes ".clientId" on stg/prod
+    if (request.url == "netapp::/command") {
+      json.set("meta.deviceid", clientId());
+    }
+
+    log_vs(5, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
+
+    if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
+      mini_curl.post_mwp_server(json, request.url, request.txn_id);
+    }
+    return request.txn_id;
   }
 
-  if (flag("zdebug", false)) {
-    json.set("meta.zdebug", true);
-  }
-
-  // TODO: Remove this after netapp_command.js recognizes ".clientId" on stg/prod
-  if (request.url == "netapp::/command") {
-    json.set("meta.deviceid", clientId());
-  }
-
-  log_vs(5, "controller_t", "Controller POSTING to (%s_%s) %s", curl.server_name, request.url, json.stringify());
-
-  if (curl.post_mwp_server(json, request.url, request.txn_id) == NULL) {
-    mini_curl.post_mwp_server(json, request.url, request.txn_id);
+  /* otherwise */
+  if (curl.post_mwp_server(request.body, request.url, request.content_type, request.txn_id) == NULL) {
+    //mini_curl.post_mwp_server(request.body, request.url, request.txn_id);
   }
   return request.txn_id;
 }
@@ -557,6 +637,15 @@ uint32 net_mobilewebprint::controller_base_t::curl_http_get(string const & url, 
 std::string net_mobilewebprint::controller_base_t::send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json, upstream_handler_t * handler)
 {
   string stream_name = upstream.send(mod_name, endpoint, json);
+
+  upstream_messages.insert(make_pair(stream_name, handler));
+
+  return stream_name;
+}
+
+std::string net_mobilewebprint::controller_base_t::send_local(string ip, int port, string path, string const & body, string content_type, upstream_handler_t * handler)
+{
+  string stream_name = upstream.send_local(ip, port, path, body, content_type, "localsend", stats_t());
 
   upstream_messages.insert(make_pair(stream_name, handler));
 
@@ -650,21 +739,30 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
       }
     }
 
-    if (json.lookup_bool("ok")) {
+    if (json.lookup_bool("ok") || json.lookup_bool("final")) {
 
       // singleNodeName means to stop looking, and just use it
       if (json.has("pclHost.singleNodeName")) {
-        curl.server_name = json.lookup("pclHost.singleNodeName");
+        curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        set_arg("pcl.servername", json.lookup("pclHost.singleNodeName"));
 
       // pclServerName means to ask that server permission
       } else if (json.has("pclHost.pclServerName")) {
-        string new_server_name = json.lookup("pclHost.pclServerName");
 
-        if (curl.server_name != new_server_name) {
-          curl.server_name = new_server_name;
-          serialization_json_t json;
-          client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
-          return handled;
+        if (json.lookup_bool("final")) {
+          curl.server_name      = json.lookup("pclHost.pclServerName");
+
+        } else {
+
+          string new_server_name = json.lookup("pclHost.pclServerName");
+
+          if (curl.server_name != new_server_name) {
+            curl.server_name = new_server_name;
+            serialization_json_t json;
+            client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
+            return handled;
+          }
         }
       }
 
@@ -707,7 +805,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
       if (new_server_name.length() > 0) {
         curl.server_name = new_server_name;
         serialization_json_t json;
-        client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER), json);
+        client_start_in_flight_txn_id = _make_http_post("/clientStart", D("clientId", clientId(), "v", BUILD_NUMBER_STR), json);
         return handled;
       }
     }
@@ -717,6 +815,8 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
     set_arg("upstreamServer",     curl.server_name);
     set_arg("fallbackServiceOne", curl.server_name);
     set_arg("fallbackServiceTwo", curl.server_name);
+
+    set_arg("upstreamServerEx",   replace(curl.server_name, ".mobile", "ex.mobile"));
 
     size_t end_of_stack_name = curl.server_name.find_first_of("-.");
     if (end_of_stack_name != string::npos) {
@@ -733,11 +833,9 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_t
 
     client_start_in_flight_txn_id = -1;
 
-    serialization_json_t json;
-    json.set("stackName", arg("stackName", ""));
-    send_upstream("servercommand", "netapp::/command", json, new server_command_response_t());
-    return handled;
+    server_command_timer.trigger();
 
+    return handled;
   }
 
   return handled;
@@ -748,10 +846,15 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::proce
   int http_resp_code = 0;
   string http_version;
   strmap headers;
-  json_array_t json;
+  string body;
+  json_t json;
+  json_array_t json_array;
   stats_t stats;
+  string content_type;
 
-  if (upstream.parse_response(payload, http_resp_code, http_version, headers, json, stats)) {
+  content_type = upstream.parse_response(payload, http_resp_code, http_version, headers, body, json, json_array, stats);
+  log_vs(4, "", "upstream response type: |%s|, version: |%s|", content_type, http_version);
+  if (content_type.length() > 0) {
 
     upstream_handler_map_t::iterator it = upstream_messages.find(extra.txn_name);
     if (it != upstream_messages.end()) {
@@ -759,58 +862,97 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::proce
       log_v(2, "controller_t", "processing upstream response for: %s (%d)", extra.txn_name.c_str(), http_resp_code);
 
       upstream_handler_t * p = it->second;
-      p->handle(http_resp_code, http_version, headers, json, stats);
+      p->handle(http_resp_code, http_version, headers, body, json, json_array, stats);
       delete p;
     } else {
       log_w("controller_t", "processing upstream response. CANNOT_FIND_HANDLER");
     }
   } else {
-    log_w("controller_t", "processing upstream response. PARSE_FAILED");
+    log_w("controller_t", "processing upstream response. PARSE_FAILED type: |%s|, version: |%s|", content_type.c_str(), http_version.c_str());
+    log_vs(2, "", "PARSE_FAIL body: |%s|", body);
   }
 
   return handled;
-}
-
-void net_mobilewebprint::server_command_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
-{
-  log_d(1, "", "-----------------------------------------------------------response from handleServerCommandRequest %d", code);
-  if (g_controller) {
-    g_controller->handle_server_command(code, http_version, headers, json, stats_out);
-  }
 }
 
 net_mobilewebprint::server_command_response_t::~server_command_response_t()
 {
 }
 
-void net_mobilewebprint::controller_base_t::handle_server_command(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+void net_mobilewebprint::server_command_response_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
+{
+  log_v(3, "", "-----------------------------------------------------------response from handleServerCommandRequest %d", code);
+  if (g_controller) {
+    g_controller->handle_server_command(code, http_version, headers, body, json, json_array, stats_out);
+  }
+}
+
+net_mobilewebprint::http_reverse_upload_t::http_reverse_upload_t(controller_base_t & controller_)
+  : controller(controller_)
+{
+}
+
+net_mobilewebprint::http_reverse_upload_t::~http_reverse_upload_t()
+{
+}
+
+void net_mobilewebprint::http_reverse_upload_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
+{
+  log_v(2, "", "-----------------------------------------------------------rup %d", code);
+
+  // TODO or octet stream?
+  string content_type = _lookup(headers, "context-type", "text/plain");
+
+  string stream_name = controller.upstream.send("/fetchLocalResponse", body, content_type, "_fetch_local_response_resp", stats_t());
+}
+
+void net_mobilewebprint::controller_base_t::handle_server_command(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
 {
   bool next_has_been_scheduled = false;
 
   if (code < 400) {
-    for (int i = 0; json.has(i); ++i) {
-      json_t const * item = json.get(i);
+    for (int i = 0; json_array.has(i); ++i) {
+      json_t const * item = json_array.get(i);
 
-      log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ handle_server_command");
-      item->dump(true);
+      if (flag("featureDumpCommand", /* default= */ false)) {
+        log_v(4, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ handle_server_command");
+        item->dump(true);
+      }
 
-
+      // Print to a mac address
       if (item->has("$print.mac") && item->has("$print.url")) {
         string const & mac      = item->lookup("$print.mac");
         string const & url      = item->lookup("$print.url");
 
         send_job(url, mac);
 
+      // Print to an IP address
       } else if (item->has("$print.ip") && item->has("$print.url")) {
         string const & ip       = item->lookup("$print.ip");
         string const & url      = item->lookup("$print.url");
 
         send_job(url, ip);
 
+      // Retry a command in 'in' msec
       } else if (item->has_int("$retry.in")) {
         server_command_timer.time = get_tick_count() + item->lookup_int("$retry.in");
         next_has_been_scheduled = true;
 
+      } else if (item->has("$addprinter.ip") && item->has_int("$addprinter.port") && item->has("$addprinter.deviceId")) {
+
+        string const & ip         = item->lookup("$addprinter.ip");
+        string const & device_id  = item->lookup("$addprinter.deviceId");
+        int            port       = item->lookup_int("$addprinter.port");
+
+        log_v(2, "", "adding printer: %s %d %s", ip.c_str(), port, device_id.c_str());
+
+        buffer_t * msg = mq.message("_on_slp_payload");
+        msg->append_strs_sans_null("(mwp-sender=", ip.c_str(), ")");
+        msg->append_strs_sans_null("(mwp-port=", mwp_itoa(port).c_str(), ")");
+        msg->append_strs_sans_null("(x-hp-p1=MFG:HP;MDL:", device_id.c_str(), ";)");
+        mq.send(msg);
+
+      // Halt the app
       } else if (item->has_int("$halt.in")) {
         if (item->lookup_int("$halt.in") == 73) {
           string halt_msg = item->lookup("$halt.msg");
@@ -819,6 +961,26 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
           }
 
           send_to_app("Halt_Mario", -1, 0, halt_msg.c_str(), NULL, NULL, NULL, NULL, item->lookup("$halt.exit", 0));
+        }
+
+      // Fetch HTTP from local
+      } else if (item->has("$fetch.ip")) {
+
+        string  ip   = item->lookup("$fetch.ip");
+        int     port = item->lookup("$fetch.port", 80);
+        string  path = item->lookup("$fetch.path", "/");
+
+        // TODO: handle $fetch.json
+        if (item->has("$fetch.body")) {
+
+          string verb           = item->lookup("$fetch.verb", "POST");
+          string content_type   = item->lookup("$fetch.content_type", "text/plain");
+
+          curl.fetch_local(ip, port, path, item->lookup("$fetch.body"), content_type, _unique(), verb);
+          send_local(ip, port, path, item->lookup("$fetch.body"), content_type, new http_reverse_upload_t(*this));
+
+        } else {
+          curl.get_local(ip, port, path, _unique());
         }
       }
     }
@@ -832,10 +994,12 @@ void net_mobilewebprint::controller_base_t::handle_server_command(int code, std:
   }
 
   /* otherwise - wait before the next one */
-  log_d(1, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ <400, handle_server_command");
+  log_v(3, "", "++++++++++++++++++++++++++++++++++++++++++++++++++++++ >= 400 (%d), handle_server_command, next_has_been_scheduled? %d", code, (int)next_has_been_scheduled);
   if (!next_has_been_scheduled) {
-    server_command_timer.time = get_tick_count();
-    next_has_been_scheduled = true;
+    if (code != 403) {
+      server_command_timer.trigger();
+      next_has_been_scheduled = true;
+    }
   }
 }
 
@@ -900,12 +1064,27 @@ void net_mobilewebprint::controller_base_t::startBucket(string bucketName, uint3
   common.set("bucketId", random_string(32));
 }
 
-void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+net_mobilewebprint::telemetry_response_t::telemetry_response_t(controller_base_t & controller_)
+  : controller(controller_)
 {
-  log_v(3, "", "telemetry response: %d", code);
-  if (g_controller) {
-    g_controller->sendTelemetry("telemetry", "serverResponse", "code", code);
+}
+
+net_mobilewebprint::telemetry_response_t::~telemetry_response_t()
+{
+}
+
+void net_mobilewebprint::telemetry_response_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
+{
+  uint32 latency = _time_since(g_controller->telemetry_send_time);
+
+  log_v(2, "", "telemetry response: %d, latency: %d", code, latency);
+
+  controller.sendTelemetry("telemetry", "serverResponse", "code", code, "latency", latency);
+
+  if (latency > 1200) {
+    controller.sendTelemetry("anomaly", latency > 3000 ? "ERROR_LATENCY" : "WARNING_LATENCY", "latency", latency, "path", "/telemetry");
   }
+  return;
 }
 
 bool net_mobilewebprint::controller_base_t::mq_is_done()
@@ -966,6 +1145,14 @@ bool net_mobilewebprint::controller_base_t::send_job(string const & asset_url_, 
   msg->appendT(printer_ip);
 
   return mq.send(msg);
+}
+
+/**
+ *
+ */
+bool net_mobilewebprint::controller_base_t::print(string const & asset_url)
+{
+  return false;
 }
 
 /**
@@ -1308,7 +1495,7 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, char const *value)
 {
-  log_d("setOption(%s, \"%s\")", name, value);
+  log_v(2, "", "setOption(%s, \"%s\")", name, value);
 
   // Some keys do not set an ARGS
   if (::strcmp(name, HP_MWP_HARD_CODE_PRINTER) == 0) {
@@ -1360,7 +1547,7 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_arg(char const *name, int value)
 {
-  log_d("setIntOption(%s, %d)", name, value);
+  log_v(2, "", "setIntOption(%s, %d)", name, value);
   ARGS.set_arg(name, mwp_itoa(value));
   return *this;
 }
@@ -1372,7 +1559,7 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::set_flag(char const *name, bool value)
 {
-  log_d("setFlag(%s, %s)", name, value ? "true" : "false");
+  log_v(2, "", "setFlag(%s, %s)", name, value ? "true" : "false");
   ARGS.set_flag(name, value);
 
   // Flags that are known to affect others
@@ -1385,13 +1572,23 @@ net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::s
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::clear_flag(char const *name)
 {
-  log_d("setFlag(%s)", name);
+  log_v(2, "", "setFlag(%s)", name);
   return set_flag(name, false);
 }
 
 net_mobilewebprint::controller_base_t & net_mobilewebprint::controller_base_t::parse_cli(int argc, void const * argv[])
 {
   ARGS.merge(args_t(argc, argv));
+
+  // Must special-process some args
+  if (_has(ARGS.args, "stackName")) {
+    set_arg("stackName", _lookup(ARGS.args, "stackName"));
+  }
+
+  if (_has(ARGS.args, "serverName")) {
+    set_arg("serverName", _lookup(ARGS.args, "serverName"));
+  }
+
   return *this;
 }
 
@@ -1448,6 +1645,20 @@ bool net_mobilewebprint::get_flag(string const & key)
 
   /* otherwise */
   bool result = g_controller->flag(key.c_str());
+  return result;
+}
+
+/**
+*  Free function to get a flag (true or false) for the key.
+*
+*  @return a bool for the key (false if the key is not present.)
+*/
+bool net_mobilewebprint::get_flag_def(string const & key, bool def)
+{
+  if (g_controller == NULL) { return def; }
+
+  /* otherwise */
+  bool result = g_controller->flag(key.c_str(), def);
   return result;
 }
 
@@ -1581,6 +1792,32 @@ bool net_mobilewebprint::controller_base_t::deregister_handler(char const * name
   } else {
     result = send_to_app("recd_deregister_handler", 1, 1, (uint8 const *)name, (sap_params const *)NULL) != 0;
   }
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_mwp_hf_callback_t callback)
+{
+  (*mwp_app_hf_callbacks)[name] = mwp_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (mwp_params*)NULL) != 0;
+  return result;
+}
+
+/**
+ *  Register a handler (callback) for an app.
+ *
+ */
+bool net_mobilewebprint::controller_base_t::register_hf_handler(char const * name, void * app_data_, hp_sap_hf_callback_t callback, bool)
+{
+  (*sap_app_hf_callbacks)[name] = sap_app_hf_callback_t(name, app_data_, callback);
+
+  bool result = false;
+  result = send_to_app("recd_register_hf_handler", 1, 1, (uint8 const *)name, (sap_params*)NULL) != 0;
   return result;
 }
 
@@ -1746,6 +1983,18 @@ bool net_mobilewebprint::controller_base_t::send_full_printer_list()
 
 bool net_mobilewebprint::controller_base_t::send_immediately(string const & msg_name, string const & payload)
 {
+  if (msg_name == "report_issue") {
+
+    strmap query;
+    if (arg("stackName", "").length() > 0)  { query = D("clientId", clientId(), "sessionId", sessionId, "stackName", arg("stackName")); }
+    else                                    { query = D("clientId", clientId(), "sessionId", sessionId); }
+
+    string search = make_search_string(query) + payload;
+    string url    = formats("http://%s/%s", arg("upstreamServerEx", MWP_DEFAULT_FQDN), msg_name);
+    send_to_app(msg_name, 0, 0, url.c_str(), search.c_str(), NULL);
+    return true;
+  }
+
   return mq.send_immediately(msg_name, payload);
 }
 
@@ -1955,8 +2204,20 @@ bool net_mobilewebprint::controller_base_t::read_arp_cache(char const * arp_cach
       if (line++ == 0) { continue; }          // Skip the first line, it has a table heading
 
       if (splitv(parts, buf, sizeof(buf), ' ') >= 4) {
-        log_v(4, "", "procnetarp: %15s %18s %s", parts[0].c_str(), parts[3].c_str(), buf);
-        sub_json.set(dashify_key(parts[0]), parts[3]);
+        string ip  = parts[0];
+        string mac = parts[3];
+
+        log_v(4, "", "procnetarp: %15s %18s %s", ip.c_str(), mac.c_str(), buf);
+        sub_json.set(dashify_key(ip), mac);
+
+        // Inform printer objects of these found mac addresses
+        if (mac_addresses.find(ip) == mac_addresses.end()) {
+          if (printers._get_printer(mac) != NULL) {
+            log_vs(2, "", "Found MAC for printer: %s -> %s", mac, ip);
+            mac_addresses    .insert(std::make_pair(ip, mac));
+            new_mac_addresses.insert(std::make_pair(ip, mac));
+          }
+        }
       }
     }
 
@@ -1988,6 +2249,26 @@ net_mobilewebprint::sap_app_callback_t::sap_app_callback_t()
 {
 }
 
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t(std::string name_, void * app_data_, hp_mwp_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::mwp_app_hf_callback_t::mwp_app_hf_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t(std::string name_, void * app_data_, hp_sap_hf_callback_t callback_)
+  : name(name_), app_data(app_data_), callback(callback_)
+{
+}
+
+net_mobilewebprint::sap_app_hf_callback_t::sap_app_hf_callback_t()
+  : app_data(NULL), callback(NULL)
+{
+}
+
 void net_mobilewebprint::controller_base_t::log_api(char const * format, ...)
 {
   if (!flag("log_api")) { return; }
@@ -2007,7 +2288,9 @@ net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 
   : txn_id(txn_id_),
     verb(verb_),
     url(url_),
-    json_body(json_)
+    json_body(json_),
+    content_type("application/json"),
+    body("")
 {
 }
 
@@ -2015,7 +2298,9 @@ net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 
   : txn_id(txn_id_),
     verb(verb_),
     url(url_),
-    json_body(json_)
+    json_body(json_),
+    content_type("application/json"),
+    body("")
 {
   string search;
   for (strmap::const_iterator it = query.begin(); it != query.end(); ++it) {
@@ -2029,5 +2314,15 @@ net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 
   if (search.length() > 0) {
     url = url + "?" + search;
   }
+}
+
+net_mobilewebprint::controller_http_request_t::controller_http_request_t(uint32 txn_id_, std::string const & verb_, std::string const & url_, string const & body_, string content_type_)
+  : txn_id(txn_id_),
+    verb(verb_),
+    url(url_),
+    //json_body(json_t()),
+    content_type(content_type_),
+    body(body_)
+{
 }
 

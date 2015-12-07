@@ -88,6 +88,7 @@
           android:host="clickit.cloudpublish.com"
           android:pathPrefix="/social/print/v2/" />
 
+        <data android:scheme="printit" />
         <!-- TODO: put this back to handle printit scheme urls
                    It is tied into the above "data" tag.  It adds "printit://" scheme to clickit...
         <data android:scheme="printit" />

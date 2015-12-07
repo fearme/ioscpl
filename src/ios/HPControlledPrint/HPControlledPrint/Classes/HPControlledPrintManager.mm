@@ -33,6 +33,7 @@ NSString *const kOperationPrintFailed        = @"FAILED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintCanceled      = @"CANCELED_PRINT_COUPON_DOCUMENT";
 NSString *const kOperationPrintDeferred      = @"COUPON_DOCUMENT_DEFERRED";
 
+//The SDK sends these to Cayman metrics
 NSString *const kStatePrintRequestInitiated  = @"INITIATED";
 NSString *const kStatePrintSuccess           = @"SUCCESS";
 NSString *const kStatePrintCancelled         = @"CANCELLED";
@@ -44,6 +45,7 @@ NSString *const kStateUpstreamError          = @"UPSTREAM_ERROR";
 NSString *const kReasonNewTokenRegistered    = @"New Token Registered";
 NSString *const kReasonPrintRequestInitiated = @"Print Request Initiated";
 
+//Mario sends these messages to the SDK
 NSString *const kPrinterStatusPrinting       = @"PRINTING";
 NSString *const kPrinterStatusIdle           = @"IDLE";
 NSString *const kPrinterStatusCanceling      = @"CANCELING PRINTING";
@@ -104,7 +106,7 @@ BOOL printerScanStarted;
 - (NSString *)hashUUID
 {
     NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
-    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt:32]];
+    NSString *hashed = [HPControlledPrintManagerUtil hash:uuid withSalt:[HPControlledPrintManagerUtil salt]];
     NSLog(@"UUID: %@", uuid);
     NSLog(@"UUID Hashed: %@", hashed);
     NSLog(@"UUID Hashed Length: %lu", (unsigned long)[hashed length]);
@@ -190,7 +192,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         
         NSString *property = [NSString stringWithUTF8String:p2];
         NSString *value = [NSString stringWithUTF8String:p3];
-        NSLog(@"%@ - %@: %@", printerIp, property, value);
+        NSLog(@"'%@' - '%@': '%@'", printerIp, property, value);
         
         if ([property isEqualToString:@"name"]) {
             attributes.name = value;
@@ -231,18 +233,35 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
         //NSString *_p5 = [NSString stringWithCString:p5 encoding:NSASCIIStringEncoding];
         //NSString *_p2 = [NSString stringWithUTF8String:p2];
         
+        //concatenate a message if necessary
         if (!([_p3 isEqualToString:kPrinterStatusPrinting] || [_p3 isEqualToString:kPrinterStatusIdle] || [_p3 isEqualToString:kPrinterStatusCanceling])) {
             _p2 = [NSString stringWithFormat:@"%@ %@", _p2, _p3];// [_p2 stringByAppendingString:_p3];
         }
         
-        [self sendPrinterStatus:_p2];
+        //send the print status to consuming app
+        if ([_p3 isEqualToString:kPrinterStatusUpstreamError]) {
+            [self sendPrinterStatus:_p3];
+        } else {
+            [self sendPrinterStatus:_p2];
+        }
+        
        
         [self sendFinalPrintJobMetrics:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
         [self notifyProviderOfPrintStatus:currentPrintJobRequest withUserVisibleStatus:_p2 withPrinterStatus:_p3];
         
     } else if ([stringMessage isEqualToString:@"begin_new_printer_list"]) {
+        NSLog(@"Removing all printers.");
+        NSLog(@"Number of printers before: '%lu'.", (unsigned long)printers.count);
         [printers removeAllObjects];
+        NSLog(@"Number of printers after:  '%lu'.", (unsigned long)printers.count);
+        
+    } else if ([stringMessage isEqualToString:@"rm_printer"]) {
+        NSString *printerIp = [NSString stringWithUTF8String:p1];
+        NSLog(@"Removing IP: '%@'.", printerIp);
+        NSLog(@"Number of printers before: '%lu'.", (unsigned long)printers.count);
+        [printers removeObjectForKey:printerIp];
+        NSLog(@"Number of printers after:  '%lu'.", (unsigned long)printers.count);
     }
 }
 
@@ -318,12 +337,14 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     if ([[self printerAttributesDelegate] respondsToSelector:@selector(didReceivePrinters:)]) {
         //make sure we only send printers with IPs, names, and isSupported set
         HPDiscoveredPrinters *printersToSend = [[HPDiscoveredPrinters alloc] init];
-        for (NSString *ip in printers) {
-            HPPrinterAttributes *printer = [printers objectForKey:ip];
+        NSDictionary *dict = [printers copy]; //make a copy so that we don't accidentally do a read and write on the printers object at the same time. That would crash the app.
+        for (NSString *ip in dict) {
+            HPPrinterAttributes *printer = [dict objectForKey:ip];
             if (printer.ip != nil && printer.name != nil && printer._supportedFlagIsSet) {
                 [printersToSend.printers setObject:printer forKey:ip];
             }
         }
+        NSLog(@"Number of printers sent to consuming app: %lu", (unsigned long)printersToSend.printers.count);
         [self.printerAttributesDelegate didReceivePrinters:printersToSend];
     }
 }
@@ -424,6 +445,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSLog(@"\n\nMetrics URL: %@\n\n", services.postMetricsUrl);
     HPMetricsSender *metricsSender = [[HPMetricsSender alloc] init];
     HPPrintJobRequest *tempRequest = [[HPPrintJobRequest alloc] init];
+    tempRequest.tokenId = token;
     [metricsSender send:services.postMetricsUrl withPrintJobRequest:tempRequest forHardwarId:self.uuidHashed forOperation:kOperationNewToken forReason:kReasonNewTokenRegistered forState:kStateNewToken metricsType:kMetricTypeUserData];
     
     HPTokenValidator *validator = [[HPTokenValidator alloc] init];    
@@ -542,6 +564,7 @@ int printStatusListener(void *listenerObject, char const *message, int ident,
     NSDictionary* dict = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&error];
     if (error != nil) {
         NSLog(@"ERROR in JSON Object containing Cayman services information !!!  - %@", error);
+        //NSLog(@"ERROR in JSON Object containing Cayman services information !!! - json: |%@|", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
         services = nil;
     } else {
         services = [HPControlledPrintManagerUtil parseDiscoveryData:dict secureAssetPrint:secureAssetPrinter caymanRootUrl:[self caymanRootUrl]];

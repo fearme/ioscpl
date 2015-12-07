@@ -71,9 +71,34 @@ namespace net_mobilewebprint {
     typedef sap_app_callback_t type_t;
   };
 
+  struct mwp_app_hf_callback_t {
+    typedef hp_mwp_hf_callback_t callback_t;
+
+    std::string        name;
+    void *             app_data;
+    callback_t         callback;
+
+    mwp_app_hf_callback_t();
+    mwp_app_hf_callback_t(std::string name, void * app_data, hp_mwp_hf_callback_t callback);
+  };
+
+  struct sap_app_hf_callback_t {
+    typedef hp_sap_hf_callback_t callback_t;
+
+    std::string        name;
+    void *             app_data;
+    callback_t         callback;
+
+    sap_app_hf_callback_t();
+    sap_app_hf_callback_t(std::string name, void * app_data, hp_sap_hf_callback_t callback);
+  };
+
   typedef std::map<std::string, mwp_app_callback_t>  mwp_app_cb_list_t;
   typedef std::map<std::string, sap_app_callback_t>  sap_app_cb_list_t;
   typedef std::map<int, std::string>                 app_timer_table_t;
+
+  typedef std::map<std::string, mwp_app_hf_callback_t>  mwp_app_hf_cb_list_t;
+  typedef std::map<std::string, sap_app_hf_callback_t>  sap_app_hf_cb_list_t;
 
   struct controller_http_request_t
   {
@@ -82,13 +107,18 @@ namespace net_mobilewebprint {
     std::string           url;
     serialization_json_t  json_body;
 
+    std::string           content_type;
+    std::string           body;
+
     controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, serialization_json_t const & json);
     controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, strmap const & query, serialization_json_t const & json);
+
+    controller_http_request_t(uint32 txn_id, std::string const & verb, std::string const & url, string const & body, string content_type);
   };
 
   struct server_command_response_t : public upstream_handler_t {
     virtual ~server_command_response_t();
-    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 
   struct controller_base_t : public mq_handler_t
@@ -115,6 +145,8 @@ namespace net_mobilewebprint {
 
     // Send a print job
     bool                    send_job(string const & url, string const & printer_ip);
+    bool                       print(string const & url);
+
     e_handle_result _allocate_job_id(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
     e_handle_result        _send_job(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
@@ -148,6 +180,9 @@ namespace net_mobilewebprint {
     bool register_handler(char const * name, void * app_data, hp_mwp_callback_t callback);
     bool register_handler(char const * name, void * app_data, hp_sap_callback_t callback);
     bool deregister_handler(char const * name);
+
+    bool register_hf_handler(char const * name, void * app_data, hp_mwp_hf_callback_t callback);
+    bool register_hf_handler(char const * name, void * app_data, hp_sap_hf_callback_t callback, bool);
 
     // The app sending a message
     int app_send(char const * name, char const * payload = NULL);
@@ -255,13 +290,19 @@ namespace net_mobilewebprint {
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json, upstream_handler_t *);
     string                send_upstream(string const & mod_name, string const & endpoint, serialization_json_t & json);
 
+    string                send_local(string ip, int port, string path, string const & body, string content_type, upstream_handler_t *);
+
     private:
       uint32               curl_http_post(string const & url, serialization_json_t &);
+      uint32               curl_http_post(string const & url, string const & body, string content_type);
       uint32                curl_http_get(string const & url);
 
-      uint32               curl_http_post(string const & url, serialization_json_t &, uint32 id);
+      uint32               curl_http_post(string const & url, serialization_json_t &, uint32 txn_id);
+      uint32               curl_http_post(string const & url, string const & body, string content_type, uint32 txn_id);
       uint32               curl_http_post(controller_http_request_t const & request);
       uint32                curl_http_get(string const & url, uint32 id);
+
+      uint32               curl_local_send(string ip, int port, string path, string const & body, string content_type, string verb = "POST");
 
     friend struct upstream_t;
     public:
@@ -307,6 +348,9 @@ namespace net_mobilewebprint {
     mwp_app_cb_list_t &       mwp_app_callbacks();
     sap_app_cb_list_t &       sap_app_callbacks();
 
+    mwp_app_hf_cb_list_t *    mwp_app_hf_callbacks;
+    sap_app_hf_cb_list_t *    sap_app_hf_callbacks;
+
     args_t                    ARGS;
 
     string                    ssid;
@@ -323,7 +367,7 @@ namespace net_mobilewebprint {
     e_handle_result process_upstream_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
     e_handle_result _on_progress_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
-    void handle_server_command(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    void handle_server_command(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
 
     // Log an api if that option is set
     void                log_api(char const * format, ...);
@@ -341,6 +385,7 @@ namespace net_mobilewebprint {
     // ---------------------- Telemetry ----------------------
     string                    sessionId;
     mq_manual_timer_t         telemetry_report;
+    uint32                    telemetry_send_time;
 
     map<string, serialization_json_t>      buckets;      // Data common to the bucket
     map<string, jsonlist>     bucketData;   // Data items
@@ -405,8 +450,18 @@ namespace net_mobilewebprint {
 
   };
 
+  struct http_reverse_upload_t : public upstream_handler_t {
+    controller_base_t & controller;
+    http_reverse_upload_t(controller_base_t & controller);
+    virtual ~http_reverse_upload_t();
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
+  };
+
   struct telemetry_response_t : public upstream_handler_t {
-    virtual void handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out);
+    controller_base_t & controller;
+    telemetry_response_t(controller_base_t & controller);
+    virtual ~telemetry_response_t();
+    virtual void handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
   };
 
   extern controller_base_t * g_controller;
@@ -418,6 +473,7 @@ namespace net_mobilewebprint {
   extern string const & get_option(char const * key, string const & def);
   extern int            get_option(char const * key, int def);
   extern bool             get_flag(string const & key);
+  extern bool         get_flag_def(string const & key, bool def);
 
   // Send a message to the app, takes the same args as the message that is sent
   int  send_to_app(char const * name, int id, int32 transaction_id, uint8 const * p1 = NULL, mwp_params const * params = NULL);

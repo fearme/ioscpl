@@ -1,0 +1,63 @@
+#!/bin/bash -e
+
+die() { echo "$@"; exit 1; }
+
+for arg in "$@"; do
+  case $arg in
+
+    --stackName=*)    stack_name="${arg#*=}";;
+
+  esac
+done
+
+server="netapp.mobiledevprint.net"
+if [ "$stack_name" == "prod" ]; then
+  server="netapp.mobilewebprint.net"
+elif [ "$stack_name" == "pub" ]; then
+  server="netapp.mobilewebprint.net"
+fi
+
+test -f ./cmake-build/macosx_workstation/debug/Debug/mwpcli || die "No mwpcli to test"
+
+if ps aux | egrep -v grep | egrep '(socat|mwpcli)'; then
+  echo kill $(ps aux | egrep -v grep | egrep '(socat|mwpcli)' | awk '{print $2}')
+  die "Previous processes still up"
+fi
+
+# ./cmake-build/macosx_workstation/debug/Debug/mwpcli --scan
+
+my_ip="$(ifconfig | egrep 'inet ' | egrep -v '127\.0\.0\.' | egrep -o '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+client_id="$(./cmake-build/macosx_workstation/debug/Debug/mwpcli --option="clientId")"
+
+test -z "$my_ip" && die "cannot find IP"
+test -z "$client_id" && die "cannot find clientId"
+
+rm -f "/tmp/test-client.pcl"
+
+socat -t 999 -T 999 tcp-l:9100 OPEN:/tmp/test-client.pcl,creat &
+socat_job="$(jobs | egrep -o '\[[0-9]+\]' | tr -d '[]')"
+
+./cmake-build/macosx_workstation/debug/Debug/mwpcli "$@" &
+mwpcli_job="$(jobs | egrep -o '\[[0-9]+\]' | tr -d '[]' | sort -n | tail -1)"
+
+sleep 3
+
+echo -n "Adding printer "
+curl -s "http://${server}/send_command-addprinter/ip-${my_ip}?deviceId=photosmart+c309a+series&port=9100&clientId=${client_id}"
+echo ""
+
+sleep 2
+jobs | egrep -q "\[${socat_job}\].*Running" || echo "socat exited too soon"
+
+echo -n "Sending print command "
+curl -s "http://${server}/send_command-print/ip-${my_ip}/clientId-${client_id}/http://cayman-ext.cloudpublish.com/filestore/files/4/data"
+echo ""
+
+echo -n "Waiting for socat"
+wait %${socat_job}
+echo "Waiting for mwpcli"
+wait %${mwpcli_job}
+egrep -q '\-12345X@PJL' /tmp/test-client.pcl || die "FAIL -- The output /tmp/test-client.pcl is not PCL"
+
+echo "OK"
+

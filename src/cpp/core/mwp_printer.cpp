@@ -943,6 +943,7 @@ void net_mobilewebprint::printer_list_t::re_scan()
     log_v(2, "", "!!!!!!!!!!!!!! %s", "Error -- reScan called during scan -- ignoring");
     log_v(2, "", "!!!!!!!!!!!!!! %s", "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
     controller.sendTelemetry("printerScan", "invalidReScan");
+    controller.sendTelemetry("anomaly", "ERROR_API", "fn", "re_scan", "reason", "already_scanning");
     return;
   }
 
@@ -1183,13 +1184,13 @@ int net_mobilewebprint::printer_list_t::unknown_is_supported_count()
   return count;
 }
 
-void net_mobilewebprint::printer_list_response_t::handle(int code, std::string const & http_version, strmap const & headers, json_array_t const & json, stats_t const & stats_out)
+void net_mobilewebprint::printer_list_response_t::handle(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out)
 {
   log_v(3, "", "-----------------------------------------------------------response from filterPrinters %d", code);
-  //log_vs(3, "", "-----------------------------------------------------------response from filterPrinters %s", json.stringify());
+  //log_vs(3, "", "-----------------------------------------------------------response from filterPrinters %s", json_array.stringify());
 
   if (g_printer_list) {
-    g_printer_list->handle_filter_printers(code, http_version, headers, json, stats_out);
+    g_printer_list->handle_filter_printers(code, http_version, headers, json_array, stats_out);
   }
 }
 
@@ -1262,6 +1263,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 //  return;
 
   controller.sendTelemetry("network", "softNetworkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("anomaly", "WARNING_NETWORK", "errno", error_number, "reason", "soft_network_error");
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
@@ -1285,6 +1287,7 @@ void net_mobilewebprint::printer_list_t::soft_network_error(string const & ip, i
 void net_mobilewebprint::printer_list_t::network_error(string const & ip, int error_number)
 {
   controller.sendTelemetry("network", "networkError", "ip", ip, "errno", error_number);
+  controller.sendTelemetry("anomaly", "ERROR_NETWORK", "errno", error_number, "reason", "network_error");
 
   printer_t * printer = _get_printer(ip);
   if (printer == NULL) {
@@ -1653,7 +1656,7 @@ int net_mobilewebprint::printer_list_t::send_list_to_app()
     }
   }
 
-  controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
+  //controller.send_to_app(HP_MWP_END_PRINTER_ENUM_MSG, -1, printer_enum_id);
 
   return result;
 }

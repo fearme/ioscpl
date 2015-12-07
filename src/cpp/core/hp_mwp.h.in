@@ -16,7 +16,7 @@
 #define HP_@MWP_INTERFACE_NAME_UC@_START_LOCAL    HP_@MWP_INTERFACE_NAME_UC@_NON_SAP & 0x01000000
 
 /* Default startup flags: 1) start the scanner, 2) do not return from start function 'cuz
- * the app called the start function from a thread dedicated for @MWP_INTERFACE_NAME_UC@ 
+ * the app called the start function from a thread dedicated for @MWP_INTERFACE_NAME_UC@
  */
 #define HP_@MWP_INTERFACE_NAME_UC@_START_APP_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING /*| HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN*/)
 #define HP_@MWP_INTERFACE_NAME_UC@_START_CLI_DEFAULT_FLAGS (HP_@MWP_INTERFACE_NAME_UC@_START_SCANNING | HP_@MWP_INTERFACE_NAME_UC@_BLOCK_START_FN)
@@ -30,6 +30,12 @@
 #define STATUS_SUCCESS                    "SUCCESS"
 
 #define TELEMETRY_DEFAULT                 false
+
+/* A string to use for undefined */
+#define HP_@MWP_INTERFACE_NAME_UC@_UNDEFINED "~~undefined~~"
+#ifndef cundefined
+  #define cundefined HP_@MWP_INTERFACE_NAME_UC@_UNDEFINED
+#endif
 
 /**
  *  Messages that the app can listen for.
@@ -98,6 +104,7 @@ extern "C" {
   } @MWP_INTERFACE_NAME@_params;
 
   typedef int(*hp_@MWP_INTERFACE_NAME@_callback_t)(void * app_data, char const * message, int id, int32 transaction_id, uint8 const * p1, @MWP_INTERFACE_NAME@_params const * params);
+  typedef int(*hp_@MWP_INTERFACE_NAME@_hf_callback_t)(void * app_data, char const * name, int loop_num, uint32 tick_count, uint8 const * p1);
 
   /* 1. ---------- Register your callback fn ---------- */
   bool hp_@MWP_INTERFACE_NAME@_register_bootstrap(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
@@ -105,12 +112,16 @@ extern "C" {
   bool hp_@MWP_INTERFACE_NAME@_register_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_callback_t callback);
   bool hp_@MWP_INTERFACE_NAME@_deregister_handler(char const * name);
 
+  /* A high-frequency handler */
+  bool hp_@MWP_INTERFACE_NAME@_register_hf_handler(char const * name, void * app_data, hp_@MWP_INTERFACE_NAME@_hf_callback_t callback);
+
   /* 2. ---------- get/set options ---------- */
   char const *  hp_@MWP_INTERFACE_NAME@_get_option          (char const *name, char * buffer_out, uint32 buf_size);
   char const *  hp_@MWP_INTERFACE_NAME@_get_option_def      (char const *name, char const *def, char * buffer_out, uint32 buf_size);
   int           hp_@MWP_INTERFACE_NAME@_get_int_option      (char const *name);
   int           hp_@MWP_INTERFACE_NAME@_get_int_option_def  (char const *name, int def);
   bool          hp_@MWP_INTERFACE_NAME@_get_flag            (char const *name);
+  bool          hp_@MWP_INTERFACE_NAME@_get_flag_def        (char const *name, bool def);
 
   int           hp_@MWP_INTERFACE_NAME@_set_option(char const *name, char const *value);
   int           hp_@MWP_INTERFACE_NAME@_set_int_option(char const *name, int value);
@@ -125,6 +136,7 @@ extern "C" {
 
   // Is the event queue done?
   bool hp_@MWP_INTERFACE_NAME@_mq_is_done();
+  bool hp_@MWP_INTERFACE_NAME@_re_scan();
 
   /* 4. ---------- Do various other things (optional) ---------- */
   /* See "other things" below */
@@ -135,7 +147,7 @@ extern "C" {
    *  Print the asset given by url to the printer at printer_ip.
    *
    *  This is the main API for printing, when the app shows the printer
-   *  list.  Returns true if the print was started, not that it 
+   *  list.  Returns true if the print was started, not that it
    *  completes.
    *
    *  This function returns immediately.
@@ -161,7 +173,7 @@ extern "C" {
   /* Send a message through the event queue */
   int  hp_@MWP_INTERFACE_NAME@_send(char const *message, char const *payload); // payload may be NULL
   bool hp_@MWP_INTERFACE_NAME@_send_immediately(char const *message, char const *payload); // payload may be NULL
-  int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);
+  /*int  hp_@MWP_INTERFACE_NAME@_set_timeout(char const * message_to_send, int msecs_to_wait);*/
 
 #ifdef __cplusplus
 }

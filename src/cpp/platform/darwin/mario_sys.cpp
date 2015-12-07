@@ -16,7 +16,7 @@ using namespace net_mobilewebprint;
 // ----------------------------------------------------------------------------------
 // Startup
 // ----------------------------------------------------------------------------------
-void net_mobilewebprint::platform_bootstrap()
+void darwin_platform_bootstrap()
 {
   // Get proxy
   int             port          = -1;

@@ -395,6 +395,17 @@ bool net_mobilewebprint::_starts_with(char const * sz, char const * sz_start)
   return true;
 }
 
+bool net_mobilewebprint::_contains(string const & str, char const * sub_str)
+{
+  return str.find(sub_str) != string::npos;
+}
+
+bool net_mobilewebprint::_contains(char const *    sz, char const * sub_str)
+{
+  return ::strstr(sz, sub_str) != NULL;
+}
+
+
 static char blank[] = "";
 char const *  net_mobilewebprint::or_blank(uint8 const * p)
 {
@@ -899,6 +910,24 @@ net_mobilewebprint::boolmap net_mobilewebprint::true_map(strlist const & list)
   return result;
 }
 
+string net_mobilewebprint::make_search_string(strmap const & query)
+{
+  string result;
+  for (strmap::const_iterator it = query.begin(); it != query.end(); ++it) {
+    if (result.length() > 0) {
+      result += "&";
+    }
+
+    result += it->first + "=" + it->second;
+  }
+
+  if (result.length() > 0) {
+    return string("?") + result;
+  }
+
+  return result;
+}
+
 void net_mobilewebprint::dump(strmap const & dict)
 {
   strmap::const_iterator it;
@@ -1275,6 +1304,80 @@ uint32 net_mobilewebprint::_time_since(uint32 time, uint32 start)
   }
 
   return start - time;
+}
+
+std::string net_mobilewebprint::format(char const * format, ...)
+{
+  va_list argList;
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  va_start(argList, format);
+
+  int cch = vsnprintf(buffer, sizeof(buffer), format, argList);
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      vsnprintf(pbuffer, cch + 1, format, argList);
+    }
+  }
+
+  va_end(argList);
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
+}
+
+std::string net_mobilewebprint::formats(char const * format, std::string const & s1)
+{
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  int cch = snprintf(buffer, sizeof(buffer), format, s1.c_str());
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      snprintf(pbuffer, cch + 1, format, s1.c_str());
+    }
+  }
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
+}
+
+std::string net_mobilewebprint::formats(char const * format, std::string const & s1, std::string const & s2)
+{
+  string  result;
+
+  char   buffer[2048];
+  char * pbuffer = &buffer[0];
+
+  int cch = snprintf(buffer, sizeof(buffer), format, s1.c_str(), s2.c_str());
+  if (cch < 0 || cch >= sizeof(buffer)) {
+    if ((pbuffer = (char *)malloc(cch + 16)) != NULL) {
+      snprintf(pbuffer, cch + 1, format, s1.c_str(), s2.c_str());
+    }
+  }
+
+  if (pbuffer != NULL) {
+    result = pbuffer;
+  }
+
+  if (pbuffer != &buffer[0]) { free(pbuffer); }
+
+  return result;
 }
 
 using net_mobilewebprint::skip_ws;

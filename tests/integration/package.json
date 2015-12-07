@@ -1,0 +1,26 @@
+{
+  "name": "mariotest",
+  "version": "0.0.1",
+  "main": "load_test",
+  "description": "Bare-bones load tester.",
+  "homepage": "mobilewebprint.net",
+  "bugs": "https://github.com/IPGPTP/mario/issues",
+  "author": {
+    "name": "Brian C Sparks",
+    "email": "brian.c.sparks@hp.com",
+    "url": "mobilewebprint.net"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/IPGPTP/mario"
+  },
+  "license": "Proprietary (Trade-Secret)",
+  "keywords": [],
+  "devDependencies": {},
+  "dependencies": {
+    "glob": "^4.0.0",
+    "moment": "^2.6.0",
+    "properties": "^1.2.1",
+    "underscore": "^1.6.0"
+  }
+}

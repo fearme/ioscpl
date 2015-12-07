@@ -1,0 +1,230 @@
+#!/usr/bin/env node
+// vim: ft=javascript:
+
+var _             = require('underscore');
+var sg            = require('./sg');
+var exec          = require('child_process').exec;
+var spawn         = require('child_process').spawn;
+var fs            = require('fs');
+var path          = require('path');
+var util          = require('util');
+var os            = require('os');
+var printer       = require('./printer');
+
+var Printer       = printer.Printer;
+var ARGV          = sg.ARGV();
+var sprintf       = util.format;
+
+var mwpcli;
+
+var stackName = ARGV.stack_name || ARGV.stackName;
+
+var serverNames = {
+  prod : "netapp.mobilewebprint.net",
+  pub  : "netapp.mobilewebprint.net",
+  qa   : "netapp.mobiledevprint.net",
+  stg  : "netapp.mobiledevprint.net",
+  ext  : "netapp.mobiledevprint.net",
+  dev  : "netapp.mobiledevprint.net",
+};
+
+var wellKnownJobs = {
+  "3"   : 'http://cayman-ext.cloudpublish.com/filestore/files/3/data',
+  "4"   : 'http://cayman-ext.cloudpublish.com/filestore/files/4/data'
+};
+
+//var printer = new Printer(9100);
+
+var ips = [];
+_.each(os.networkInterfaces(), function(iface, name) {
+  if (name.match(/^lo/)) { return; }
+  _.each(iface, function(addr) {
+    if (addr.family.toLowerCase() === 'ipv4') {
+      ips.push(addr.address);
+    }
+  });
+});
+
+// ./cmake-build/macosx_workstation/debug/Debug/mwpcli --scan
+var main = function(callback) {
+
+  // Setup an errback
+  var errback = function(err, msg /* , ...*/) {
+    if (!msg && _.isString(err)) {
+      msg = err;
+    }
+
+    if (msg) {
+      var rest = _.rest(arguments);
+      console.error.apply(console, rest);
+    }
+
+    return callback(err);
+  };
+
+  // Check that we know our local IP
+  if (ips.length <= 0) {
+    return errback("Cannot determine ip.");
+  }
+  var ip = ips[0];
+
+  // The caller must provide the stack name
+  if (!stackName) {
+    return errback("Must provide --stack-name=qa");
+  }
+
+  // From the stack name, we get server name
+  var serverName = serverNames[stackName];
+  if (!serverName) {
+    return errback("Unknown stack name: " + stackName);
+  }
+
+  // Make sure the mwpcli executable is available
+  var mwpPath = path.join(process.cwd(), 'cmake-build/macosx_workstation/debug/Debug/mwpcli');
+  var mwpStats = fs.statSync(mwpPath);
+  if (!mwpStats.isFile()) {
+    return errback("Could not stat " + mwpPath);
+  }
+
+  var job           = 'http://cayman-ext.cloudpublish.com/filestore/files/4/data';
+
+  if (ARGV.job) {
+    if (wellKnownJobs[ARGV.job]) {
+      job = wellKnownJobs[ARGV.job];
+    } else {
+      console.log("Unknown job; using: %s", job);
+    }
+  }
+
+  // Good to go.
+  var clientId, printerJson;
+
+  return sg.__run([function(next) {
+
+    // Get the MWP clientId
+    return exec(mwpPath + ' --option="clientId"', function(err, stdout, stderr) {
+
+      if (err)                                  { return errback(err, "Could not get clientId from %s", mwpPath); }
+      if (!(clientId = stdout.split('\n')[0]))  { return errback('ENOCLIENTID'); }
+
+      /* otherwise */
+      return next();
+    });
+
+  // Launch the mwp binary to do its magic
+  }, function(next) {
+
+    console.log("Sending addPrinter command");
+
+    var addPrinterCurlResponse;
+    var printerJsons = [];
+
+    var timebomb = setTimeout(function() {
+      errback({timeout:'addPrinter', response:addPrinterCurlResponse, json: printerJsons});
+    }, 22000);
+
+    mwpcli = spawn(mwpPath, ["--outfmt=json"].concat(_.rest(process.argv, 2)));
+    sg.watchProcess(mwpcli, function(line, json) {
+
+      if (json && json.ip === ip) {
+        printerJson = json;
+        printerJsons.push(json);
+        if ('is_supported' in json) {
+          clearTimeout(timebomb);
+          console.log("Command-scanner found '%s' at %s (is_supported:%s)", json.name || 'unnamed', json.ip, json.is_supported);
+          return next();
+        }
+      } else if (sg.verbosity() > 0) {
+        console.log(line);
+      }
+    }, { finalCb : function(err, code) {
+      console.log("mwpcli exiting (%d), err: %s", code, err);
+    }});
+
+    var command = sprintf("curl -s 'http://%s/send_command-addprinter/ip-%s/clientId-%s?deviceId=photosmart+c309a+series&port=9100'", serverName, ip, clientId);
+    var addPrinter = function() {
+      return exec(command, function(err, stdout, stderr) {
+
+        // Keep looking if mwpcli has not registered with the command server, yet
+        addPrinterCurlResponse = sg.safeJSONParse(stdout, {});
+        if (!addPrinterCurlResponse.ok) {
+          if (sg.verbosity() > 0) { console.log(addPrinterCurlResponse); }
+          else                    { console.log(" waiting..."); }
+        }
+
+        if (addPrinterCurlResponse.bad && /cannot find connection/i.exec(addPrinterCurlResponse.bad.msg)) {
+          return setTimeout(addPrinter, 500);
+        }
+      });
+    };
+    return setTimeout(addPrinter, 2500);
+
+  // Setup the printer to listen
+  }, function(next) {
+
+    var startJobTime  = _.now();
+
+    console.log("sendJob '%s' to %s", job, ip);
+
+    var sendJobCurlResponse;
+
+    var timebomb = setTimeout(function() {
+      errback({timeout:'sendJob', response:sendJobCurlResponse, json: printerJson});
+    }, 22000 + 12000);
+
+    printer.actLikePrinter(9100, function(err, didPass) {
+      clearTimeout(timebomb);
+      console.log("sendJob took %d ms", _.now() - startJobTime);
+      return callback(err, didPass);
+    });
+
+    var command = sprintf("curl -s 'http://%s/send_command-print/ip-%s/clientId-%s/%s'", serverName, ip, clientId, job);
+    var sendPrint = function() {
+      return exec(command, function(err, stdout, stderr) {
+        var sendJobCurlResponse = sg.safeJSONParse(stdout, {});
+        if (sendJobCurlResponse.bad && /cannot find connection/i.exec(sendJobCurlResponse.bad.msg)) {
+          return setTimeout(sendPrint, 500);
+        }
+      });
+    };
+    return setTimeout(sendPrint, 1500);
+
+  }], function() {
+    // Note: the callback on the success case is in actLikePrinter
+  });
+};
+
+process.on('SIGQUIT', function() {
+  mwpcli.kill('SIGQUIT');
+  console.log('SIGQUIT');
+  process.exit(0);
+});
+process.on('SIGTERM', function() {
+  mwpcli.kill('SIGTERM');
+  console.log('SIGTERM');
+  process.exit(0);
+});
+process.on('SIGINT', function() {
+  mwpcli.kill('SIGINT');
+  console.log('SIGINT');
+  process.exit(1);
+});
+
+if (process.argv[1] === __filename) {
+  main(function(err, didPass) {
+
+    mwpcli.kill('SIGINT');
+    var code = 1;
+
+    if (didPass) {
+      code = 0;
+      if (!ARGV.quiet) {
+        console.log("Pass.");
+      }
+    }
+
+    if (err) { console.error(err); code = 1; }
+    process.exit(code);
+  });
+}
+

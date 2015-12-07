@@ -76,6 +76,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     }
     
     func didReceivePrinters(printers: HPDiscoveredPrinters) {
+        self.foundPrinters.removeAll(keepCapacity: true)
         for (ip, printer) in printers.printers {
             self.foundPrinters[ip as! String] = printer as? HPPrinterAttributes;
         }

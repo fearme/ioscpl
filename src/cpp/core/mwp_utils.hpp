@@ -71,7 +71,10 @@ namespace net_mobilewebprint {
   extern char const *  skip_past_double_newline(char const *sz, char const * end);
 
   extern bool          _starts_with(string const & str, char const * sz_start);
-  extern bool          _starts_with(char const * sz, char const * sz_start);
+  extern bool          _starts_with(char const *    sz, char const * sz_start);
+
+  extern bool          _contains(string const & str, char const * sub_str);
+  extern bool          _contains(char const *    sz, char const * sub_str);
 
   extern bool          eq(char const * sz1, char const * sz2);
   extern bool          eq(string const & s1, char const * sz2);
@@ -83,6 +86,10 @@ namespace net_mobilewebprint {
 
   extern string        random_string(size_t length);
   extern bool          _normalize_keys(string & parent, string & key);
+
+  extern string        format(char const * fmt, ...);
+  extern string        formats(char const * fmt, string const & s1);
+  extern string        formats(char const * fmt, string const & s1, string const & s2);
 
   //-----------------------------------------------------------------------------
   //
@@ -153,6 +160,8 @@ namespace net_mobilewebprint {
   extern void       dump(strmap const & dict);
 
   extern boolmap    true_map(strlist const & list);
+
+  extern string     make_search_string(strmap const & map);
 
   extern string     JSON_stringify(strmap const & dict, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);
   extern string     JSON_debug_string(strmap const & dict, strlist const & keys, strlist const & key_order, std::map<string, int> const * numbers = NULL, std::map<string, bool> const * bools = NULL);

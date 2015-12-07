@@ -23,13 +23,14 @@ namespace net_mobilewebprint {
 
             bool                   register_handler    (char const * name, void * app_data, hp_sap_callback_t callback);
     virtual bool                   deregister_handler  (char const * name);
+            bool                   register_hf_handler (char const * name, void * app_data, hp_sap_hf_callback_t callback);
     virtual bool                   app_send            (char const * name, char const * payload = NULL);
     virtual int                    app_set_timeout     (char const * message_to_send, int msecs_to_wait);
 
     // ---------- Options within the app ----------
     virtual std::string const &    get_option          (char const * name, char const *def = "");
     virtual int                    get_int_option      (char const * name, int def = 0);
-    virtual bool                   get_bool_option     (char const * name);
+    virtual bool                   get_bool_option     (char const * name, bool def = false);
 
     virtual void                   set_option          (char const * name, char const *value);
     virtual void                   set_option          (char const * name, int value);

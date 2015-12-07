@@ -23,15 +23,15 @@ bool net_mobilewebprint::core_api_t::start(bool start_scanning, bool block)
   return controller->start(start_scanning, block);
 }
 
-bool net_mobilewebprint::core_api_t::reScan()
-{
-  controller->printers.re_scan();
-  return true;
-}
-
 bool net_mobilewebprint::core_api_t::mq_is_done()
 {
   return controller->mq_is_done();
+}
+
+bool net_mobilewebprint::core_api_t::re_scan()
+{
+  controller->printers.re_scan();
+  return true;
 }
 
 bool net_mobilewebprint::core_api_t::send_job(char const * url, const char * printer_ip)
@@ -44,26 +44,10 @@ bool net_mobilewebprint::core_api_t::send_job(char const * url, const char * pri
   return controller->send_job(url, printer_ip);
 }
 
-//unimplemented TODO: async, so allocate_job must return txn_id
-//std::string allocate_job()
-//{
-//}
-//
-//void set_job_param(std::string const & job_id, char const * name, char const *value)
-//{
-//}
-//
-//void set_job_param(std::string const & job_id, char const * name, int)
-//{
-//}
-//
-//void set_job_param(std::string const & job_id, char const * name, bool)
-//{
-//}
-//
-//void set_job_param(std::string const & job_id, char const * name, double const &)
-//{
-//}
+bool net_mobilewebprint::core_api_t::print(char const * url)
+{
+  return controller->print(url);
+}
 
 bool net_mobilewebprint::core_api_t::register_bootstrap(char const * name, void * app_data, hp_mwp_callback_t callback)
 {
@@ -78,6 +62,11 @@ bool net_mobilewebprint::core_api_t::register_handler(char const * name, void * 
 bool net_mobilewebprint::core_api_t::deregister_handler(char const * name)
 {
   return controller->deregister_handler(name);
+}
+
+bool net_mobilewebprint::core_api_t::register_hf_handler(char const * name, void * app_data, hp_mwp_hf_callback_t callback)
+{
+  return controller->register_hf_handler(name, app_data, callback);
 }
 
 bool net_mobilewebprint::core_api_t::app_send(char const * name, char const * payload)
@@ -110,16 +99,12 @@ std::string const & net_mobilewebprint::core_api_t::get_option(char const *name,
 
 int net_mobilewebprint::core_api_t::get_int_option(char const *name, int def)
 {
-  string const & str = controller->arg(name, "~~~none~~~");
-  if (str == "~~~none~~~") { return def; }
-
-  /* otherwise */
-  return mwp_atoi(str);
+  return controller->arg(name, def);
 }
 
-bool net_mobilewebprint::core_api_t::get_bool_option(char const *name)
+bool net_mobilewebprint::core_api_t::get_bool_option(char const *name, bool def)
 {
-  return controller->flag(name);
+  return controller->flag(name, def);
 }
 
 void net_mobilewebprint::core_api_t::set_option(char const *name, char const *value)

@@ -767,6 +767,26 @@ std::string const & net_mobilewebprint::json_t::lookup(string const & key) const
   return the_null_string;
 }
 
+std::string         net_mobilewebprint::json_t::lookup(char const * key, char const * def) const
+{
+  strmap::const_iterator it = str_attrs.find(key);
+  if (it != str_attrs.end()) {
+    return it->second;
+  }
+
+  return def;
+}
+
+std::string         net_mobilewebprint::json_t::lookup(string const & key, char const * def) const
+{
+  strmap::const_iterator it = str_attrs.find(key);
+  if (it != str_attrs.end()) {
+    return it->second;
+  }
+
+  return def;
+}
+
 int net_mobilewebprint::json_t::lookup(char const * key_, int def) const
 {
   std::string key(key_);
@@ -1542,16 +1562,18 @@ void net_mobilewebprint::log_d(char level, char const * tag, char const * format
 
 void net_mobilewebprint::log_w(char const * tags, char const * format, ...)
 {
-  return;
   if (get_flag("no_warn")) { return; }
   if (!_should_log(tags))  { return; }
+
+  char const * warning = "WARNING:  ";
 
   va_list argList;
 
   char buffer[2048];
+  ::strcpy(buffer, warning);
 
   va_start(argList, format);
-  vsnprintf(buffer, sizeof(buffer), format, argList);
+  vsnprintf(buffer + ::strlen(warning), sizeof(buffer) - strlen(warning), format, argList);
   va_end(argList);
 
   log_w(buffer, (log_param_t)NULL);

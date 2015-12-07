@@ -7,6 +7,54 @@ project("mario_client")
 set(BUILD_NUMBER  $ENV{BUILD_NUMBER})
 set(BUILD_USER    $ENV{USER})
 
+set(MARIO_MAJOR_VERSION   "1.1")
+set(MARIO_VERSION         "1.1.${BUILD_NUMBER}")
+set(MARIO_DATA_FORMAT        11)
+
+set(MARIO_CURL_AGENT "Mario")
+if(NOT ${BUILD_USER} STREQUAL "build")
+  if(${BUILD_USER} STREQUAL "sparksb")
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
+  else()
+    set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
+  endif()
+endif()
+
+
+execute_process(COMMAND git rev-parse HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1 OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git rev-parse --short HEAD OUTPUT_VARIABLE MARIO_GIT_SHA1_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND git rev-parse --abbrev-ref HEAD OUTPUT_VARIABLE MARIO_GIT_BRANCH_NAME OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# If you build on a 'detached' branch, you get HEAD
+if (${MARIO_GIT_BRANCH_NAME} STREQUAL "HEAD")
+  set(MARIO_GIT_BRANCH_NAME    "$ENV{MARIO_BRANCH}")
+endif()
+
+if (${MARIO_GIT_BRANCH_NAME} STREQUAL "prod")
+
+  set(MARIO_STACK_NAME "prod")
+  set(MARIO_DOMAIN_NAME "mobilewebprint.net")
+  set(MARIO_IS_DEBUG    false)
+  set(MARIO_VERBOSITY   "verbose")
+
+else()
+
+  set(MARIO_DOMAIN_NAME "mobiledevprint.net")
+  set(MARIO_IS_DEBUG    true)
+  set(MARIO_VERBOSITY   "vverbose")
+
+  if (${MARIO_GIT_BRANCH_NAME} STREQUAL "qa")
+    set(MARIO_STACK_NAME "qa")
+  elseif (${MARIO_GIT_BRANCH_NAME} STREQUAL "stg")
+    set(MARIO_STACK_NAME "ext")
+  else()
+    set(MARIO_STACK_NAME "dev")
+    set(MARIO_VERBOSITY   "vvverbose")
+  endif()
+endif()
+
+set(MARIO_DEFAULT_FQDN  "${MARIO_STACK_NAME}.${MARIO_DOMAIN_NAME}")
+
 # TODO: move this to the right place (in an 'if' that knows we are building
 # for MacOSX)
 set(CMAKE_MACOSX_RPATH 1)
@@ -20,6 +68,8 @@ elseif (ANDROID_STANDALONE_TOOLCHAIN_SEARCH_PATH)
 else()
   message(FATAL_ERROR "Unknown platform.  Exiting.")
 endif()
+
+set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${MARIO_PLATFORM}-${MARIO_GIT_BRANCH_NAME} ${MARIO_VERSION} (${MARIO_GIT_SHA1_SHORT}) libcurl")
 
 #enable_testing()
 
@@ -62,15 +112,16 @@ set(MARIO_PLATFORM_SOURCES platform/base/mario_sys.cpp)
 
 # What platform are we on?
 if(${MARIO_PLATFORM} STREQUAL "ios")
-  set(MARIO_PLATFORM_DIR platform/darwin)
-  set(MARIO_PLATFORM_LOG platform/ios)
+  set(MARIO_PLATFORM_DIR platform/ios)
+  set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
   set(MARIO_APP True)
   set(MARIO_APP_SHARED False)
   set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
-  set(MARIO_PLATFORM_DIR platform/darwin)
-  set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
+  set(MARIO_PLATFORM_DIR platform/macosx)
+  set(MARIO_PLATFORM_LOG platform/darwin)
   set(MARIO_APP False)
+  set(MARIO_CURL_CPP "core/mwp_curl.cpp")
 elseif (${MARIO_PLATFORM} STREQUAL "android")
   set(MARIO_PLATFORM_DIR platform/android)
   set(MARIO_PLATFORM_LOG ${MARIO_PLATFORM_DIR})
@@ -82,8 +133,10 @@ endif()
 set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} ${MARIO_PLATFORM_DIR}/mario_sys.cpp)
 
 if(${MARIO_PLATFORM} STREQUAL "ios")
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/mario_sys.cpp)
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/ios/platform_name.cpp)
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
+  set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/mario_sys.cpp)
   set(MARIO_PLATFORM_SOURCES ${MARIO_PLATFORM_SOURCES} platform/darwin/platform_name.cpp)
 endif()
 
@@ -99,13 +152,22 @@ if(${MARIO_PLATFORM} STREQUAL "ios")
 
 elseif (${MARIO_PLATFORM} STREQUAL "macosx")
 
+  find_package(CURL REQUIRED)
+
   # "mariocli" is a command-line tool to drive functionality during development
   add_executable(mwpcli
                  ${MARIO_PLATFORM_SOURCES}
                  ${MARIO_CURL_CPP}
                  platform/stdio_out_err/mario_cli.cpp)
 
-  target_link_libraries(mwpcli mwpcore mwpcoreprotos)
+  #target_link_libraries(mwpcli mwpcore mwpcoreprotos cpl mwpobjcinterop)
+  target_link_libraries(mwpcli mwpcore mwpcoreprotos cpl mwpobjcinterop
+                          ${CURL_LIBRARIES}
+                          "-framework CoreFoundation"
+                          "-framework IOKit"
+                          "-framework AppKit"
+                          "-framework SystemConfiguration")
+
 
 
 elseif (${MARIO_PLATFORM} STREQUAL "android")

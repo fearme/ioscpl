@@ -1,4 +1,5 @@
 
+#import <Foundation/Foundation.h>
 #import <SystemConfiguration/SystemConfiguration.h>
 #import <UIKit/UIKit.h>
 #import <CommonCrypto/CommonHMAC.h>
@@ -24,9 +25,9 @@ int mwp_interop_bootstrap(void * app_data, char const * message, int id, int32 t
 
 int darwin_log(char type, char const * tag, char const * message)
 {
-  //NSLog(@"%s", message);
+  NSLog(@"%s", message);
   //printf("----- %s\n", message);
-  printf("%s\n", message);
+  //printf("%s\n", message);
 }
 
 void set_client_id()
@@ -34,7 +35,7 @@ void set_client_id()
   NSString *uuid = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
 
   char const * cData = [uuid cStringUsingEncoding:NSUTF8StringEncoding];
-  char const * salt  = "kdjfljsdfkjsdklfjsfh";
+  char const * salt  = "HPIsTheBestPlaceToWorkWeLoveIt!!";  //happens to be 32 chars
   unsigned char cHMAC[CC_SHA256_DIGEST_LENGTH];
   CCHmac(kCCHmacAlgSHA256, salt, strlen(salt), cData, strlen(cData), cHMAC);
 

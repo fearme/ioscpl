@@ -29,8 +29,9 @@ if [ -z "$DEVELOPMENT" ]; then
 else
 
   # Just enough to debug
-  #$(dirname $0)/build-ios-simulator-debug "$@"
+  $(dirname $0)/build-ios-simulator-debug "$@"
   $(dirname $0)/build-ios-simulator64-debug "$@"
+  $(dirname $0)/build-ios-device-debug "$@"
 
 fi
 
@@ -53,9 +54,17 @@ if [ -z "$DEVELOPMENT" ]; then
 
 else
 
-  for lib in `(cd simulator64/debug/libs/; ls; cd ../../..) | egrep -v libcurl`; do
-    lipo -output fat/debug/libs/$lib -create -arch x86_64 simulator64/debug/libs/$lib;
+  lib_names="$(find . -type f | egrep '\.a$' | egrep '^\./(device|simulator|simulator64)/' | egrep debug | xargs -L 1 -I {} basename {} | sort | uniq | egrep -v libcurl)"
+  for lib in $lib_names; do
+    params=""
+    test -f "device/debug/libs/${lib}"        && params="device/debug/libs/${lib} $params"
+    test -f "simulator64/debug/libs/${lib}"   && params="-arch x86_64 simulator64/debug/libs/${lib} $params"
+    test -f "simulator/debug/libs/${lib}"     && params="-arch i386 simulator/debug/libs/${lib} $params"
+
+    lipo -output fat/debug/libs/$lib -create $params
+
   done
+
   cp $(find . -type f | egrep 'libcurl\.a' | egrep debug | head -1) fat/debug/libs
 
 fi
