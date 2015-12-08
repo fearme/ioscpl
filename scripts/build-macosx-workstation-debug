@@ -1,5 +1,8 @@
 #!/bin/bash -e
 
+test -n "$BUILD_NUMBER" || export BUILD_NUMBER="1"
+test -n "$USER"         || export USER="none"
+
 $(dirname $0)/build-base --type=debug --os=macosx --platform=workstation --build-tool=xcode
 $(dirname $0)/package --type=debug --os=macosx --platform=workstation --build-tool=xcode
 

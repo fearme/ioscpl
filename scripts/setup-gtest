@@ -1,0 +1,29 @@
+#!/bin/bash -e
+
+die() { echo "$@"; exit 1; }
+
+mario_root_dir="$(dirname $(dirname $(dirname $0)))"
+test -n "$mario_root_dir" || die "You must be in the parent of the google test dir (like ~/dev)"
+[ "$mario_root_dir" != "." ] || die "You must be in the parent of the google test dir (like ~/dev)"
+
+echo $mario_root_dir
+[ "$(dirname $mario_root_dir)" == "." ] || die "You must be in the parent of the google test dir (like ~/dev)"
+test -d "$mario_root_dir/.git" || die "You must be in a directory that is a sibling of the mario dir."
+
+if [ -d googletest ]; then
+  cd googletest
+  git pull --ff-only
+else
+  git clone git@github.com:google/googletest
+  cd googletest
+fi
+
+mkdir -p build
+cd $_
+cmake -G Xcode ..
+xcodebuild
+
+sudo cp -r ../googletest/include/gtest /usr/local/include/
+sudo cp -r ../googlemock/include/gmock /usr/local/include/
+sudo cp $(find ./ -type f | egrep '\.a$') /usr/local/lib
+
