@@ -311,6 +311,11 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
     add_executable(_0_test_gtest "tests/setup/test-gtest.cpp")
     target_link_libraries(_0_test_gtest ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
     add_test(_0_test_gtest, _0_test_gtest)
+
+    add_executable(_0_test_gmock "tests/setup/test-gmock.cpp")
+    target_link_libraries(_0_test_gmock ${GMOCK_LIBRARIES} ${GMOCK_MAIN_LIBRARIES})
+    add_test(_0_test_gmock, _0_test_gmock)
+
   endif()
 
 endif()
