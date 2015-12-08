@@ -10,9 +10,15 @@ echo $mario_root_dir
 [ "$(dirname $mario_root_dir)" == "." ] || die "You must be in the parent of the google test dir (like ~/dev)"
 test -d "$mario_root_dir/.git" || die "You must be in a directory that is a sibling of the mario dir."
 
-git clone git@github.com:google/googletest
-cd googletest
-mkdir build
+if [ -d googletest ]; then
+  cd googletest
+  git pull --ff-only
+else
+  git clone git@github.com:google/googletest
+  cd googletest
+fi
+
+mkdir -p build
 cd $_
 cmake -G Xcode ..
 xcodebuild
