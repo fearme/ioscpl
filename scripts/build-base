@@ -134,18 +134,20 @@ BUILD_TREE_ROOT=$(pwd)
 TARGET="mwp"
 if [ "$BUILD_TOOL" == "xcode" ]; then
 
-  if [ "$BUILD_FOR" == "ios_simulator" ]; then
-    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
-  elif [ "$BUILD_FOR" == "ios_simulator64" ]; then
-    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
-  elif [ "$BUILD_FOR" == "ios_device" ]; then
-    cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM="OS"
-  elif [ "$BUILD_FOR" == "macosx_workstation" ]; then
+  if [ "$BUILD_FOR" == "macosx_workstation" ]; then
     cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/
-    TARGET="mwpcli"
-  fi
+    ${MAKE_TOOL} -configuration ${DEBUG_RELEASE_CAP}
+  else
+    if [ "$BUILD_FOR" == "ios_simulator" ]; then
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+    elif [ "$BUILD_FOR" == "ios_simulator64" ]; then
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM=${PLATFORM_UC}
+    elif [ "$BUILD_FOR" == "ios_device" ]; then
+      cmake -G ${GENERATOR_CMAKE} ${WORKSPACE}/client/src/cpp/ -DCMAKE_TOOLCHAIN_FILE=${WORKSPACE}/client/toolchain/${TOOLCHAIN_FILE} -DCMAKE_BUILD_TYPE=${DEBUG_RELEASE} -D${OS_UC}_PLATFORM="OS"
+    fi
 
-  ${MAKE_TOOL} -target $TARGET -configuration ${DEBUG_RELEASE_CAP}
+    ${MAKE_TOOL} -target $TARGET -configuration ${DEBUG_RELEASE_CAP}
+  fi
 
 else
 

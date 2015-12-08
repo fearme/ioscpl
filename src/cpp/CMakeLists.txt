@@ -13,9 +13,20 @@
 #
 
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
-#set(CMAKE_USE_RELATIVE_PATHS ON FORCE)
 
 project("mario_client")
+
+# ----------------------------------------------------------------------------------------------------
+# Inform CMAKE of various paths and things
+#
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../../toolchain")
+
+# ----------------------------------------------------------------------------------------------------
+# Various options
+#
+# build_tests (OFF)           -- Build and run the tests (OFF until all the build systems have GTest)
+#
+option(build_tests "Build and run the tests." OFF)
 
 # ====================================================================================================
 # Figure out our build variables
@@ -103,6 +114,7 @@ set(MARIO_CURL_AGENT "Mario")
 if(NOT ${BUILD_USER} STREQUAL "build")
   if(${BUILD_USER} STREQUAL "sparksb")
     set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
+    set(build_tests ON)
   else()
     set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
   endif()
@@ -129,9 +141,34 @@ else()
 endif()
 
 # ----------------------------------------------------------------------------------------------------
-# Turn testing on
+# Turn testing on -- not when cross-compiling
 #
-#enable_testing()
+if (${MARIO_PLATFORM} STREQUAL "macosx")
+
+  if (build_tests)
+    enable_testing()
+
+    find_package(GTEST)
+    #message(STATUS ${GTEST_FOUND})
+    if (GTEST_FOUND)
+      message(STATUS "Found gtest at: ${GTEST_INCLUDE_DIRS}")
+      message(STATUS "Found gtest at: ${GTEST_LIBRARIES}")
+
+      include_directories(${GTEST_INCLUDE_DIRS})
+    endif ()
+
+    find_package(GMock)
+    #message(STATUS ${GMOCK_FOUND})
+    if (GMOCK_FOUND)
+      message(STATUS "Found gmock at: ${GMOCK_INCLUDE_DIRS}")
+      message(STATUS "Found gmock at: ${GMOCK_LIBRARIES}")
+
+      include_directories(${GMOCK_INCLUDE_DIRS})
+    endif ()
+  endif()
+
+endif()
+#message(FATAL_ERROR "Stopping")
 
 # ----------------------------------------------------------------------------------------------------
 # Add the directories for the modules:
@@ -269,6 +306,12 @@ elseif (${MARIO_PLATFORM} STREQUAL "macosx")
                           "-framework IOKit"
                           "-framework AppKit"
                           "-framework SystemConfiguration")
+
+  if (build_tests)
+    add_executable(_0_test_gtest "tests/setup/test-gtest.cpp")
+    target_link_libraries(_0_test_gtest ${GTEST_LIBRARIES} ${GTEST_MAIN_LIBRARIES})
+    add_test(_0_test_gtest, _0_test_gtest)
+  endif()
 
 endif()
 
