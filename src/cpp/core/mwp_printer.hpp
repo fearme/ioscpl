@@ -107,7 +107,7 @@ namespace net_mobilewebprint {
     void   make_server_json(serialization_json_t & json, bool forFilterPrinters = true);
     bool   is_unknown(char const * purpose) const;
     bool   is_missing();
-    int   get_idle_wait_time();
+    bool   is_epson();
 
     /* private */
     network_node_t node;

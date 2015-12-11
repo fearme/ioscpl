@@ -645,8 +645,8 @@ bool net_mobilewebprint::printer_t::is_missing()
   return false;
 }
 
-int net_mobilewebprint::printer_t::get_idle_wait_time(){
-  return _is_epson(*this) ? 20000 : 0;
+bool net_mobilewebprint::printer_t::is_epson(){
+  return _is_epson(*this);
 }
 
 //---------------------------------------------------------------------------------------
