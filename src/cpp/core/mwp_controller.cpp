@@ -1406,17 +1406,22 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
 
     if (printerState != PML_STATUS_IDLE) {
       job_stat(pcl_txn_id, "has_started", true);
+      job_stat(pcl_txn_id, "idle_starting_tick_count", (int)get_tick_count());
+    } else if(http_stats.bool_attrs["has_started"]){
+      int idleTickCount = _lookup(http_stats.int_attrs, "idle_starting_tick_count", -1);
 
-    } else if (http_stats.bool_attrs["has_started"]) {
+      if(_time_since(idleTickCount) <= printers._get_printer(http_stats.attrs["ip"])->get_idle_wait_time()){
+        message = "Waiting for status updates";
 
-      // Back to idle... We are done
-      message = "Done";
-      if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
-        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
       } else {
-        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
+        message = "Done";
+        if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
+          jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
+        } else {
+          jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
+        }
+        is_finishing = true;
       }
-      is_finishing = true;
     }
   }
 
