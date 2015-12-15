@@ -1404,20 +1404,13 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
       message = "Cancelling...";
     }
 
-    if (printerState != PML_STATUS_IDLE) {
-      job_stat(pcl_txn_id, "has_started", true);
 
-    } else if (http_stats.bool_attrs["has_started"]) {
-
-      // Back to idle... We are done
-      message = "Done";
-      if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
-        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
-      } else {
-        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
-      }
-      is_finishing = true;
+    if(printers._get_printer(http_stats.attrs["ip"])->is_epson()){
+      epson_progress_handle(printerState, http_stats, pcl_txn_id, message, jobStatus, is_finishing);
+    } else {
+      other_progress_handle(printerState, http_stats, pcl_txn_id, message, jobStatus, is_finishing);
     }
+
   }
 
   // As long as we are not done, send status
@@ -1439,6 +1432,50 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
   }
 
   return handled;
+}
+
+void net_mobilewebprint::controller_base_t::epson_progress_handle(string printerState, stats_t http_stats, uint32 pcl_txn_id, string & message, string & jobStatus, bool & is_finishing)
+{  
+    if (printerState != PML_STATUS_IDLE) {
+      if(http_stats.bool_attrs["has_started"] && _lookup(http_stats.attrs, "previous_state") == PML_STATUS_IDLE && printerState == "other"){
+        int currTick = (int)get_tick_count();
+        sendTelemetry("network", "EPSON_PRINT", "epson_idle_to_other", currTick - _lookup(http_stats.int_attrs, "idle_starting_tick_count", currTick));
+        log_d(1, "controller_t", "sending %d", currTick - _lookup(http_stats.int_attrs, "idle_starting_tick_count", currTick));
+      }
+      job_stat(pcl_txn_id, "has_started", true);
+      job_stat(pcl_txn_id, "idle_starting_tick_count", (int)get_tick_count());
+    } else if(http_stats.bool_attrs["has_started"]){
+      int idleTickCount = _lookup(http_stats.int_attrs, "idle_starting_tick_count", -1);
+      job_stat(pcl_txn_id, "previous_state", printerState);
+
+      if(_time_since(idleTickCount) <= 10000){
+        message = "Finishing...";
+        log_d(1, "printer", "printing has not finished sending... TICK COUNT: %d", _time_since(idleTickCount)/1000);
+      } else {
+        message = "Done";
+        if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
+          jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
+        } else {
+          jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
+        }
+        is_finishing = true;
+      }
+    }
+}
+
+void net_mobilewebprint::controller_base_t::other_progress_handle(string printerState, stats_t http_stats, uint32 pcl_txn_id, string & message, string & jobStatus, bool & is_finishing)
+{  
+    if (printerState != PML_STATUS_IDLE) {
+      job_stat(pcl_txn_id, "has_started", true);
+    } else if(http_stats.bool_attrs["has_started"]){
+      message = "Done";
+      if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
+      } else {
+        jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_SUCCESS);
+      }
+      is_finishing = true;
+    }
 }
 
 //------------------------------------------------------------------------------------------------

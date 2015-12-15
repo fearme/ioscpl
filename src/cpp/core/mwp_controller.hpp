@@ -367,6 +367,9 @@ namespace net_mobilewebprint {
     e_handle_result process_upstream_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
     e_handle_result _on_progress_response(string const & name, buffer_view_i const & payload, buffer_t * data, mq_handler_extra_t & extra);
 
+    void epson_progress_handle(string printerState, stats_t http_stats, uint32 pcl_txn_id, string & message, string & jobStatus, bool & is_finishing);
+    void other_progress_handle(string printerState, stats_t http_stats, uint32 pcl_txn_id, string & message, string & jobStatus, bool & is_finishing);
+
     void handle_server_command(int code, std::string const & http_version, strmap const & headers, string const & body, json_t const & json, json_array_t const & json_array, stats_t const & stats_out);
 
     // Log an api if that option is set

@@ -645,6 +645,10 @@ bool net_mobilewebprint::printer_t::is_missing()
   return false;
 }
 
+bool net_mobilewebprint::printer_t::is_epson(){
+  return _is_epson(*this);
+}
+
 //---------------------------------------------------------------------------------------
 //
 // printer_list_t
