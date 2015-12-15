@@ -1449,7 +1449,7 @@ void net_mobilewebprint::controller_base_t::epson_progress_handle(string printer
       job_stat(pcl_txn_id, "previous_state", printerState);
 
       if(_time_since(idleTickCount) <= 10000){
-        message = "Waiting for status updates";
+        message = "Finishing...";
         log_d(1, "printer", "printing has not finished sending... TICK COUNT: %d", _time_since(idleTickCount)/1000);
       } else {
         message = "Done";
