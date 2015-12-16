@@ -42,7 +42,7 @@ class ValidationTableViewController: UITableViewController {
     }
     
     override func viewWillDisappear(animated: Bool) {
-        setupTableViewController?.printSource = uriTokenTextField.text
+        setupTableViewController?.printSource = uriTokenTextField.text!
         setupTableViewController?.useToken = validationOnOffSwitch.on
     }
     

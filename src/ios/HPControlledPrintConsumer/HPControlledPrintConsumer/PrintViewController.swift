@@ -41,7 +41,7 @@ class PrintViewController: UIViewController, ControlledPrintDelegate {
         dispatch_async(dispatch_get_main_queue()) {
             self.printJobStatusLabel.text = status
         }
-        println(status)
+        print(status)
         if status == "Done" {
             dispatch_async(dispatch_get_main_queue()) {
                 self.spinner.removeFromSuperview()

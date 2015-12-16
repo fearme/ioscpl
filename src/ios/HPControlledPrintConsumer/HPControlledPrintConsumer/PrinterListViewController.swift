@@ -24,8 +24,9 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         super.viewDidLoad()
         self.cpl = ControlledPrint(controlledPrintDelegate: self)
         self.cpl?.printerListUpdateInterval(3)
-        self.cpl?.setProxy("proxy.vcd.hp.com", port: "8080")
-        //self.cpl?.setProxy("web-proxy", port: "8088")
+        //self.cpl?.setProxy("proxy.vcd.hp.com", port: "8080")
+        self.cpl?.setProxy("web-proxy", port: "8088")
+        
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.screenName = "PrinterListViewControllerLoaded";
         self.cpl?.postGoogleMetrics("screen", analyticsMdl: analyticsModel)
@@ -36,13 +37,13 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         //Valid Token: QPLESLIKETOKEN-2321321312321321321
         //Valid File: http://www.pdfpdf.com/samples/Sample5.PDF
         self.cpl?.initialize(selectedServerStack, completion:{(status: InitStatus) -> () in
-            if (status.value == InitStatusServerStackNotAvailable.value) {
+            if (status == InitStatusServerStackNotAvailable) {
                 self.spinner.removeFromSuperview()
                 self.clearPrinterList = true
                 let alert = UIAlertView(title: "Server Error", message: "Unable to connect to the Server Stack.", delegate: self, cancelButtonTitle: "OK")
                 alert.show()
                 
-            } else if (status.value == InitStatusServerStackAvailable.value) {
+            } else if (status == InitStatusServerStackAvailable) {
                 if (self.doValidation) {
                     
                     if let delegate = UIApplication.sharedApplication().delegate as? AppDelegate {                        
@@ -120,7 +121,7 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     }
     
     func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
-        var cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) as! UITableViewCell
+        var cell = tableView.dequeueReusableCellWithIdentifier("cell", forIndexPath: indexPath) 
         
         if indexPath.section == availablePrinterSection {
             let printerAttributes = self.printers[indexPath.row]
@@ -167,10 +168,10 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     
     // MARK: - Segue
     
-    override func shouldPerformSegueWithIdentifier(identifier: String?, sender: AnyObject?) -> Bool {
+    override func shouldPerformSegueWithIdentifier(identifier: String, sender: AnyObject?) -> Bool {
         var doSegue = true
         
-        if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow() {
+        if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow {
             let printerAttributes = self.printers[indexPath.row]
             if !printerAttributes.isSupported {
                 let alert = UIAlertView(title: "Unsupported Printer", message: "Sorry, this printer is not supported.", delegate: self, cancelButtonTitle: "OK")
@@ -182,9 +183,9 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
     }
         
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        var printScene = segue.destinationViewController as! PrintViewController
+        let printScene = segue.destinationViewController as! PrintViewController
         
-        if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow() {
+        if let indexPath = self.availablePrintersTableView.indexPathForSelectedRow {
             if let cell = self.availablePrintersTableView.cellForRowAtIndexPath(indexPath) {
                 let selectedPrinterName = cell.textLabel?.text
                 let selectedPrinterIp = cell.detailTextLabel?.text
