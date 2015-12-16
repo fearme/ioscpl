@@ -24,9 +24,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../../to
 # ----------------------------------------------------------------------------------------------------
 # Various options
 #
-# build_tests (OFF)           -- Build and run the tests (OFF until all the build systems have GTest)
+# build_tests (ON)
 #
-option(build_tests "Build and run the tests." OFF)
+option(build_tests "Build and run the tests." ON)
 
 # ====================================================================================================
 # Figure out our build variables
@@ -114,7 +114,6 @@ set(MARIO_CURL_AGENT "Mario")
 if(NOT ${BUILD_USER} STREQUAL "build")
   if(${BUILD_USER} STREQUAL "sparksb")
     set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-s")
-    set(build_tests ON)
   else()
     set(MARIO_CURL_AGENT "${MARIO_CURL_AGENT}-${BUILD_USER}")
   endif()
