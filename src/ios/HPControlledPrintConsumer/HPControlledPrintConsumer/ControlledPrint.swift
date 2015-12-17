@@ -2,8 +2,8 @@
 import Foundation
 
 protocol ControlledPrintDelegate {
-    func printersFound(Dictionary<String, HPPrinterAttributes>)
-    func printJobStatus(String)
+    func printersFound(_: Dictionary<String, HPPrinterAttributes>)
+    func printJobStatus(_: String)
 }
 
 class ControlledPrint : NSObject, HPPrinterAttributesDelegate {

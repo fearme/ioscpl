@@ -1,0 +1,6 @@
+framework module HPControlledPrint {
+  umbrella header "HPControlledPrint.h"
+
+  export *
+  module * { export * }
+}

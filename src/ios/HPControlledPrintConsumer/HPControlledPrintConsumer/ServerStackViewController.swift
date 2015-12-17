@@ -16,14 +16,14 @@ class ServerStackViewController: UIViewController, UIPickerViewDataSource, UIPic
 
         if let stack = setupTableViewController?.selectedServerStack {
             var row = 0
-            switch stack.value {
-            case ServerStackDevelopment.value :
+            switch stack {
+            case ServerStackDevelopment :
                 row = 0
-            case ServerStackQa.value :
+            case ServerStackQa :
                 row = 1
-            case ServerStackStaging.value :
+            case ServerStackStaging :
                 row = 2
-            case ServerStackProduction.value :
+            case ServerStackProduction :
                 row = 3
             default :
                 row = 0
