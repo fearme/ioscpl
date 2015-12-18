@@ -18,16 +18,6 @@
 #define PML_STATUS_VERY_LOW_ON_INK        "VERY LOW ON INK"
 #define PML_STATUS_CANCELLING             "CANCELING"
 
-#define MESSAGE_NETWORK_ERROR             "Network error."
-#define MESSAGE_FORMATTING_JOB            "Formatting print job"
-#define MESSAGE_UPSTREAM_ERROR            "Upstream error."
-#define MESSAGE_WAITING_START             "Waiting for print to start"
-#define MESSAGE_WAITING_RESUME            "Waiting for print to resume"
-#define MESSAGE_PRINTING                  "Printing..."
-#define MESSAGE_FINISHING                 "Finishing..."
-#define MESSAGE_CANCELLING                "Cancelling..."
-#define MESSAGE_DONE                      "Done"
-
 net_mobilewebprint::controller_base_t * net_mobilewebprint::g_controller = NULL;
 
 using namespace net_mobilewebprint::msg;
@@ -1311,7 +1301,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     printerState = job_stat(pcl_txn_id, "status", "NETWORK_ERROR");
     jobStatus = job_stat(pcl_txn_id, "jobStatus", "NETWORK_ERROR");
     state = "NETWORK_ERROR";
-    message = MESSAGE_NETWORK_ERROR;
+    message = HP_MWP_MESSAGE_NETWORK_ERROR;
     is_error_condition = true;
 
   } else if (state == "UPSTREAM_ERROR" || printerState == "UPSTREAM_ERROR" || jobStatus == "UPSTREAM_ERROR"){
@@ -1319,7 +1309,7 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     printerState = job_stat(pcl_txn_id, "status", "UPSTREAM_ERROR");
     jobStatus = job_stat(pcl_txn_id, "jobStatus", "UPSTREAM_ERROR");
     state = "UPSTREAM_ERROR";
-    message = MESSAGE_UPSTREAM_ERROR;
+    message = HP_MWP_MESSAGE_UPSTREAM_ERROR;
     is_error_condition = true;
   }
 
@@ -1375,25 +1365,25 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
 
     // Track the complex state of the print -- This also sets a message, that might be clobbered below.
     if (jobStatus == STATUS_WAITING0) {
-      message = MESSAGE_FORMATTING_JOB;
+      message = HP_MWP_MESSAGE_FORMATTING_JOB;
       if (_has(http_stats.int_attrs, "numDownloaded") && _lookup(http_stats.int_attrs, "numDownloaded", 0) > 0) {
         jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_WAITING1);
       }
     }
 
     if (jobStatus == STATUS_WAITING1) {
-      message = MESSAGE_WAITING_START;
+      message = HP_MWP_MESSAGE_WAITING_START;
     }
 
     if (jobStatus == STATUS_PRINTING) {
       if (printerState != PML_STATUS_PRINTING && printerState != PML_STATUS_IDLE) {
-        message = MESSAGE_WAITING_RESUME;
+        message = HP_MWP_MESSAGE_WAITING_RESUME;
         jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_WAITING2);
       }
     }
 
     if (jobStatus == STATUS_WAITING2) {
-      message = MESSAGE_WAITING_RESUME;
+      message = HP_MWP_MESSAGE_WAITING_RESUME;
       if (printerState == PML_STATUS_PRINTING) {
         jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_PRINTING);
       }
@@ -1403,15 +1393,15 @@ net_mobilewebprint::e_handle_result net_mobilewebprint::controller_base_t::_on_p
     // Track the simpler states -- maybe overriding the "message" from above
     if (printerState == PML_STATUS_PRINTING) {
       jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_PRINTING);
-      message = MESSAGE_PRINTING;
+      message = HP_MWP_MESSAGE_PRINTING;
 
       // If the entire byte stream has been sent, tell the user we are waiting for finish
       if (_has(http_stats.bool_attrs, "byte_stream_done") && _lookup(http_stats.bool_attrs, "byte_stream_done", false) != false) {
-        message = MESSAGE_FINISHING;
+        message = HP_MWP_MESSAGE_FINISHING;
       }
     } else if (_starts_with(printerState, PML_STATUS_CANCELLING)) {
       jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLING);
-      message = MESSAGE_CANCELLING;
+      message = HP_MWP_MESSAGE_CANCELLING;
     }
 
 
@@ -1459,10 +1449,10 @@ void net_mobilewebprint::controller_base_t::epson_progress_handle(string printer
       job_stat(pcl_txn_id, "previous_state", printerState);
 
       if(_time_since(idleTickCount) <= 10000){
-        message = MESSAGE_FINISHING;
+        message = HP_MWP_MESSAGE_FINISHING;
         log_d(1, "printer", "printing has not finished sending... TICK COUNT: %d", _time_since(idleTickCount)/1000);
       } else {
-        message = MESSAGE_DONE;
+        message = HP_MWP_MESSAGE_DONE;
         if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
           jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
         } else {
@@ -1478,7 +1468,7 @@ void net_mobilewebprint::controller_base_t::other_progress_handle(string printer
     if (printerState != PML_STATUS_IDLE) {
       job_stat(pcl_txn_id, "has_started", true);
     } else if(http_stats.bool_attrs["has_started"]){
-      message = MESSAGE_DONE;
+      message = HP_MWP_MESSAGE_DONE;
       if (http_stats.attrs["jobStatus"] == STATUS_CANCELLING) {
         jobStatus = job_stat(pcl_txn_id, "jobStatus", STATUS_CANCELLED);
       } else {
