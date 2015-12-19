@@ -10,5 +10,6 @@
 #define HPControlledPrintApp_HPControlledPrint_Bridging_Header_h
 
 #import <HPControlledPrint/HPControlledPrint.h>
+#import <Branch/Branch.h>
 
 #endif
