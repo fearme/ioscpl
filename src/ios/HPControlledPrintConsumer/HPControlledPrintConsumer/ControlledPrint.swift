@@ -25,10 +25,10 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         ControlledPrint.cpl.initialize(stack, withCompletion:{(status: InitStatus) in
             completion(status)
         })
-        var analyticsModel = GoogleAnalyticsModel();
+        let analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppControlledPrint";
         analyticsModel.eventAction = "ConsumerAppInitialize";
-        postGoogleMetrics("event", analyticsMdl: analyticsModel)
+        postGoogleMetrics("event", analyticsModel: analyticsModel)
     }
     
     func validateToken(token: String, completion: ((Bool) -> ())) {
@@ -46,7 +46,7 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
         var analyticsModel = GoogleAnalyticsModel();
         analyticsModel.eventCategory = "ConsumerAppControlledPrint";
         analyticsModel.eventAction = "ConsumerAppScanForPrinters";
-        postGoogleMetrics("event", analyticsMdl: analyticsModel)
+        postGoogleMetrics("event", analyticsModel: analyticsModel)
         return ControlledPrint.cpl.scanForPrinters()
     }
     
@@ -88,15 +88,15 @@ class ControlledPrint : NSObject, HPPrinterAttributesDelegate {
     // Add functions to this file so screen views can call them
     // DONE: Enum change the name to be more descriptive
     
-    func postGoogleMetrics(type: String, analyticsMdl: GoogleAnalyticsModel){
+    func postGoogleMetrics(type: String, analyticsModel: GoogleAnalyticsModel){
         switch type{
             case "event":
                 NSLog("Logging Analytics Event from ControlledPrint.swift")
-                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsMdl)
+                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumEvent, withParams: analyticsModel)
 
             case "screen":
                 NSLog("Logging Analytics Screen from ControlledPrint.swift")
-                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumScreen, withParams: analyticsMdl);
+                ControlledPrint.cpl.postGoogleAnalyticsMetrics(GoogleAnalyticsTypeEnumScreen, withParams: analyticsModel);
             case "crash":
                 // Crashes are uploaded automatically
                 NSLog("Logging Analytics Crash from ControlledPrint.swift")

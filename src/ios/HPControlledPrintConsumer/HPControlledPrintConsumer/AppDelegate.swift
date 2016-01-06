@@ -12,30 +12,39 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    var launchToken: String?
+    var branchIoParameters: NSDictionary?
+    
+    private var _launchToken: String? {
+        get {return self._launchToken }
+        set {self._launchToken = newValue }
+    }
   
     func application(application: UIApplication, openURL url: NSURL, sourceApplication: String?, annotation: AnyObject) -> Bool {
-        if let path = url.path as NSString? { //path is the rest of the url after "printit://"
-            let range: NSRange = path.rangeOfString("asset-qples-")
-            let length =  range.length
-            let location = range.location
-            
-            if (location >= 0) {
-                let range2 = location...path.length
-                launchToken = path.substringFromIndex(location)
-                self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
-                let storyboard = UIStoryboard(name: "Main", bundle: nil)
-                let initialViewController = storyboard.instantiateViewControllerWithIdentifier("PrintNavigationController") ;
-                self.window?.rootViewController = initialViewController
-                self.window?.makeKeyAndVisible()
-            }
-        }
+        Branch.getInstance().handleDeepLink(url);
         return true
     }
     
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         // Override point for customization after application launch.
+        let branch: Branch = Branch.getInstance()
+        branch.initSessionWithLaunchOptions(launchOptions, andRegisterDeepLinkHandler: {params, error in
+            if (error == nil && params != nil) {
+                self.branchIoParameters = params
+                let navigationDecider = NavigationDecider()
+                
+                self.window = UIWindow(frame: UIScreen.mainScreen().bounds)
+                self.window?.rootViewController = navigationDecider.decide(self.branchIoParameters!)
+                self.window?.makeKeyAndVisible()
+            }
+        })
+        
         return true
+    }
+    
+    func application(application: UIApplication, continueUserActivity userActivity: NSUserActivity, restorationHandler: ([AnyObject]?) -> Void) -> Bool {
+        // pass the url to the handle deep link call
+        
+        return Branch.getInstance().continueUserActivity(userActivity)
     }
 
     func applicationWillResignActive(application: UIApplication) {

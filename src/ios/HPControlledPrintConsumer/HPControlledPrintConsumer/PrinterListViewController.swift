@@ -25,12 +25,11 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
         self.cpl = ControlledPrint(controlledPrintDelegate: self)
         self.cpl?.printerListUpdateInterval(3)
         //self.cpl?.setProxy("proxy.vcd.hp.com", port: "8080")
-        self.cpl?.setProxy("web-proxy", port: "8088")
+        //self.cpl?.setProxy("web-proxy", port: "8088")
         
-        var analyticsModel = GoogleAnalyticsModel();
+        let analyticsModel = GoogleAnalyticsModel();
         analyticsModel.screenName = "PrinterListViewControllerLoaded";
-        self.cpl?.postGoogleMetrics("screen", analyticsMdl: analyticsModel)
-        
+        self.cpl?.postGoogleMetrics("screen", analyticsModel: analyticsModel)
 
         showSpinner()
         
@@ -44,14 +43,18 @@ class PrinterListViewController: UIViewController, UITableViewDataSource, UITabl
                 alert.show()
                 
             } else if (status == InitStatusServerStackAvailable) {
-                if (self.doValidation) {
-                    
-                    if let delegate = UIApplication.sharedApplication().delegate as? AppDelegate {                        
-                        if let token = delegate.launchToken {
-                            self.printSource = token
-                        }
+                
+                let appDelegate = UIApplication.sharedApplication().delegate as? AppDelegate
+                if let token = appDelegate!.branchIoParameters?.objectForKey("url") {
+                    let url = token as! NSString
+                    let range: NSRange = url.rangeOfString("asset-qples-")
+                    let location = range.location
+                    if (location >= 0) {
+                        self.printSource = url.substringFromIndex(location)
                     }
-                    
+                }
+                
+                if (self.doValidation) {                    
                     self.cpl?.validateToken(self.printSource, completion: {(valid: Bool) -> () in
                         if (!valid) {
                             self.spinner.removeFromSuperview()
