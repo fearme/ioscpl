@@ -55,6 +55,15 @@
 
 #define HP_@MWP_INTERFACE_NAME_UC@_PRINT_PROGRESS_MSG         "print_progress"
 
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_NETWORK_ERROR      "Network error."
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_FORMATTING_JOB     "Formatting print job"
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_UPSTREAM_ERROR     "Upstream error."
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_WAITING_START      "Waiting for print to start"
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_WAITING_RESUME     "Waiting for print to resume"
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_PRINTING           "Printing..."
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_FINISHING          "Finishing..."
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_CANCELLING         "Cancelling..."
+#define HP_@MWP_INTERFACE_NAME_UC@_MESSAGE_DONE               "Done"
 /*
  *  Messages that @MWP_INTERFACE_NAME_UC@ will respond to
  */
